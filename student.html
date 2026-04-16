@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="student-page">
+    <section class="student-shell">
+      <a class="student-back" href="index.html">Back to instructor dashboard</a>
+
+      <header class="student-hero">
+        <div>
+          <p class="eyebrow">Student Dashboard</p>
+          <h1 id="student-name">Student</h1>
+          <a id="student-cohort" class="student-course-link" href="#" target="_blank" rel="noreferrer"></a>
+        </div>
+        <div class="student-badge-group">
+          <div id="student-seat" class="seat-label">Seat</div>
+          <div id="student-status" class="status-chip">Status</div>
+        </div>
+      </header>
+
+      <section class="student-primary-actions">
+        <a id="student-curriculum-link" class="curriculum-link-button primary" href="#" target="_blank" rel="noreferrer">Curriculum</a>
+        <a id="student-rewards-link" class="curriculum-link-button secondary" href="#" target="_blank" rel="noreferrer">CM Rewards</a>
+      </section>
+
+      <section id="assign-work-panel" class="panel assign-work-panel hidden">
+        <div class="assign-work-header">
+          <div>
+            <p class="eyebrow">Assign Work</p>
+            <h3>Build a task for this student</h3>
+          </div>
+          <button id="assign-work-close" class="modal-close" type="button" aria-label="Close assign work">x</button>
+        </div>
+        <div class="assign-work-grid">
+          <div class="assign-work-topics">
+            <p class="assign-work-label">Choose subject topics</p>
+            <div id="assign-work-topic-list" class="assign-work-topic-list"></div>
+          </div>
+          <div class="assign-work-divider">
+            <span>or</span>
+          </div>
+          <div class="assign-work-custom">
+            <p class="assign-work-label">Add project directions</p>
+            <p class="assign-work-copy">Add pointers and/or a descriptive direction the student should follow for their project or assignment.</p>
+            <textarea id="assign-work-text" class="course-note-input assign-work-text" placeholder="Example: Complete a short project checkpoint, include one worked example, and explain your reasoning in two or three sentences."></textarea>
+          </div>
+        </div>
+        <div class="assign-work-actions">
+          <span id="assign-work-status" class="course-note-status">Choose topics, enter custom directions, or use both.</span>
+          <button id="assign-work-save" class="schedule-button" type="button">Assign</button>
+        </div>
+      </section>
+
+      <section class="student-summary-grid">
+        <article class="metric-card progress-metric-card">
+          <div class="progress-copy">
+            <p class="metric-label">Course Progress</p>
+            <p class="metric-caption">Current course completion</p>
+          </div>
+          <div id="student-progress-ring" class="mini-progress-ring accurate">
+            <span id="student-progress" class="mini-progress-number">0%</span>
+          </div>
+        </article>
+        <article class="metric-card alert-card">
+          <p class="metric-label">Support Alert</p>
+          <h3 id="student-alert">Inactive</h3>
+          <p id="student-alert-copy" class="metric-caption"></p>
+          <button id="request-help-button" class="request-help-button" type="button">Request Help</button>
+        </article>
+        <article class="metric-card student-goal-card">
+          <p class="metric-label">Current Goal</p>
+          <div id="student-goal-list" class="student-goal-list"></div>
+          <button id="assign-work-button" class="curriculum-link-button secondary student-goal-button" type="button">Assign Work</button>
+        </article>
+      </section>
+
+      <section class="student-detail-grid">
+        <article class="panel">
+          <p class="eyebrow">Current Snapshot</p>
+          <h3>Tasks to complete</h3>
+          <div class="student-focus-list">
+            <div class="seat-stat">
+              <div class="seat-stat-head">
+                <span>Late Assignments</span>
+                <strong id="student-late-work">0</strong>
+              </div>
+            </div>
+            <div class="seat-stat">
+              <div class="seat-stat-head">
+                <span>Your Tasks</span>
+              </div>
+              <div id="student-task-list" class="student-task-list"></div>
+            </div>
+            <div class="submit-work-panel">
+              <label class="submit-work-label" for="student-submit-select">Submit work</label>
+              <div class="submit-work-row">
+                <select id="student-submit-select" class="submit-work-select">
+                  <option value="">Choose an item</option>
+                </select>
+                <button id="student-submit-button" class="submit-work-button" type="button">Submit</button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <p class="eyebrow">Next Steps</p>
+          <h3>Recommended actions</h3>
+          <div id="student-actions" class="student-actions"></div>
+        </article>
+      </section>
+    </section>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="student.js"></script>
+</body>
+</html>

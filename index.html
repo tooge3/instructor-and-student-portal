@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instructor Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell" id="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-main">
+        <div class="brand-block">
+          <div class="sidebar-toggle-row">
+            <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebar" aria-label="Hide sidebar">
+              <span class="sidebar-toggle-icon"><</span>
+              <span class="sidebar-toggle-text">Hide</span>
+            </button>
+          </div>
+          <p class="eyebrow">Instructor Workspace</p>
+          <h1>North Hall Academy</h1>
+          <p class="muted">A focused dashboard for attendance, achievement, and intervention follow-up.</p>
+        </div>
+
+        <nav class="nav-panel" aria-label="Primary">
+          <button class="nav-link active" data-view="home" type="button">Dashboard Home</button>
+          <button class="nav-link" data-view="class" type="button">Current Class</button>
+          <button class="nav-link" data-view="courses" type="button">Courses</button>
+          <button class="nav-link" data-view="schedule" type="button">Weekly Schedule</button>
+          <button class="nav-link" data-view="documents" type="button">Daily Documents</button>
+          <button class="nav-link" data-view="payment" type="button">Payment</button>
+        </nav>
+      </div>
+
+      <section class="advisor-card">
+        <div class="advisor-card-header">
+          <div>
+            <p class="eyebrow">Instructor Account</p>
+            <h2 id="advisor-name">Dr. Maya Brooks</h2>
+            <p id="advisor-role">Senior Advisor, STEM Cohort</p>
+          </div>
+          <div class="advisor-menu-wrap">
+            <button id="advisor-menu-button" class="advisor-menu-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Instructor account menu">
+              ...
+            </button>
+            <div id="advisor-menu" class="advisor-menu hidden" role="menu">
+              <button class="advisor-menu-item" type="button" data-advisor-action="settings" role="menuitem">Edit Settings</button>
+              <button class="advisor-menu-item" type="button" data-advisor-action="logout" role="menuitem">Log Out</button>
+            </div>
+          </div>
+        </div>
+        <dl>
+          <div>
+            <dt>Active Students</dt>
+            <dd id="active-student-count">0</dd>
+          </div>
+          <div>
+            <dt>Urgent Alerts</dt>
+            <dd id="urgent-alert-count">0</dd>
+          </div>
+        </dl>
+      </section>
+    </aside>
+
+    <main class="dashboard">
+      <button id="sidebar-show-button" class="sidebar-show-button hidden" type="button" aria-controls="sidebar" aria-label="Show sidebar">Show Menu</button>
+      <section class="dashboard-view active" data-view-panel="home">
+      <section class="hero" id="overview">
+        <div>
+          <p class="eyebrow">Account-Based Dashboard</p>
+          <h2>Today's teaching picture, urgent alerts, and your class at a glance.</h2>
+        </div>
+      </section>
+
+      <section class="dashboard-home-grid" aria-label="Dashboard home highlights">
+        <article class="metric-card home-card">
+          <p class="metric-label">Reminders</p>
+          <div class="home-list">
+            <p class="home-list-item">STEM family conference night starts Thursday at 6:00 PM.</p>
+            <p class="home-list-item">Progress reports are due before Friday advisory check-in.</p>
+            <p class="home-list-item">Biology lab supply restock arrives this afternoon.</p>
+          </div>
+        </article>
+
+        <article id="assistance-card" class="metric-card alert-card">
+          <p class="metric-label">Alerts</p>
+          <h3 id="assistance-count">0</h3>
+          <p id="assistance-caption" class="metric-caption"></p>
+        </article>
+
+        <article class="metric-card home-card">
+          <p class="metric-label">Today's Schedule</p>
+          <h3 id="workload-count">0 sessions</h3>
+          <div id="workload-list" class="home-list">
+            <p id="workload-caption" class="metric-caption">No after-school sessions scheduled today.</p>
+          </div>
+        </article>
+      </section>
+      </section>
+
+      <section class="dashboard-view" data-view-panel="courses">
+      <section class="panel courses-panel" id="courses">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Courses</p>
+            <h3>Course list and details access</h3>
+          </div>
+        </div>
+
+        <div id="courses-grid" class="courses-grid"></div>
+      </section>
+      </section>
+
+      <section class="dashboard-view" data-view-panel="schedule">
+      <section class="panel schedule-panel" id="schedule">
+        <div class="schedule-topbar">
+          <h3 id="weekly-hours-label">Weekly Hours: Not Set - Not Set</h3>
+          <button id="adjust-hours-button" class="schedule-button" type="button">Adjust Weekly Hours</button>
+        </div>
+
+        <div class="schedule-subnav" role="tablist" aria-label="Weekly schedule tabs">
+          <button class="schedule-subtab active" data-schedule-tab="calendar" type="button">Calendar</button>
+          <button class="schedule-subtab" data-schedule-tab="unavailability" type="button">General Unavailability</button>
+          <button class="schedule-subtab" data-schedule-tab="timeoff" type="button">Time-Off Request</button>
+        </div>
+
+        <div class="schedule-subview active" data-schedule-panel="calendar">
+          <div class="schedule-weekbar">
+            <button id="previous-week-button" class="schedule-week-button" type="button">Previous Week</button>
+            <p id="schedule-week-label" class="schedule-week-label"></p>
+            <button id="next-week-button" class="schedule-week-button" type="button">Next Week</button>
+          </div>
+          <div class="schedule-layout">
+            <div id="schedule-grid" class="schedule-grid"></div>
+          </div>
+        </div>
+
+        <div class="schedule-subview" data-schedule-panel="unavailability">
+          <div class="schedule-card schedule-card-emphasis">
+            <div class="schedule-card-header">
+              <div>
+                <p class="metric-label">Set Unavailability</p>
+                <p class="schedule-card-copy">Block a time on the calendar when you should not be assigned other obligations.</p>
+              </div>
+            </div>
+            <form class="schedule-form schedule-form-inline">
+              <div class="schedule-field">
+                <label class="schedule-label" for="unavailable-day">Day</label>
+                <select id="unavailable-day" class="schedule-input">
+                  <option>Monday</option>
+                  <option>Tuesday</option>
+                  <option>Wednesday</option>
+                  <option>Thursday</option>
+                  <option>Friday</option>
+                </select>
+              </div>
+              <div class="schedule-field schedule-field-wide">
+                <label class="schedule-label" for="unavailable-time">Time</label>
+                <input id="unavailable-time" class="schedule-input" type="text" value="4:30 PM - 5:30 PM">
+              </div>
+              <div class="schedule-field schedule-field-action">
+                <button id="block-time-button" class="schedule-button" type="button">Block Time</button>
+              </div>
+            </form>
+            <p id="schedule-warning" class="schedule-warning hidden" role="alert"></p>
+          </div>
+          <div class="schedule-card schedule-table-card">
+            <div class="schedule-card-header">
+              <div>
+                <p class="metric-label">Blocked Slots</p>
+                <p class="schedule-card-copy">Review and remove unavailability blocks from the current schedule.</p>
+              </div>
+            </div>
+            <div id="unavailability-list" class="unavailability-list"></div>
+          </div>
+        </div>
+
+        <div class="schedule-subview" data-schedule-panel="timeoff">
+          <div class="schedule-card">
+            <div class="schedule-card-header">
+              <div>
+                <p class="metric-label">Time-Off Request</p>
+                <p class="schedule-card-copy">Submit a time-off request for advance planning and team coverage.</p>
+              </div>
+            </div>
+            <form class="schedule-form schedule-form-inline">
+              <div class="schedule-field">
+                <label class="schedule-label" for="timeoff-start-date">Start Date</label>
+                <input id="timeoff-start-date" class="schedule-input" type="date">
+              </div>
+              <div class="schedule-field">
+                <label class="schedule-label" for="timeoff-end-date">End</label>
+                <input id="timeoff-end-date" class="schedule-input" type="date">
+              </div>
+              <div class="schedule-field schedule-field-wide">
+                <label class="schedule-label" for="timeoff-reason">Reason</label>
+                <input id="timeoff-reason" class="schedule-input" type="text" value="Family appointment">
+              </div>
+              <div class="schedule-field schedule-field-action">
+                <button id="submit-timeoff-button" class="schedule-button schedule-button-secondary" type="button">Submit Request</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="schedule-card schedule-table-card">
+            <div class="schedule-card-header">
+              <div>
+                <p class="metric-label">Submitted Requests</p>
+                <p class="schedule-card-copy">Review submitted dates, intersecting classes, approval status, and sub plans.</p>
+              </div>
+            </div>
+            <div class="schedule-table-wrap">
+              <table class="schedule-table">
+                <thead>
+                  <tr>
+                    <th>Dates</th>
+                    <th>Classes</th>
+                    <th>Approved</th>
+                    <th>Sub Plans</th>
+                  </tr>
+                </thead>
+                <tbody id="timeoff-rows"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+      </section>
+
+      <section class="dashboard-view" data-view-panel="documents">
+      <section class="panel tips-panel" id="documents">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Daily Documents</p>
+            <h3>Small reminders for today’s instruction</h3>
+          </div>
+        </div>
+        <div class="tips-list">
+          <article class="tip-card">Open with a 3-minute warm-up question tied to yesterday’s lesson.</article>
+          <article class="tip-card">Student notes: Attendance follow-up sheet for today's advisory block.</article>
+          <article class="tip-card">Progress report draft: Final intervention comments due before end of day.</article>
+        </div>
+      </section>
+      </section>
+
+      <section class="dashboard-view" data-view-panel="class">
+      <section class="panel roster-panel" id="students">
+        <div class="panel-heading roster-header">
+          <div>
+            <p class="eyebrow">Current Class</p>
+            <h3>Today's scheduled roster, attendance, and risk status</h3>
+          </div>
+
+          <div class="filter-bar" role="tablist" aria-label="Student filters">
+            <button class="filter-button active" data-filter="all" type="button">All</button>
+            <button class="filter-button" data-filter="atRisk" type="button">Needs Help</button>
+            <button class="filter-button" data-filter="attendance" type="button">Attendance Issues</button>
+          </div>
+        </div>
+
+        <div class="classroom-stage">
+          <div class="instructor-desk" aria-hidden="true">Instructor Station</div>
+          <div id="student-grid" class="student-grid classroom-grid"></div>
+        </div>
+      </section>
+      </section>
+
+    </main>
+  </div>
+
+  <div id="settings-modal" class="modal-shell hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-settings="true"></div>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Account Settings</p>
+          <h3 id="settings-title">Edit instructor settings</h3>
+        </div>
+        <button id="settings-close" class="modal-close" type="button" aria-label="Close settings">x</button>
+      </div>
+
+      <form id="settings-form" class="settings-form">
+        <label class="schedule-label" for="settings-email">Email</label>
+        <input id="settings-email" class="schedule-input" type="email">
+
+        <label class="schedule-label" for="settings-phone">Phone #</label>
+        <input id="settings-phone" class="schedule-input" type="tel">
+
+        <label class="schedule-label" for="settings-pronouns">Pronouns</label>
+        <input id="settings-pronouns" class="schedule-input" type="text" placeholder="She/Her">
+
+        <div class="settings-multi">
+          <label class="schedule-label" for="settings-locations-button">Available Locations</label>
+          <button id="settings-locations-button" class="settings-multi-button" type="button" aria-expanded="false">Select locations</button>
+          <div id="settings-locations-menu" class="settings-multi-menu hidden">
+            <label class="settings-multi-option">
+              <input type="checkbox" value="Irvine" data-settings-group="locations">
+              <span>Irvine</span>
+            </label>
+            <label class="settings-multi-option">
+              <input type="checkbox" value="Redmond" data-settings-group="locations">
+              <span>Redmond</span>
+            </label>
+            <label class="settings-multi-option">
+              <input type="checkbox" value="Bothell" data-settings-group="locations">
+              <span>Bothell</span>
+            </label>
+            <label class="settings-multi-option">
+              <input type="checkbox" value="Factoria" data-settings-group="locations">
+              <span>Factoria</span>
+            </label>
+            <label class="settings-multi-option">
+              <input type="checkbox" value="Anaheim" data-settings-group="locations">
+              <span>Anaheim</span>
+            </label>
+            <label class="settings-multi-option">
+              <input type="checkbox" value="Santa Ana" data-settings-group="locations">
+              <span>Santa Ana</span>
+            </label>
+            <label class="settings-multi-option">
+              <input type="checkbox" value="Online" data-settings-group="locations">
+              <span>Online</span>
+            </label>
+          </div>
+          <p id="settings-locations-summary" class="settings-multi-summary">No locations selected</p>
+        </div>
+
+        <div class="settings-multi">
+          <label class="schedule-label" for="settings-languages-button">Teaching Language</label>
+          <button id="settings-languages-button" class="settings-multi-button" type="button" aria-expanded="false">Select teaching languages</button>
+          <div id="settings-languages-menu" class="settings-multi-menu hidden">
+            <label class="settings-multi-option">
+              <input type="checkbox" value="English" data-settings-group="languages">
+              <span>English</span>
+            </label>
+            <label class="settings-multi-option">
+              <input type="checkbox" value="Mandarin" data-settings-group="languages">
+              <span>Mandarin</span>
+            </label>
+            <label class="settings-multi-option">
+              <input type="checkbox" value="Spanish" data-settings-group="languages">
+              <span>Spanish</span>
+            </label>
+          </div>
+          <p id="settings-languages-summary" class="settings-multi-summary">No languages selected</p>
+        </div>
+
+        <div class="modal-actions">
+          <button id="settings-cancel" class="schedule-button schedule-button-secondary" type="button">Cancel</button>
+          <button class="schedule-button" type="submit">Save Changes</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div id="logout-modal" class="modal-shell hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-logout="true"></div>
+    <section class="modal-card modal-card-small" role="dialog" aria-modal="true" aria-labelledby="logout-title">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Log Out</p>
+          <h3 id="logout-title">End this instructor session?</h3>
+        </div>
+      </div>
+      <p class="modal-copy">You will be signed out of the instructor dashboard on this device. Your saved class and schedule data will remain in place.</p>
+      <div class="modal-actions">
+        <button id="logout-cancel" class="schedule-button schedule-button-secondary" type="button">Stay Signed In</button>
+        <button id="logout-confirm" class="schedule-button schedule-button-danger" type="button">Log Out</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="logged-out-state" class="logged-out-state hidden" aria-hidden="true">
+    <section class="logged-out-card">
+      <p class="eyebrow">Signed Out</p>
+      <h2>Instructor session ended</h2>
+      <p>You have been logged out of this dashboard on this device.</p>
+      <button id="sign-in-again" class="schedule-button" type="button">Sign In Again</button>
+    </section>
+  </div>
+
+  <button id="faq-toggle" class="faq-fab" type="button" aria-expanded="false" aria-controls="faq-panel">FAQ</button>
+
+  <section id="faq-panel" class="faq-panel hidden" aria-hidden="true" aria-label="FAQ chatbot">
+    <div class="faq-panel-header">
+      <div>
+        <p class="eyebrow">FAQ Assistant</p>
+        <h3>Document-based help</h3>
+      </div>
+      <button id="faq-close" class="modal-close" type="button" aria-label="Close FAQ chatbot">x</button>
+    </div>
+    <p class="faq-panel-copy">Ask about Daily Documents, payment, time-off, office access, Zoom, or substitute plans.</p>
+    <div id="faq-messages" class="faq-messages" aria-live="polite"></div>
+    <div class="faq-suggestions">
+      <button class="faq-suggestion" type="button" data-faq-suggestion="Where do I find time-off requests?">Time-off requests</button>
+      <button class="faq-suggestion" type="button" data-faq-suggestion="How do I access Irvine office rules?">Office rules</button>
+      <button class="faq-suggestion" type="button" data-faq-suggestion="Where is the payment guide?">Payment guide</button>
+    </div>
+    <form id="faq-form" class="faq-form">
+      <input id="faq-input" class="schedule-input" type="text" placeholder="Ask a question from the provided documents...">
+      <button class="schedule-button" type="submit">Send</button>
+    </form>
+  </section>
+
+  <script src="data.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
