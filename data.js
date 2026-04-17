@@ -425,6 +425,51 @@ function seatForIndex(index) {
   return `${row}${column}`;
 }
 
+function normalizeTasks(tasks) {
+  if (!Array.isArray(tasks)) {
+    return [];
+  }
+
+  return tasks.map((task) => {
+    if (typeof task === "string") {
+      return {
+        text: task,
+        assignedAt: null,
+      };
+    }
+
+    return {
+      text: task.text || "",
+      assignedAt: task.assignedAt || null,
+    };
+  }).filter((task) => task.text);
+}
+
+function normalizeGoalItems(goals, fallbackGoal) {
+  if (Array.isArray(goals) && goals.length) {
+    return goals.map((goal) => {
+      if (typeof goal === "string") {
+        return {
+          text: goal,
+          assignedAt: null,
+        };
+      }
+
+      return {
+        text: goal.text || "",
+        assignedAt: goal.assignedAt || null,
+      };
+    }).filter((goal) => goal.text);
+  }
+
+  return fallbackGoal
+    ? [{
+      text: fallbackGoal,
+      assignedAt: null,
+    }]
+    : [];
+}
+
 function studentWithCourse(student, index) {
   const lookup = courseLookup();
   const courseId = inferCourseId(student);
@@ -432,10 +477,9 @@ function studentWithCourse(student, index) {
 
   return {
     ...student,
-    currentGoals: Array.isArray(student.currentGoals) && student.currentGoals.length
-      ? student.currentGoals
-      : [student.goal].filter(Boolean),
+    currentGoals: normalizeGoalItems(student.currentGoals, student.goal),
     assignedWork: Array.isArray(student.assignedWork) ? student.assignedWork : [],
+    tasks: normalizeTasks(student.tasks),
     courseId: course.id,
     cohort: course.title,
     curriculumLabel: course.curriculumLabel,
@@ -445,11 +489,31 @@ function studentWithCourse(student, index) {
   };
 }
 
+function ensureAtLeastOneInstructorAlert(students) {
+  if (students.some((student) => student.alertActive)) {
+    return students;
+  }
+
+  const preferredName = "Grace Park";
+  const fallbackIndex = students.findIndex((student) => student.name === preferredName);
+  const targetIndex = fallbackIndex >= 0 ? fallbackIndex : 0;
+
+  return students.map((student, index) =>
+    index === targetIndex
+      ? {
+          ...student,
+          needsHelp: true,
+          alertActive: true,
+        }
+      : student,
+  );
+}
+
 function loadStudents() {
   const stored = window.localStorage.getItem(storageKey);
 
   if (!stored) {
-    const seededStudents = clone(defaultStudents).map(studentWithCourse);
+    const seededStudents = ensureAtLeastOneInstructorAlert(clone(defaultStudents).map(studentWithCourse));
     window.localStorage.setItem(storageKey, JSON.stringify(seededStudents));
     return seededStudents;
   }
@@ -462,7 +526,7 @@ function loadStudents() {
       parsed.every((student) => legacySeedNames.includes(student.name));
 
     if (isLegacySeed) {
-      const resetStudents = clone(defaultStudents).map(studentWithCourse);
+      const resetStudents = ensureAtLeastOneInstructorAlert(clone(defaultStudents).map(studentWithCourse));
       window.localStorage.setItem(storageKey, JSON.stringify(resetStudents));
       return resetStudents;
     }
@@ -479,11 +543,11 @@ function loadStudents() {
       }
     });
 
-    const normalizedStudents = Array.from(mergedByName.values());
+    const normalizedStudents = ensureAtLeastOneInstructorAlert(Array.from(mergedByName.values()));
     window.localStorage.setItem(storageKey, JSON.stringify(normalizedStudents));
     return normalizedStudents;
   } catch (error) {
-    const fallbackStudents = clone(defaultStudents).map(studentWithCourse);
+    const fallbackStudents = ensureAtLeastOneInstructorAlert(clone(defaultStudents).map(studentWithCourse));
     window.localStorage.setItem(storageKey, JSON.stringify(fallbackStudents));
     return fallbackStudents;
   }
@@ -495,9 +559,10 @@ window.portalStore = {
   },
 
   saveStudents(students) {
+    const normalizedStudents = ensureAtLeastOneInstructorAlert(students.map(studentWithCourse));
     window.localStorage.setItem(
       storageKey,
-      JSON.stringify(students.map(studentWithCourse)),
+      JSON.stringify(normalizedStudents),
     );
   },
 

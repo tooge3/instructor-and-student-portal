@@ -26,17 +26,23 @@ body {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 310px 1fr;
+  grid-template-columns: auto 1fr;
   min-height: 100vh;
 }
 
 .sidebar {
   display: flex;
+  width: 310px;
   flex-direction: column;
   padding: 32px 24px;
   border-right: 1px solid var(--line);
   background: #fafbfc;
-  transition: width 180ms ease, padding 180ms ease;
+  overflow: hidden;
+  transition:
+    width 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 220ms ease,
+    border-color 220ms ease;
 }
 
 .sidebar-main {
@@ -62,6 +68,14 @@ body {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease,
+    width 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .sidebar-toggle:hover {
@@ -74,6 +88,37 @@ body {
   width: 18px;
   height: 18px;
   font-weight: 700;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sidebar-toggle-text {
+  transition: opacity 180ms ease, transform 220ms ease;
+}
+
+.sidebar.hidden-sidebar .sidebar-toggle-row {
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.sidebar.hidden-sidebar .sidebar-toggle {
+  width: 42px;
+  height: 42px;
+  justify-content: center;
+  padding: 0;
+  border-color: rgba(44, 107, 237, 0.18);
+  background: #ffffff;
+  color: var(--accent);
+  box-shadow: 0 10px 24px rgba(29, 39, 51, 0.08);
+}
+
+.sidebar.hidden-sidebar .sidebar-toggle-icon {
+  width: auto;
+  height: auto;
+  font-size: 1rem;
+}
+
+.sidebar.hidden-sidebar .sidebar-toggle-text {
+  display: none;
 }
 
 .brand-block,
@@ -85,6 +130,18 @@ body {
   border-radius: 16px;
   background: var(--paper);
   box-shadow: var(--shadow);
+}
+
+.brand-block,
+.nav-panel,
+.advisor-card {
+  transition:
+    opacity 180ms ease,
+    transform 220ms ease,
+    max-height 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    margin 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform-origin: top left;
 }
 
 .brand-block {
@@ -152,27 +209,30 @@ body {
 }
 
 .sidebar.hidden-sidebar {
-  display: none;
+  width: 64px;
+  padding: 20px 10px;
+  align-items: center;
+}
+
+.sidebar.hidden-sidebar .sidebar-main {
+  width: 100%;
+}
+
+.sidebar.hidden-sidebar .brand-block,
+.sidebar.hidden-sidebar .nav-panel,
+.sidebar.hidden-sidebar .advisor-card {
+  opacity: 0;
+  transform: translateX(-10px);
+  max-height: 0;
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .app-shell.sidebar-hidden {
-  grid-template-columns: 1fr;
-}
-
-.sidebar-show-button {
-  margin-bottom: 16px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 10px 14px;
-  background: #f7f9fc;
-  color: var(--ink);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.sidebar-show-button:hover {
-  background: #eef4ff;
+  grid-template-columns: 64px 1fr;
 }
 
 .advisor-card-header {
@@ -556,6 +616,21 @@ body {
   margin-top: 10px;
 }
 
+.home-subsection {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+}
+
+.home-subsection-label {
+  margin: 0;
+  color: var(--warning);
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .home-list-item {
   margin: 0;
   padding: 12px 14px;
@@ -566,6 +641,26 @@ body {
   font-size: 0.95rem;
   font-weight: 700;
   line-height: 1.35;
+}
+
+.home-list-item.urgent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fff6f4;
+  border-color: #f0d4d0;
+}
+
+.urgent-bullet {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-top: 4px;
+  flex: 0 0 auto;
+  background: var(--warning);
+  animation: bounce-alert 1.2s infinite;
+  box-shadow: 0 0 0 6px rgba(179, 61, 41, 0.08);
 }
 
 .home-list-item.conflict {
@@ -1208,10 +1303,227 @@ body {
 }
 
 .documents-hub {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
+  display: block;
   margin-top: 18px;
+}
+
+.documents-support {
+  display: grid;
+  gap: 18px;
+}
+
+.documents-support-intro {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+  padding: 2px 2px 0;
+}
+
+.documents-support-intro h3 {
+  margin: 6px 0 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.2rem;
+}
+
+.documents-support-intro p:last-child {
+  max-width: 420px;
+  margin: 0;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.documents-support-shell {
+  display: grid;
+  grid-template-columns: minmax(250px, 310px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.documents-groups {
+  display: grid;
+  gap: 14px;
+}
+
+.documents-group-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.documents-group-card h4 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+}
+
+.documents-group-links {
+  display: grid;
+  gap: 8px;
+  margin-top: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: max-height 220ms ease, opacity 180ms ease, margin-top 180ms ease;
+}
+
+.documents-group-preview {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.documents-group-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.documents-thread-link,
+.documents-mini-chip {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f8faff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.documents-thread-link {
+  padding: 10px 12px;
+}
+
+.documents-thread-link.is-match {
+  border-color: rgba(52, 96, 255, 0.24);
+  background: #eef3ff;
+  color: var(--accent);
+}
+
+.documents-group-card:hover,
+.documents-group-card.is-relevant {
+  border-color: rgba(52, 96, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.documents-group-card:hover h4,
+.documents-group-card.is-relevant h4 {
+  color: var(--accent);
+}
+
+.documents-group-card:hover .documents-group-links,
+.documents-group-card.is-relevant:hover .documents-group-links {
+  margin-top: 14px;
+  max-height: 520px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.documents-group-card.is-relevant:hover .documents-group-preview {
+  display: none;
+}
+
+.documents-thread-link.active {
+  border-color: rgba(52, 96, 255, 0.24);
+  background: #eef3ff;
+  color: var(--accent);
+}
+
+.documents-thread-panel {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+  min-height: 540px;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 14px;
+}
+
+.documents-thread-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.documents-thread-header h4 {
+  margin: 6px 0 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.15rem;
+}
+
+.documents-thread-pill {
+  border-radius: 999px;
+  background: #eef3ff;
+  color: var(--accent);
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.documents-thread-messages {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.documents-thread-message {
+  max-width: min(86%, 640px);
+  border-radius: 18px;
+  padding: 12px 14px;
+  line-height: 1.55;
+  font-weight: 600;
+}
+
+.documents-thread-message.user {
+  justify-self: end;
+  background: #edf2ff;
+  color: var(--accent);
+}
+
+.documents-thread-message.bot {
+  justify-self: start;
+  background: #f7f9fc;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.documents-thread-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.documents-mini-chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+
+.documents-thread-form {
+  display: grid;
+  gap: 10px;
+}
+
+.documents-thread-form-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
 }
 
 .documents-card,
@@ -1299,6 +1611,11 @@ body {
   text-decoration: underline;
 }
 
+.faq-fab,
+.faq-panel {
+  display: none !important;
+}
+
 .statement-history {
   display: grid;
   gap: 18px;
@@ -1375,6 +1692,13 @@ body {
   flex-wrap: wrap;
 }
 
+.statement-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .statement-detail p {
   margin: 0;
   font-weight: 700;
@@ -1399,6 +1723,19 @@ body {
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+.statement-print {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, var(--accent), #5b82ff);
+  color: white;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(52, 96, 255, 0.18);
 }
 
 .statement-session-line {
@@ -1430,6 +1767,458 @@ body {
 
 .statement-amount.credit {
   color: var(--ok);
+}
+
+#paystub-print-shell {
+  display: none;
+}
+
+.paystub-print-shell {
+  display: none;
+}
+
+.paystub-sheet {
+  width: 100%;
+  max-width: 8in;
+  margin: 0 auto;
+  padding: 0.35in;
+  border: 1px solid #d8e0f2;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #173057;
+  box-shadow: none;
+}
+
+.paystub-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: start;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #d8e0f2;
+}
+
+.paystub-header h1 {
+  margin: 4px 0 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.7rem;
+}
+
+.paystub-label,
+.paystub-section-label {
+  margin: 0;
+  color: #5873a5;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.paystub-subtitle {
+  margin: 8px 0 0;
+  color: #5f7398;
+}
+
+.paystub-net-box {
+  min-width: 1.8in;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #eef3ff;
+  text-align: right;
+}
+
+.paystub-net-box span {
+  display: block;
+  color: #5873a5;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.paystub-net-box strong {
+  display: block;
+  margin-top: 8px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.6rem;
+  color: #2049c7;
+}
+
+.paystub-top-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.paystub-info-card,
+.paystub-table-card {
+  border: 1px solid #d8e0f2;
+  border-radius: 16px;
+  padding: 16px;
+  background: #fbfcff;
+}
+
+.paystub-info-list {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+}
+
+.paystub-info-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #e9eef8;
+  padding-bottom: 8px;
+}
+
+.paystub-info-list div:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.paystub-info-list dt {
+  color: #5f7398;
+  font-weight: 700;
+}
+
+.paystub-info-list dd {
+  margin: 0;
+  color: #173057;
+  font-weight: 700;
+  text-align: right;
+}
+
+.paystub-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.paystub-summary-card {
+  border-radius: 14px;
+  background: #f3f6fd;
+  padding: 14px;
+}
+
+.paystub-summary-card span {
+  display: block;
+  color: #5f7398;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.paystub-summary-card strong {
+  display: block;
+  margin-top: 10px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.2rem;
+  color: #173057;
+}
+
+.paystub-table-card {
+  margin-top: 18px;
+}
+
+.paystub-table-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.paystub-table-head h2 {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.05rem;
+}
+
+.paystub-table-head p {
+  margin: 0;
+  color: #5f7398;
+  font-weight: 700;
+}
+
+.paystub-earnings-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.paystub-earnings-column {
+  border: 1px solid #e6ebf7;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #ffffff;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.paystub-earnings-header {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr) 42px 54px;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f3f6fd;
+  color: #5873a5;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.paystub-earnings-list {
+  display: grid;
+}
+
+.paystub-earnings-row {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr) 42px 54px;
+  gap: 8px;
+  padding: 9px 10px;
+  border-top: 1px solid #e6ebf7;
+  align-items: start;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.paystub-earnings-date,
+.paystub-earnings-hours,
+.paystub-earnings-total {
+  color: #173057;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.paystub-earnings-session strong {
+  display: block;
+  color: #173057;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.paystub-earnings-session span {
+  display: block;
+  margin-top: 3px;
+  color: #5f7398;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.paystub-earnings-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 18px;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #d8e0f2;
+  color: #173057;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.paystub-earnings-footer span {
+  color: #5f7398;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.paystub-earnings-footer strong {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.95rem;
+}
+
+@media print {
+  @page {
+    size: portrait;
+    margin: 0.3in;
+  }
+
+  body.print-paystub-active > * {
+    display: none !important;
+  }
+
+  body.print-paystub-active #paystub-print-shell,
+  body.print-paystub-active #paystub-print-shell * {
+    visibility: visible !important;
+  }
+
+  body.print-paystub-active #paystub-print-shell {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    background: #ffffff;
+  }
+
+  body.print-paystub-active .paystub-print-shell {
+    display: block !important;
+  }
+
+  body.print-paystub-active .paystub-sheet {
+    max-width: none;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+  }
+
+  body.print-paystub-active .paystub-header,
+  body.print-paystub-active .paystub-top-grid,
+  body.print-paystub-active .paystub-summary-grid,
+  body.print-paystub-active .paystub-table-card,
+  body.print-paystub-active .paystub-earnings-column,
+  body.print-paystub-active .paystub-earnings-row,
+  body.print-paystub-active .paystub-earnings-footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  body.print-paystub-active .paystub-header {
+    gap: 12px;
+    padding-bottom: 10px;
+  }
+
+  body.print-paystub-active .paystub-header h1 {
+    font-size: 1.32rem;
+  }
+
+  body.print-paystub-active .paystub-subtitle {
+    margin-top: 4px;
+    font-size: 0.82rem;
+  }
+
+  body.print-paystub-active .paystub-label,
+  body.print-paystub-active .paystub-section-label {
+    font-size: 0.64rem;
+    letter-spacing: 0.1em;
+  }
+
+  body.print-paystub-active .paystub-net-box {
+    min-width: 1.45in;
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
+
+  body.print-paystub-active .paystub-net-box strong {
+    margin-top: 5px;
+    font-size: 1.2rem;
+  }
+
+  body.print-paystub-active .paystub-top-grid {
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  body.print-paystub-active .paystub-info-card,
+  body.print-paystub-active .paystub-table-card {
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
+
+  body.print-paystub-active .paystub-info-list {
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  body.print-paystub-active .paystub-info-list div {
+    padding-bottom: 5px;
+  }
+
+  body.print-paystub-active .paystub-info-list dt,
+  body.print-paystub-active .paystub-info-list dd {
+    font-size: 0.8rem;
+  }
+
+  body.print-paystub-active .paystub-summary-grid {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  body.print-paystub-active .paystub-summary-card {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  body.print-paystub-active .paystub-summary-card span {
+    font-size: 0.68rem;
+  }
+
+  body.print-paystub-active .paystub-summary-card strong {
+    margin-top: 6px;
+    font-size: 0.98rem;
+  }
+
+  body.print-paystub-active .paystub-table-card {
+    margin-top: 10px;
+  }
+
+  body.print-paystub-active .paystub-table-head {
+    margin-bottom: 8px;
+  }
+
+  body.print-paystub-active .paystub-table-head h2 {
+    font-size: 0.92rem;
+  }
+
+  body.print-paystub-active .paystub-table-head p {
+    font-size: 0.76rem;
+  }
+
+  body.print-paystub-active .paystub-earnings-columns {
+    gap: 8px;
+  }
+
+  body.print-paystub-active .paystub-earnings-header,
+  body.print-paystub-active .paystub-earnings-row {
+    grid-template-columns: 58px minmax(0, 1fr) 34px 46px;
+    gap: 6px;
+  }
+
+  body.print-paystub-active .paystub-earnings-header {
+    padding: 6px 8px;
+    font-size: 0.6rem;
+  }
+
+  body.print-paystub-active .paystub-earnings-row {
+    padding: 6px 8px;
+  }
+
+  body.print-paystub-active .paystub-earnings-date,
+  body.print-paystub-active .paystub-earnings-hours,
+  body.print-paystub-active .paystub-earnings-total {
+    font-size: 0.72rem;
+  }
+
+  body.print-paystub-active .paystub-earnings-session strong {
+    font-size: 0.73rem;
+  }
+
+  body.print-paystub-active .paystub-earnings-session span {
+    margin-top: 2px;
+    font-size: 0.64rem;
+  }
+
+  body.print-paystub-active .paystub-earnings-footer {
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  body.print-paystub-active .paystub-earnings-footer span {
+    font-size: 0.68rem;
+  }
+
+  body.print-paystub-active .paystub-earnings-footer strong {
+    font-size: 0.84rem;
+  }
 }
 
 .mini-bar {
@@ -1625,19 +2414,25 @@ body {
 
 .course-list-roster {
   display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
+  align-items: start;
+  justify-content: start;
 }
 
 .course-list-roster-item {
-  display: grid;
-  gap: 4px;
-  padding: 12px 14px;
-  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 12px;
   border: 1px solid var(--line);
   background: #ffffff;
   color: var(--ink);
   text-decoration: none;
+  width: 100%;
+  align-self: start;
 }
 
 .course-list-roster-item:hover {
@@ -1645,14 +2440,475 @@ body {
   box-shadow: 0 10px 20px rgba(29, 39, 51, 0.06);
 }
 
+.course-list-roster-item strong {
+  min-width: 0;
+  font-size: 0.95rem;
+}
+
 .course-list-roster-item span {
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .course-list-stack {
   display: grid;
   gap: 10px;
+}
+
+.testing-panel {
+  padding: 20px;
+}
+
+.restaurant-occupancy {
+  display: grid;
+  gap: 20px;
+}
+
+.restaurant-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+}
+
+.restaurant-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.restaurant-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.legend-dot.occupied {
+  background: #2c6bed;
+}
+
+.legend-dot.available {
+  background: #d6deec;
+}
+
+.restaurant-map-board {
+  display: grid;
+}
+
+.restaurant-floor-map-shell {
+  display: grid;
+  gap: 14px;
+}
+
+.restaurant-map-context {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: #fbfcff;
+}
+
+.restaurant-map-context h4 {
+  margin: 6px 0 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+}
+
+.restaurant-map-note {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: #fbfcff;
+}
+
+.restaurant-floor-map {
+  position: relative;
+  display: grid;
+  border-radius: 22px;
+  overflow: visible;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(244, 247, 252, 0.92)),
+    #eef2f7;
+}
+
+.restaurant-map-area {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  min-height: 0;
+  overflow: visible;
+  background:
+    linear-gradient(180deg, rgba(110, 146, 235, 0.06), rgba(110, 146, 235, 0.01)),
+    #f8fbff;
+}
+
+.restaurant-map-area-label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.restaurant-map-table-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 250px));
+  gap: 14px;
+  align-items: start;
+}
+
+.restaurant-map-table {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(134, 149, 173, 0.24);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 10px 24px rgba(29, 39, 51, 0.04);
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  overflow: visible;
+}
+
+.restaurant-map-table.drag-over {
+  border-color: rgba(44, 107, 237, 0.35);
+  box-shadow: 0 14px 30px rgba(44, 107, 237, 0.08);
+}
+
+.restaurant-map-table-buffer {
+  background:
+    linear-gradient(180deg, rgba(244, 247, 252, 0.92), rgba(244, 247, 252, 0.78)),
+    #fbfcff;
+  border-style: dashed;
+}
+
+.restaurant-map-table-note {
+  justify-self: center;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.restaurant-map-label {
+  position: absolute;
+  top: -11px;
+  left: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(134, 149, 173, 0.28);
+  color: var(--ink);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(29, 39, 51, 0.06);
+}
+
+.restaurant-map-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.restaurant-map-grid.grid-2x2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.restaurant-map-cell {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 64px;
+  border: 1px solid rgba(134, 149, 173, 0.22);
+  border-radius: 10px;
+  background: #edf2f8;
+  cursor: default;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.restaurant-map-cell-marker {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--accent);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.restaurant-map-seat-shell {
+  position: relative;
+  overflow: visible;
+}
+
+.restaurant-map-seat-shell::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(100% - 2px);
+  width: 18px;
+  height: 120px;
+  transform: translateY(-50%);
+}
+
+.restaurant-map-cell[draggable="true"] {
+  cursor: grab;
+}
+
+.restaurant-map-cell.dragging {
+  opacity: 0.45;
+  transform: scale(0.97);
+}
+
+.restaurant-map-cell.drag-over {
+  border-color: rgba(44, 107, 237, 0.45);
+  box-shadow: inset 0 0 0 2px rgba(44, 107, 237, 0.18);
+}
+
+.restaurant-map-cell.occupied {
+  background:
+    linear-gradient(180deg, rgba(44, 107, 237, 0.18), rgba(44, 107, 237, 0.08)),
+    #eff4ff;
+  border-color: rgba(44, 107, 237, 0.24);
+}
+
+.restaurant-map-cell.occupied.absent {
+  background:
+    linear-gradient(180deg, rgba(220, 94, 94, 0.2), rgba(220, 94, 94, 0.08)),
+    #fff3f1;
+  border-color: rgba(220, 94, 94, 0.3);
+}
+
+.restaurant-map-cell.attention {
+  background:
+    linear-gradient(180deg, rgba(255, 173, 90, 0.2), rgba(255, 173, 90, 0.08)),
+    #fff7ee;
+  border-color: rgba(255, 173, 90, 0.3);
+}
+
+.restaurant-map-cell.available {
+  background:
+    linear-gradient(180deg, rgba(214, 222, 236, 0.68), rgba(214, 222, 236, 0.42)),
+    #f4f7fb;
+}
+
+.restaurant-map-cell:hover,
+.restaurant-map-cell:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(44, 107, 237, 0.28);
+  box-shadow: 0 12px 24px rgba(29, 39, 51, 0.1);
+  outline: none;
+}
+
+.restaurant-seat-name {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%) translateY(6px);
+  min-width: 180px;
+  max-width: 240px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  background: #1d2733;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+  box-shadow: 0 12px 24px rgba(29, 39, 51, 0.18);
+  white-space: normal;
+  display: grid;
+  gap: 4px;
+  z-index: 5;
+}
+
+.restaurant-seat-name::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 10px;
+  height: 10px;
+  background: #1d2733;
+  transform: translate(-50%, -45%) rotate(45deg);
+}
+
+.restaurant-map-cell:hover .restaurant-seat-name,
+.restaurant-map-cell:focus-visible .restaurant-seat-name {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.restaurant-map-seat-shell .restaurant-map-cell.occupied:hover .restaurant-seat-name,
+.restaurant-map-seat-shell .restaurant-map-cell.occupied:focus-visible .restaurant-seat-name {
+  opacity: 0;
+  transform: translateX(-50%) translateY(6px);
+}
+
+.restaurant-map-widget {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  z-index: 60;
+  width: 280px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  box-shadow: 0 18px 38px rgba(29, 39, 51, 0.14);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(8px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.restaurant-map-seat-shell:hover .restaurant-map-widget,
+.restaurant-map-seat-shell:focus-within .restaurant-map-widget {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+}
+
+.dragging-student-map .restaurant-map-widget {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.dragging-student-map .restaurant-map-seat-shell::after {
+  display: none;
+}
+
+.restaurant-map-widget-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.restaurant-map-widget-head-actions {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+.restaurant-map-widget-head h4 {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+}
+
+.restaurant-map-widget-meta {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.restaurant-map-widget-stats {
+  display: grid;
+  gap: 8px;
+}
+
+.seat-note.visible {
+  margin-top: 0;
+  padding: 12px 14px;
+  max-height: none;
+  opacity: 1;
+  overflow: visible;
+}
+
+.testing-widget-links {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.restaurant-map-widget-inline {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.restaurant-map-widget .status-chip {
+  opacity: 1;
+  transform: none;
+}
+
+.restaurant-seat-meta {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.restaurant-seat-goal {
+  font-size: 0.74rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 1180px) {
+  .restaurant-map-board {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .restaurant-header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .restaurant-map-context {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .restaurant-map-widget {
+    left: 50%;
+    top: calc(100% + 12px);
+    width: min(280px, 85vw);
+    z-index: 60;
+    transform: translateX(-50%) translateY(8px);
+  }
+
+  .restaurant-map-seat-shell:hover .restaurant-map-widget,
+  .restaurant-map-seat-shell:focus-within .restaurant-map-widget {
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .classroom-stage {
@@ -2693,12 +3949,20 @@ body {
 }
 
 .student-task-item {
+  display: grid;
+  gap: 4px;
   padding: 10px 12px;
   border-radius: 10px;
   background: #f7f9fc;
   border: 1px solid var(--line);
   color: var(--ink);
   font-weight: 600;
+}
+
+.student-task-date {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
 }
 
 .student-action {
@@ -2728,6 +3992,8 @@ body {
 }
 
 .student-goal-item {
+  display: grid;
+  gap: 4px;
   padding: 10px 12px;
   border-radius: 10px;
   background: #f7f9fc;
@@ -2735,6 +4001,12 @@ body {
   color: var(--ink);
   font-weight: 700;
   line-height: 1.45;
+}
+
+.student-goal-date {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
 }
 
 .student-goal-subtitle {
@@ -2990,9 +4262,25 @@ body {
   .course-inline-grid,
   .course-roster-grid,
   .documents-hub,
+  .documents-support-shell,
+  .restaurant-floor,
   .documents-subgrid,
   .assign-work-grid {
     grid-template-columns: 1fr;
+  }
+
+  .documents-support-intro,
+  .documents-thread-header {
+    flex-direction: column;
+    align-items: start;
+  }
+
+  .documents-thread-panel {
+    min-height: 0;
+  }
+
+  .documents-thread-messages {
+    max-height: 300px;
   }
 
   .course-roster-header-row {
@@ -3053,6 +4341,18 @@ body {
   .status-row {
     flex-direction: column;
     align-items: start;
+  }
+
+  .documents-thread-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .documents-group-links {
+    margin-top: 14px;
+    max-height: 520px;
+    opacity: 1;
+    overflow: visible;
+    pointer-events: auto;
   }
 
   .classroom-grid {

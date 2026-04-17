@@ -185,17 +185,53 @@ function topicOptionsForStudent(student) {
   return topicSet[language] || topicSet.English || [];
 }
 
+function formatAssignedDate(assignedAt) {
+  if (!assignedAt) {
+    return "Assigned earlier";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(assignedAt));
+}
+
 function normalizeCurrentGoals(student) {
-  return Array.isArray(student.currentGoals) && student.currentGoals.length
-    ? student.currentGoals
-    : [student.goal].filter(Boolean);
+  if (Array.isArray(student.currentGoals) && student.currentGoals.length) {
+    return student.currentGoals.map((goal) => {
+      if (typeof goal === "string") {
+        return {
+          text: goal,
+          assignedAt: null,
+        };
+      }
+
+      return {
+        text: goal.text || "",
+        assignedAt: goal.assignedAt || null,
+      };
+    }).filter((goal) => goal.text);
+  }
+
+  return student.goal
+    ? [{
+      text: student.goal,
+      assignedAt: null,
+    }]
+    : [];
 }
 
 function renderGoalSection(student) {
   const currentGoals = normalizeCurrentGoals(student);
 
   elements.goalList.innerHTML = currentGoals.length
-    ? currentGoals.map((goalItem) => `<div class="student-goal-item">${goalItem}</div>`).join("")
+    ? currentGoals.map((goalItem) => `
+      <div class="student-goal-item">
+        <strong>${goalItem.text}</strong>
+        <span class="student-goal-date">Date assigned: ${formatAssignedDate(goalItem.assignedAt)}</span>
+      </div>
+    `).join("")
     : "";
 }
 
@@ -205,6 +241,7 @@ function renderAssignWorkPanel() {
 
   elements.assignWorkPanel.classList.toggle("hidden", !assignWorkOpen);
   elements.assignWorkPanel.hidden = !assignWorkOpen;
+  elements.assignWorkPanel.style.display = assignWorkOpen ? "" : "none";
   elements.assignWorkButton.textContent = assignWorkOpen ? "Hide Assign Work" : "Assign Work";
   elements.assignWorkTopicList.innerHTML = topics.length
     ? topics.map((topic, index) => `
@@ -242,11 +279,16 @@ function renderStudent() {
   elements.rewardsLink.textContent = "CM Rewards";
   elements.lateWork.textContent = student.assignmentsLate;
   elements.taskList.innerHTML = student.tasks
-    .map((task) => `<div class="student-task-item">${task}</div>`)
+    .map((task) => `
+      <div class="student-task-item">
+        <strong>${task.text}</strong>
+        <span class="student-task-date">Date assigned: ${formatAssignedDate(task.assignedAt)}</span>
+      </div>
+    `)
     .join("");
   elements.submitSelect.innerHTML = `
     <option value="">Choose an item</option>
-    ${student.tasks.map((task, index) => `<option value="${index}">${task}</option>`).join("")}
+    ${student.tasks.map((task, index) => `<option value="${index}">${task.text}</option>`).join("")}
   `;
   elements.actions.innerHTML = recommendedActions(student)
     .map((action) => `<div class="student-action">${action}</div>`)
@@ -300,8 +342,14 @@ elements.assignWorkSave.addEventListener("click", () => {
   }
 
   const nextTasks = [
-    ...selectedTopics,
-    ...(customDirections ? [customDirections] : []),
+    ...selectedTopics.map((task) => ({
+      text: task,
+      assignedAt: new Date().toISOString(),
+    })),
+    ...(customDirections ? [{
+      text: customDirections,
+      assignedAt: new Date().toISOString(),
+    }] : []),
   ];
 
   assignWorkOpen = false;

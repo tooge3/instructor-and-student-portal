@@ -6,6 +6,7 @@ const scheduleStorageKey = "portal-schedule-blocks";
 const timeOffStorageKey = "portal-timeoff-requests";
 const settingsStorageKey = "portal-instructor-settings";
 const sidebarHiddenStorageKey = "portal-sidebar-hidden";
+const testingMapStorageKey = "portal-testing-map-assignments";
 let openScheduleMenuId = null;
 let lastAlertCount = students.filter((student) => student.alertActive).length;
 let audioUnlocked = false;
@@ -63,6 +64,7 @@ const baseSchedule = [
 let unavailableBlocks = loadUnavailableBlocks();
 let timeOffRequests = loadTimeOffRequests();
 let instructorSettings = loadInstructorSettings();
+let testingMapAssignments = loadTestingMapAssignments();
 
 const filters = {
   all: () => true,
@@ -97,6 +99,13 @@ const metrics = {
   logoutModal: document.getElementById("logout-modal"),
   logoutCancel: document.getElementById("logout-cancel"),
   logoutConfirm: document.getElementById("logout-confirm"),
+  subplanModal: document.getElementById("subplan-modal"),
+  subplanClose: document.getElementById("subplan-close"),
+  subplanCancel: document.getElementById("subplan-cancel"),
+  subplanSave: document.getElementById("subplan-save"),
+  subplanOpenExisting: document.getElementById("subplan-open-existing"),
+  subplanLinkInput: document.getElementById("subplan-link-input"),
+  subplanCopy: document.getElementById("subplan-copy"),
   loggedOutState: document.getElementById("logged-out-state"),
   signInAgain: document.getElementById("sign-in-again"),
   workloadCount: document.getElementById("workload-count"),
@@ -118,10 +127,10 @@ const metrics = {
   blockTimeButton: document.getElementById("block-time-button"),
   scheduleWarning: document.getElementById("schedule-warning"),
   studentGrid: document.getElementById("student-grid"),
+  testingMapContent: document.getElementById("testing-map-content"),
   coursesGrid: document.getElementById("courses-grid"),
   sidebar: document.getElementById("sidebar"),
   sidebarToggle: document.getElementById("sidebar-toggle"),
-  sidebarShowButton: document.getElementById("sidebar-show-button"),
   appShell: document.getElementById("app-shell"),
   classNavButton: document.querySelector(".nav-link[data-view='class']"),
   faqToggle: document.getElementById("faq-toggle"),
@@ -137,6 +146,10 @@ let currentView = "home";
 let sidebarHidden = loadSidebarHidden();
 let faqOpen = false;
 let currentClassPreviewActive = false;
+let activeDocumentThread = "";
+let documentThreadMessages = [];
+let documentFilterQuery = "";
+let activeSubplanRequestIndex = null;
 
 function documentSections() {
   const selectedLocations = instructorSettings.availableLocations || [];
@@ -336,6 +349,138 @@ function documentSections() {
   ];
 }
 
+function documentConcernGroups() {
+  return [
+    {
+      title: "Time Off and Coverage",
+      iconClass: "documents-section-icon-inquiries",
+      prompt: "Help me with time-off requests, substitute plans, or schedule coverage.",
+      keywords: ["time off", "request", "leave", "absence", "substitute", "coverage", "sub plans"],
+    },
+    {
+      title: "Payroll and Reimbursements",
+      iconClass: "documents-section-icon-system",
+      prompt: "Help me with payment timing, statements, deposits, Melio, or reimbursements.",
+      keywords: ["payment", "payroll", "statement", "deposit", "melio", "reimbursement"],
+    },
+    {
+      title: "Office Access and Rules",
+      iconClass: "documents-section-icon-inquiries",
+      prompt: "Help me with office rules, office access, arrival logistics, or on-site expectations.",
+      keywords: ["office", "rules", "access", "arrival", "location", "site expectations"],
+    },
+    {
+      title: "Online Teaching and Zoom",
+      iconClass: "documents-section-icon-system",
+      prompt: "Help me with Zoom login, Zoom basics, virtual teaching, or online meeting access.",
+      keywords: ["zoom", "login", "meeting", "virtual", "online"],
+    },
+    {
+      title: "Curriculum and Teaching",
+      iconClass: "documents-section-icon-teaching",
+      prompt: "Help me with curriculum access, homework, feedback guidelines, assessments, or class prep.",
+      keywords: ["curriculum", "homework", "feedback", "assessment", "teaching", "class prep", "presentations"],
+    },
+    {
+      title: "Team Support and Policies",
+      iconClass: "documents-section-icon-prep",
+      prompt: "Help me with who to contact, CM rewards, penalties, do's and don'ts, or internal guidance.",
+      keywords: ["contact", "team", "support", "rewards", "penalty", "guidelines", "do's and don'ts"],
+    },
+  ];
+}
+
+const documentSynonyms = {
+  "time off": ["pto", "vacation", "day off", "time away", "out of office", "ooo", "leave"],
+  request: ["submit", "file", "apply", "send in"],
+  absence: ["absent", "missing workday", "not available"],
+  substitute: ["sub", "coverage teacher", "replacement instructor"],
+  coverage: ["cover", "fill in", "backup", "replacement"],
+  payment: ["pay", "paid", "compensation", "earnings", "money"],
+  payroll: ["paycheck", "pay stub", "paystub", "direct deposit", "salary", "wages"],
+  statement: ["record", "summary", "history"],
+  reimbursement: ["repayment", "expense refund", "refund"],
+  office: ["campus", "site", "center", "location"],
+  access: ["entry", "enter", "getting in", "door code"],
+  rules: ["policy", "expectations", "requirements"],
+  arrival: ["check in", "arrival time", "coming in"],
+  zoom: ["video call", "meeting link", "virtual class"],
+  login: ["sign in", "log in", "access account"],
+  online: ["remote", "virtual", "distance"],
+  virtual: ["remote", "online"],
+  curriculum: ["course material", "lesson content", "teaching material"],
+  homework: ["assignment", "classwork", "student work"],
+  feedback: ["comments", "notes", "response"],
+  assessment: ["test", "quiz", "evaluation", "grading"],
+  teaching: ["instruction", "lesson", "classroom"],
+  presentations: ["slides", "deck", "slide deck"],
+  contact: ["reach out", "email", "call", "message"],
+  support: ["help", "assistance", "guidance"],
+  rewards: ["incentives", "recognition", "prizes"],
+  penalty: ["discipline", "consequence", "accountability"],
+  guidelines: ["guide", "instructions", "best practices"],
+};
+
+function expandedKeywordSet(keywords = []) {
+  const values = new Set();
+
+  keywords.forEach((keyword) => {
+    const normalizedKeyword = keyword.toLowerCase();
+    values.add(normalizedKeyword);
+
+    (documentSynonyms[normalizedKeyword] || []).forEach((synonym) => {
+      values.add(synonym.toLowerCase());
+    });
+  });
+
+  return [...values];
+}
+
+function scoreKeywordMatches(normalizedQuestion, keywords = []) {
+  return expandedKeywordSet(keywords).reduce((score, keyword) => {
+    if (normalizedQuestion.includes(keyword)) {
+      return score + 3;
+    }
+
+    const keywordParts = keyword.split(/\s+/).filter(Boolean);
+    const partialMatches = keywordParts.filter((part) => part.length > 3 && normalizedQuestion.includes(part)).length;
+
+    if (partialMatches) {
+      return score + partialMatches;
+    }
+
+    return score;
+  }, 0);
+}
+
+function questionSegments(question) {
+  return question
+    .toLowerCase()
+    .split(/\band\b|,|\/|&/)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
+}
+
+function matchingConcernGroups(question) {
+  const normalized = question.trim().toLowerCase();
+  const segments = questionSegments(question);
+
+  if (!normalized) {
+    return [];
+  }
+
+  return documentConcernGroups()
+    .map((group) => ({
+      ...group,
+      score: scoreKeywordMatches(normalized, group.keywords)
+        + segments.reduce((sum, segment) => sum + scoreKeywordMatches(segment, group.keywords), 0)
+        + (normalized.includes(group.title.toLowerCase()) ? 5 : 0)
+        + group.title.toLowerCase().split(/\s+/).filter((part) => part.length > 3 && normalized.includes(part)).length,
+    }))
+    .filter((group) => group.score >= 2)
+    .sort((left, right) => right.score - left.score);
+}
+
 function flattenedDocumentEntries() {
   return documentSections().flatMap((section) => {
     const directItems = (section.items || []).map((item) => ({
@@ -353,6 +498,180 @@ function flattenedDocumentEntries() {
 
     return [...directItems, ...nestedItems];
   });
+}
+
+function findDocumentEntryByTitle(title) {
+  return flattenedDocumentEntries().find((entry) => entry.title === title) || null;
+}
+
+function documentEntryKey(entry) {
+  return `${entry.section || ""}::${entry.subsection || ""}::${entry.title || ""}`;
+}
+
+function matchingDocumentEntries(question) {
+  const normalized = question.trim().toLowerCase();
+  const segments = questionSegments(question);
+
+  if (!normalized) {
+    return [];
+  }
+
+  return flattenedDocumentEntries()
+    .map((entry) => {
+      const keywordScore = scoreKeywordMatches(normalized, entry.keywords || []);
+      const segmentedKeywordScore = segments.reduce((sum, segment) => sum + scoreKeywordMatches(segment, entry.keywords || []), 0);
+      const titleScore = normalized.includes(entry.title.toLowerCase()) ? 5 : 0;
+      const sectionScore = normalized.includes(entry.section.toLowerCase()) ? 1 : 0;
+      const subsectionScore = entry.subsection && normalized.includes(entry.subsection.toLowerCase()) ? 1 : 0;
+      const partialTitleScore = entry.title
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((part) => part.length > 3 && normalized.includes(part)).length;
+
+      return {
+        ...entry,
+        score: keywordScore + segmentedKeywordScore + titleScore + sectionScore + subsectionScore + partialTitleScore,
+      };
+    })
+    .filter((entry) => entry.score >= 2)
+    .sort((left, right) => right.score - left.score);
+}
+
+function threadReplyForEntry(entry) {
+  if (!entry) {
+    return "Choose a concern on the left or ask a question below and I’ll route you to the most relevant document guidance.";
+  }
+
+  const related = flattenedDocumentEntries()
+    .filter((item) => item.title !== entry.title && item.section === entry.section)
+    .slice(0, 3)
+    .map((item) => item.title);
+
+  return `${entry.summary}${related.length ? ` You may also want: ${related.join(", ")}.` : ""}`;
+}
+
+function documentsHubMarkup() {
+  const sections = documentSections();
+  const matches = documentFilterQuery ? matchingDocumentEntries(documentFilterQuery) : [];
+  const allowedKeys = new Set(matches.map((entry) => documentEntryKey(entry)));
+  const firstThread = activeDocumentThread || matches[0]?.title || flattenedDocumentEntries()[0]?.title || "";
+  const activeEntry = findDocumentEntryByTitle(firstThread);
+  const visibleSections = sections
+    .map((section) => {
+      const directItems = (section.items || []).map((item) => ({
+        ...item,
+        section: section.title,
+        subsection: "",
+      }));
+      const nestedItems = (section.subsections || []).flatMap((subsection) =>
+        subsection.items.map((item) => ({
+          ...item,
+          section: section.title,
+          subsection: subsection.title,
+        })),
+      );
+      const mergedItems = [...directItems, ...nestedItems];
+      const matchedItems = mergedItems.filter((item) => allowedKeys.has(documentEntryKey(item)));
+      const prioritizedItems = matches.length && matchedItems.length
+        ? [
+            ...matchedItems,
+            ...mergedItems.filter((item) => !allowedKeys.has(documentEntryKey(item))),
+          ]
+        : mergedItems;
+
+      return {
+        ...section,
+        visibleItems: prioritizedItems,
+        matchedItems,
+        isRelevant: matches.length > 0 && matchedItems.length > 0,
+      };
+    })
+    .sort((left, right) => Number(right.isRelevant) - Number(left.isRelevant));
+  const threadMessages = documentThreadMessages;
+
+  return `
+    <section class="documents-support">
+      <div class="documents-support-intro">
+        <div>
+          <p class="eyebrow">Daily Documents</p>
+          <h3>Support threads for instructor concerns</h3>
+        </div>
+        <p>Choose a concern category to open a focused thread, or ask a document question directly.</p>
+      </div>
+
+      <div class="documents-support-shell">
+        <aside class="documents-groups" aria-label="Document concern categories">
+          ${visibleSections
+            .map(
+              (section) => `
+                <section class="documents-group-card ${section.isRelevant ? "is-relevant" : ""}">
+                  <h4>
+                    <span class="documents-section-icon ${section.iconClass}" aria-hidden="true"></span>
+                    <span>${section.title}</span>
+                  </h4>
+                  ${
+                    section.isRelevant && section.matchedItems.length
+                      ? `
+                        <div class="documents-group-preview">
+                          ${section.matchedItems
+                            .map(
+                              (item) => `
+                                <button
+                                  class="documents-thread-link is-match ${item.title === firstThread ? "active" : ""}"
+                                  type="button"
+                                  data-document-thread="${escapeHtml(item.title)}"
+                                >${item.title}</button>
+                              `,
+                            )
+                            .join("")}
+                        </div>
+                      `
+                      : ""
+                  }
+                  <div class="documents-group-links">
+                    ${section.visibleItems
+                      .map(
+                        (item) => `
+                          <button
+                            class="documents-thread-link ${item.title === firstThread ? "active" : ""} ${allowedKeys.has(documentEntryKey(item)) ? "is-match" : ""}"
+                            type="button"
+                            data-document-thread="${escapeHtml(item.title)}"
+                          >${item.title}</button>
+                        `,
+                      )
+                      .join("")}
+                  </div>
+                </section>
+              `,
+            )
+            .join("")}
+        </aside>
+
+        <section class="documents-thread-panel" aria-label="Document support thread">
+          <div class="documents-thread-header">
+            <div>
+              <p class="eyebrow">Support Thread</p>
+              <h4>Document guidance</h4>
+            </div>
+          </div>
+
+          <div class="documents-thread-messages" id="documents-thread-messages">
+            ${threadMessages
+              .map((message) => `<article class="documents-thread-message ${message.role}">${escapeHtml(message.content)}</article>`)
+              .join("")}
+          </div>
+
+          <form class="documents-thread-form" id="documents-thread-form">
+            <label class="schedule-label" for="documents-thread-input">Ask a document question</label>
+            <div class="documents-thread-form-row">
+              <input id="documents-thread-input" class="schedule-input" type="text" placeholder="Ask about time-off requests, payment, office access, substitutes, or Zoom...">
+              <button id="documents-thread-send" class="schedule-button" type="submit">Send</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </section>
+  `;
 }
 
 function escapeHtml(value) {
@@ -383,22 +702,7 @@ function faqAnswer(question) {
     return "Ask about time-off requests, payment guidance, Zoom, office rules, office access, curriculum access, or substitute plans.";
   }
 
-  const matches = flattenedDocumentEntries()
-    .map((entry) => {
-      const keywordScore = (entry.keywords || []).reduce(
-        (score, keyword) => score + (normalized.includes(keyword) ? 3 : 0),
-        0,
-      );
-      const titleScore = normalized.includes(entry.title.toLowerCase()) ? 5 : 0;
-      const sectionScore = normalized.includes(entry.section.toLowerCase()) ? 1 : 0;
-
-      return {
-        ...entry,
-        score: keywordScore + titleScore + sectionScore,
-      };
-    })
-    .filter((entry) => entry.score > 0)
-    .sort((left, right) => right.score - left.score);
+  const matches = matchingDocumentEntries(question);
 
   if (!matches.length) {
     return "I couldn’t match that to the current provided documents. Try asking about time-off requests, payment, Zoom, office access, substitute plans, curriculum access, or CM Rewards.";
@@ -442,6 +746,98 @@ function submitFaqQuestion(question) {
   }
 }
 
+function openDocumentThread(title) {
+  activeDocumentThread = title;
+  documentFilterQuery = title;
+  const entry = findDocumentEntryByTitle(title);
+  documentThreadMessages = [
+    { role: "bot", content: threadReplyForEntry(entry) },
+  ];
+  ensureSidebarViews();
+}
+
+function openDocumentPrompt(prompt) {
+  documentFilterQuery = prompt;
+  const matches = matchingDocumentEntries(prompt);
+
+  if (matches.length) {
+    activeDocumentThread = matches[0].title;
+  }
+
+  documentThreadMessages = [
+    { role: "bot", content: faqAnswer(prompt) },
+  ];
+  ensureSidebarViews();
+}
+
+function submitDocumentThreadQuestion(question) {
+  const trimmed = question.trim();
+
+  if (!trimmed) {
+    return;
+  }
+
+  const matches = matchingDocumentEntries(trimmed);
+  documentFilterQuery = trimmed;
+
+  if (matches.length) {
+    activeDocumentThread = matches[0].title;
+  }
+
+  documentThreadMessages = [
+    ...documentThreadMessages,
+    { role: "user", content: trimmed },
+    { role: "bot", content: faqAnswer(trimmed) },
+  ];
+  ensureSidebarViews();
+
+  const panel = document.getElementById("documents-thread-messages");
+
+  if (panel) {
+    panel.scrollTop = panel.scrollHeight;
+  }
+
+  const input = document.getElementById("documents-thread-input");
+
+  if (input) {
+    input.value = "";
+  }
+}
+
+function bindDocumentThreadInteractions() {
+  const form = document.getElementById("documents-thread-form");
+  const input = document.getElementById("documents-thread-input");
+  const sendButton = document.getElementById("documents-thread-send");
+
+  if (form && !form.dataset.boundThreadForm) {
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      submitDocumentThreadQuestion(document.getElementById("documents-thread-input")?.value || "");
+    });
+    form.dataset.boundThreadForm = "true";
+  }
+
+  if (sendButton && !sendButton.dataset.boundThreadSend) {
+    sendButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      submitDocumentThreadQuestion(document.getElementById("documents-thread-input")?.value || "");
+    });
+    sendButton.dataset.boundThreadSend = "true";
+  }
+
+  if (input && !input.dataset.boundThreadEnter) {
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") {
+        return;
+      }
+
+      event.preventDefault();
+      submitDocumentThreadQuestion(document.getElementById("documents-thread-input")?.value || "");
+    });
+    input.dataset.boundThreadEnter = "true";
+  }
+}
+
 function loadSidebarHidden() {
   return window.localStorage.getItem(sidebarHiddenStorageKey) === "true";
 }
@@ -463,14 +859,12 @@ function renderSidebarVisibility() {
   const toggleIcon = metrics.sidebarToggle.querySelector(".sidebar-toggle-icon");
 
   if (toggleText) {
-    toggleText.textContent = sidebarHidden ? "Show" : "Hide";
+    toggleText.textContent = sidebarHidden ? "" : "Hide";
   }
 
   if (toggleIcon) {
     toggleIcon.textContent = sidebarHidden ? ">" : "<";
   }
-
-  metrics.sidebarShowButton?.classList.toggle("hidden", !sidebarHidden);
 }
 
 function loadTimeOffRequests() {
@@ -681,6 +1075,26 @@ function renderCurrentClassAvailability() {
   }
 }
 
+function currentClassDisplayState() {
+  const activeCourseIds = currentClassCourseIds();
+  const preview = nextScheduledClassPreview();
+  const previewCourseIds = !activeCourseIds.length && currentClassPreviewActive && preview
+    ? preview.courseIds
+    : [];
+  const displayedCourseIds = activeCourseIds.length ? activeCourseIds : previewCourseIds;
+
+  return {
+    activeCourseIds,
+    preview,
+    previewCourseIds,
+    displayedCourseIds,
+  };
+}
+
+function testingMapViewKey(displayedCourseIds) {
+  return [...displayedCourseIds].sort().join("|") || "none";
+}
+
 function persistTimeOffRequests() {
   window.localStorage.setItem(timeOffStorageKey, JSON.stringify(timeOffRequests));
 }
@@ -796,6 +1210,7 @@ function sessionsForMonth(year, monthIndex) {
 
     daySchedule.slots.forEach((slot) => {
       sessions.push({
+        date: new Date(cursor).toISOString(),
         dateLabel: new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(cursor),
         time: slot.time,
         label: slot.label,
@@ -828,12 +1243,181 @@ function buildMonthlyStatements(numberOfMonths = 2) {
   });
 }
 
+function monthlyHoursLabel(totalHours) {
+  return Number.isInteger(totalHours) ? totalHours : totalHours.toFixed(1);
+}
+
+function monthRangeLabel(statement) {
+  if (!statement?.sessions?.length) {
+    return statement?.label || "";
+  }
+
+  const sortedDates = statement.sessions
+    .map((session) => new Date(session.date))
+    .sort((left, right) => left - right);
+
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  return `${formatter.format(sortedDates[0])} - ${formatter.format(sortedDates[sortedDates.length - 1])}`;
+}
+
+function getStatementByKey(statementKey) {
+  return buildMonthlyStatements().find((statement) => statement.key === statementKey) || null;
+}
+
+function paystubMarkup(statement) {
+  const periodLabel = monthRangeLabel(statement);
+  const totalHours = monthlyHoursLabel(statement.totalHours);
+  const grossPay = currency(statement.totalAmount);
+  const netPay = currency(statement.totalAmount);
+  const employeeId = `IN-${statement.key.toUpperCase()}`;
+  const paymentMethod = "Direct Deposit";
+  const companyName = "North Hall Academy";
+  const primaryLocation = locationText().replace("Office: ", "");
+  const midpoint = Math.ceil(statement.sessions.length / 2);
+  const sessionColumns = [statement.sessions.slice(0, midpoint), statement.sessions.slice(midpoint)];
+
+  return `
+    <section class="paystub-print-shell" aria-hidden="true">
+      <article class="paystub-sheet">
+        <header class="paystub-header">
+          <div>
+            <p class="paystub-label">Monthly Paystub</p>
+            <h1>${companyName}</h1>
+            <p class="paystub-subtitle">${statement.label} payroll summary</p>
+          </div>
+          <div class="paystub-net-box">
+            <span>Net Pay</span>
+            <strong>${netPay}</strong>
+          </div>
+        </header>
+
+        <section class="paystub-top-grid">
+          <div class="paystub-info-card">
+            <p class="paystub-section-label">Employee</p>
+            <dl class="paystub-info-list">
+              <div><dt>Name</dt><dd>${instructorSettings.name}</dd></div>
+              <div><dt>Role</dt><dd>${instructorSettings.role}</dd></div>
+              <div><dt>Employee ID</dt><dd>${employeeId}</dd></div>
+              <div><dt>Location</dt><dd>${primaryLocation || "Online"}</dd></div>
+            </dl>
+          </div>
+
+          <div class="paystub-info-card">
+            <p class="paystub-section-label">Pay Details</p>
+            <dl class="paystub-info-list">
+              <div><dt>Pay Period</dt><dd>${periodLabel}</dd></div>
+              <div><dt>Deposit Date</dt><dd>${statement.depositLabel}</dd></div>
+              <div><dt>Pay Rate</dt><dd>${currency(hourlyRate)}/hr</dd></div>
+              <div><dt>Method</dt><dd>${paymentMethod}</dd></div>
+            </dl>
+          </div>
+        </section>
+
+        <section class="paystub-summary-grid">
+          <div class="paystub-summary-card">
+            <span>Total Hours</span>
+            <strong>${totalHours}</strong>
+          </div>
+          <div class="paystub-summary-card">
+            <span>Sessions</span>
+            <strong>${statement.sessions.length}</strong>
+          </div>
+          <div class="paystub-summary-card">
+            <span>Gross Pay</span>
+            <strong>${grossPay}</strong>
+          </div>
+          <div class="paystub-summary-card">
+            <span>Deductions</span>
+            <strong>${currency(0)}</strong>
+          </div>
+        </section>
+
+        <section class="paystub-table-card">
+          <div class="paystub-table-head">
+            <h2>Earnings Detail</h2>
+            <p>${statement.label}</p>
+          </div>
+          <div class="paystub-earnings-columns">
+            ${sessionColumns
+              .map(
+                (columnSessions) => `
+                  <div class="paystub-earnings-column">
+                    <div class="paystub-earnings-header">
+                      <span>Date</span>
+                      <span>Session</span>
+                      <span>Hours</span>
+                      <span>Total</span>
+                    </div>
+                    <div class="paystub-earnings-list">
+                      ${columnSessions
+                        .map(
+                          (session) => `
+                            <article class="paystub-earnings-row">
+                              <div class="paystub-earnings-date">${session.dateLabel}</div>
+                              <div class="paystub-earnings-session">
+                                <strong>${session.label}</strong>
+                                <span>${session.time}</span>
+                              </div>
+                              <div class="paystub-earnings-hours">${monthlyHoursLabel(session.hours)}</div>
+                              <div class="paystub-earnings-total">${currency(session.hours * hourlyRate)}</div>
+                            </article>
+                          `,
+                        )
+                        .join("")}
+                    </div>
+                  </div>
+                `,
+              )
+              .join("")}
+          </div>
+          <div class="paystub-earnings-footer">
+            <span>Monthly totals</span>
+            <strong>${totalHours} hours</strong>
+            <strong>${grossPay}</strong>
+          </div>
+        </section>
+      </article>
+    </section>
+  `;
+}
+
+function printMonthlyPaystub(statementKey) {
+  const statement = getStatementByKey(statementKey);
+
+  if (!statement) {
+    return;
+  }
+
+  let printShell = document.getElementById("paystub-print-shell");
+
+  if (!printShell) {
+    document.body.insertAdjacentHTML("beforeend", '<div id="paystub-print-shell"></div>');
+    printShell = document.getElementById("paystub-print-shell");
+  }
+
+  printShell.innerHTML = paystubMarkup(statement);
+  document.body.classList.add("print-paystub-active");
+
+  const cleanup = () => {
+    document.body.classList.remove("print-paystub-active");
+    window.removeEventListener("afterprint", cleanup);
+  };
+
+  window.addEventListener("afterprint", cleanup);
+  window.print();
+}
+
 function statementMarkup() {
   return `
     <section class="statement-history">
       ${buildMonthlyStatements()
         .map((statement) => {
-          const totalHours = Number.isInteger(statement.totalHours) ? statement.totalHours : statement.totalHours.toFixed(1);
+          const totalHours = monthlyHoursLabel(statement.totalHours);
 
           return `
             <article class="statement-month">
@@ -853,7 +1437,10 @@ function statementMarkup() {
                   <div class="statement-detail">
                     <div class="statement-detail-head">
                       <p>Instructional payroll</p>
-                      <button class="statement-toggle" type="button" data-statement-toggle="${statement.key}" aria-expanded="false">View Details</button>
+                      <div class="statement-actions">
+                        <button class="statement-print" type="button" data-print-paystub="${statement.key}">Print Paystub</button>
+                        <button class="statement-toggle" type="button" data-statement-toggle="${statement.key}" aria-expanded="false">View Details</button>
+                      </div>
                     </div>
                     <span>${totalHours} hours across ${statement.sessions.length} sessions</span>
                     <div class="statement-session-lines hidden" data-statement-details="${statement.key}">
@@ -882,47 +1469,16 @@ function statementMarkup() {
 
 function ensureSidebarViews() {
   const documentsHeading = document.querySelector("[data-view-panel='documents'] .panel-heading h3");
-  const documentsPanel = document.querySelector("[data-view-panel='documents'] .tips-list");
-  const sections = documentSections();
+  const documentsPanel = document.querySelector("[data-view-panel='documents'] .tips-list, [data-view-panel='documents'] .documents-hub");
 
   if (documentsHeading) {
-    documentsHeading.textContent = "Instruction resources and daily reference links";
+    documentsHeading.textContent = "Grouped support threads for daily instructor questions";
   }
 
   if (documentsPanel) {
     documentsPanel.className = "documents-hub";
-    documentsPanel.innerHTML = sections
-      .map((section) => {
-        if (section.subsections?.length) {
-          return `
-            <section class="documents-card documents-card-wide">
-              <h4><span class="documents-section-icon ${section.iconClass}" aria-hidden="true"></span>${section.title}</h4>
-              <div class="documents-subgrid">
-                ${section.subsections
-                  .map((subsection) => `
-                    <section class="documents-subcard">
-                      <h5><span class="documents-section-icon ${subsection.iconClass}" aria-hidden="true"></span>${subsection.title}</h5>
-                      <div class="documents-links">
-                        ${subsection.items.map((item) => `<a href="${item.href}">${item.title}</a>`).join("")}
-                      </div>
-                    </section>
-                  `)
-                  .join("")}
-              </div>
-            </section>
-          `;
-        }
-
-        return `
-          <section class="documents-card">
-            <h4><span class="documents-section-icon ${section.iconClass}" aria-hidden="true"></span>${section.title}</h4>
-            <div class="documents-links">
-              ${section.items.map((item) => `<a href="${item.href}">${item.title}</a>`).join("")}
-            </div>
-          </section>
-        `;
-      })
-      .join("");
+    documentsPanel.innerHTML = documentsHubMarkup();
+    bindDocumentThreadInteractions();
   }
 
   const paymentMarkup = statementMarkup();
@@ -1049,6 +1605,24 @@ function persistUnavailableBlocks() {
   window.localStorage.setItem(scheduleStorageKey, JSON.stringify(unavailableBlocks));
 }
 
+function loadTestingMapAssignments() {
+  const stored = window.localStorage.getItem(testingMapStorageKey);
+
+  if (!stored) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(stored);
+  } catch (error) {
+    return {};
+  }
+}
+
+function persistTestingMapAssignments() {
+  window.localStorage.setItem(testingMapStorageKey, JSON.stringify(testingMapAssignments));
+}
+
 function reseatStudents() {
   students.forEach((student, index) => {
     const row = String.fromCharCode(65 + Math.floor(index / 3));
@@ -1093,7 +1667,11 @@ function createStudent() {
 }
 
 function renderSummary() {
-  const helpCount = students.filter((student) => student.alertActive).length;
+  const activeCourseIds = currentClassCourseIds();
+  const relevantStudents = activeCourseIds.length
+    ? students.filter((student) => activeCourseIds.includes(student.courseId))
+    : students;
+  const helpCount = relevantStudents.filter((student) => student.alertActive).length;
   const today = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(new Date());
   const todaySessions = (baseSchedule.find((entry) => entry.day === today)?.slots || []);
   const todayConflicts = conflictingSlotsForDay(today);
@@ -1104,8 +1682,12 @@ function renderSummary() {
 
   metrics.assistanceCount.textContent = `${helpCount}`;
   metrics.assistanceCaption.textContent = helpCount
-    ? "Students currently flagged for intervention."
-    : "No active alerts.";
+    ? activeCourseIds.length
+      ? "Students in the live class currently flagged for intervention."
+      : "Students currently flagged for intervention."
+    : activeCourseIds.length
+      ? "No active alerts in the live class."
+      : "No active alerts.";
   metrics.assistanceCard.classList.toggle("hidden", helpCount === 0);
   metrics.activeStudentCount.textContent = students.length;
   metrics.urgentAlertCount.textContent = helpCount;
@@ -1177,6 +1759,48 @@ function openSettingsModal() {
 function closeSettingsModal() {
   metrics.settingsModal.classList.add("hidden");
   metrics.settingsModal.setAttribute("aria-hidden", "true");
+}
+
+function openSubplanModal(requestIndex) {
+  const request = timeOffRequests[requestIndex];
+
+  if (!request || !metrics.subplanModal) {
+    return;
+  }
+
+  activeSubplanRequestIndex = requestIndex;
+  metrics.subplanCopy.textContent = request.subPlanLink
+    ? "Update the substitute plan link for this submitted time-off request."
+    : "Add the substitute plan document link for this submitted time-off request.";
+  metrics.subplanLinkInput.value = request.subPlanLink || "";
+  metrics.subplanOpenExisting.classList.toggle("hidden", !request.subPlanLink);
+  metrics.subplanModal.classList.remove("hidden");
+  metrics.subplanModal.setAttribute("aria-hidden", "false");
+  metrics.subplanLinkInput.focus();
+}
+
+function closeSubplanModal() {
+  activeSubplanRequestIndex = null;
+  metrics.subplanModal?.classList.add("hidden");
+  metrics.subplanModal?.setAttribute("aria-hidden", "true");
+}
+
+function saveSubplanLink() {
+  if (activeSubplanRequestIndex === null) {
+    return;
+  }
+
+  const request = timeOffRequests[activeSubplanRequestIndex];
+
+  if (!request) {
+    closeSubplanModal();
+    return;
+  }
+
+  request.subPlanLink = metrics.subplanLinkInput.value.trim();
+  persistTimeOffRequests();
+  renderTimeOffRequests();
+  closeSubplanModal();
 }
 
 function openLogoutModal() {
@@ -1381,31 +2005,7 @@ function handleSubPlanAction(requestIndex) {
   if (!request) {
     return;
   }
-
-  if (request.subPlanLink) {
-    const nextAction = window.prompt(
-      "Paste a new substitute plan link to replace the current one, or leave this as-is and press Cancel to open the existing document.",
-      request.subPlanLink,
-    );
-
-    if (nextAction === null) {
-      window.open(request.subPlanLink, "_blank", "noreferrer");
-      return;
-    }
-
-    request.subPlanLink = nextAction.trim();
-  } else {
-    const newLink = window.prompt("Paste the substitute plan document link:");
-
-    if (newLink === null) {
-      return;
-    }
-
-    request.subPlanLink = newLink.trim();
-  }
-
-  persistTimeOffRequests();
-  renderTimeOffRequests();
+  openSubplanModal(requestIndex);
 }
 
 function conflictingSlotsForDay(day) {
@@ -1799,6 +2399,299 @@ function renderSeatCard(student) {
   `;
 }
 
+function primaryGoalText(student) {
+  return student.currentGoals?.[0]?.text || student.goal || "No current goal recorded.";
+}
+
+function syncTestingMapAssignments(roster, displayedCourseIds, slotCount) {
+  const viewKey = testingMapViewKey(displayedCourseIds);
+  const existing = { ...(testingMapAssignments[viewKey] || {}) };
+  const rosterNames = new Set(roster.map((student) => student.name));
+  let changed = false;
+
+  Object.keys(existing).forEach((name) => {
+    if (!rosterNames.has(name)) {
+      delete existing[name];
+      changed = true;
+    }
+  });
+
+  const usedSlots = new Set();
+
+  roster.forEach((student, index) => {
+    const currentSlot = existing[student.name];
+    const slotIsValid = Number.isInteger(currentSlot) && currentSlot >= 0 && currentSlot < slotCount && !usedSlots.has(currentSlot);
+
+    if (slotIsValid) {
+      usedSlots.add(currentSlot);
+      return;
+    }
+
+    let nextSlot = index;
+
+    while (usedSlots.has(nextSlot) || nextSlot >= slotCount) {
+      nextSlot = usedSlots.size;
+    }
+
+    existing[student.name] = nextSlot;
+    usedSlots.add(nextSlot);
+    changed = true;
+  });
+
+  if (changed || !testingMapAssignments[viewKey]) {
+    testingMapAssignments = {
+      ...testingMapAssignments,
+      [viewKey]: existing,
+    };
+    persistTestingMapAssignments();
+  }
+
+  return existing;
+}
+
+function testingMapTablesForRoster(roster, displayedCourseIds) {
+  const capacity = 4;
+  const tableCount = Math.max(1, Math.ceil(roster.length / capacity) + 1);
+  const slotCount = tableCount * capacity;
+  const assignments = syncTestingMapAssignments(roster, displayedCourseIds, slotCount);
+  const slots = Array.from({ length: slotCount }, () => null);
+
+  roster.forEach((student) => {
+    const slotIndex = assignments[student.name];
+
+    if (Number.isInteger(slotIndex) && slotIndex >= 0 && slotIndex < slotCount) {
+      slots[slotIndex] = student;
+    }
+  });
+
+  return Array.from({ length: tableCount }, (_, index) => ({
+    label: String(index + 1),
+    layout: "grid-2x2",
+    capacity,
+    startIndex: index * capacity,
+    students: slots.slice(index * capacity, (index + 1) * capacity),
+  }));
+}
+
+function renderTestingMapCell(student, rosterIndex) {
+  if (!student) {
+    return `
+      <div class="restaurant-map-seat-shell" data-testing-target-index="${rosterIndex}">
+        <button class="restaurant-map-cell available" type="button" aria-label="Available">
+          <span class="restaurant-seat-name">
+            <strong>Available</strong>
+            <span class="restaurant-seat-meta">Open section</span>
+          </span>
+        </button>
+      </div>
+    `;
+  }
+
+  const status = studentStatus(student);
+  const presenceLabel = student.presentToday ? "Here" : "Absent";
+  const presenceClass = student.presentToday ? "" : " absent";
+  const alertClass = student.alertActive ? " attention" : "";
+  const alertButtonClass = student.alertActive ? "seat-alert bouncing" : "seat-alert hidden";
+  const attendanceClass = student.presentToday ? "present" : "absent";
+  const attendanceIcon = student.presentToday ? "P" : "A";
+  const studentParam = encodeURIComponent(student.name);
+  const assignWorkUrl = `student.html?student=${studentParam}&assignWork=1`;
+  const course = courseForStudent(student);
+
+  return `
+    <div class="restaurant-map-seat-shell" data-testing-target-index="${rosterIndex}">
+      <button class="restaurant-map-cell occupied${presenceClass}${alertClass}" type="button" draggable="true" data-testing-student="${student.name}" data-testing-target-index="${rosterIndex}" aria-label="${student.name}">
+        <span class="restaurant-map-cell-marker" aria-hidden="true">${student.name.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span>
+      </button>
+      <article class="restaurant-map-widget" aria-label="${student.name} details">
+        <div class="restaurant-map-widget-head">
+          <div>
+            <h4>${student.name}</h4>
+            <a class="student-course-link" href="${courseWorkspaceUrl(course.id)}">${course.title}</a>
+            <p class="student-group-meta">${courseScheduleLabel(course)}</p>
+          </div>
+          <div class="restaurant-map-widget-head-actions">
+            <div class="status-chip ${status.className}">${status.label}</div>
+            <button class="${alertButtonClass}" type="button" data-student="${student.name}" aria-label="${student.alertActive ? `Disable alert for ${student.name}` : `${student.name} alert disabled`}">!</button>
+          </div>
+        </div>
+        <div class="restaurant-map-widget-meta">
+          <span class="restaurant-map-widget-inline">Late assignments: ${student.assignmentsLate}</span>
+        </div>
+        <div class="restaurant-map-widget-stats">
+          <div class="seat-stat">
+            <div class="seat-stat-head">
+              <span>Attendance</span>
+              <strong>${student.attendance}%</strong>
+            </div>
+            <button class="attendance-box ${attendanceClass}" type="button" data-attendance-student="${student.name}" aria-label="Mark ${student.name} as ${student.presentToday ? "absent" : "here"}">
+              <span class="attendance-icon">${attendanceIcon}</span>
+              <span>${presenceLabel}</span>
+            </button>
+          </div>
+          <div class="seat-stat">
+            <div class="seat-stat-head">
+              <span>Progress</span>
+              <strong>${student.progress}%</strong>
+            </div>
+            <div class="progress-track" aria-label="${student.name} progress">
+              <span class="progress-fill" style="width:${student.progress}%"></span>
+            </div>
+          </div>
+        </div>
+        <div class="seat-note visible">
+          <strong>${student.note}</strong>
+        </div>
+        <div class="student-card-links testing-widget-links">
+          <a class="student-link" href="${assignWorkUrl}">Assign Work</a>
+          <a class="student-link" href="student.html?student=${studentParam}">Student profile</a>
+        </div>
+      </article>
+    </div>
+  `;
+}
+
+function renderTestingMap() {
+  if (!metrics.testingMapContent) {
+    return;
+  }
+
+  const { activeCourseIds, preview, displayedCourseIds } = currentClassDisplayState();
+  const roster = students.filter((student) => displayedCourseIds.includes(student.courseId));
+
+  if (!activeCourseIds.length && !currentClassPreviewActive) {
+    metrics.testingMapContent.innerHTML = `
+      <article class="restaurant-map-note">
+        <div class="student-card-header">
+          <h4>No class is active right now</h4>
+          ${
+            preview
+              ? `<button class="schedule-button" type="button" data-preview-current-class="true">Preview Next Class</button>`
+              : ""
+          }
+        </div>
+        <p class="student-meta">This floor map follows the same live session logic as Current Class and appears from 10 minutes before a class starts through 10 minutes after it ends.</p>
+        ${
+          preview
+            ? `<p class="student-meta">Next class: <strong>${preview.label}</strong> on ${preview.day} at ${preview.time}.</p>`
+            : `<p class="student-meta">There are no additional scheduled classes to preview right now.</p>`
+        }
+      </article>
+    `;
+    return;
+  }
+
+  if (!roster.length) {
+    metrics.testingMapContent.innerHTML = `
+      <article class="restaurant-map-note">
+        <h4>${activeCourseIds.length ? "No roster is available for this live session" : "Preview unavailable"}</h4>
+        <p class="student-meta">${activeCourseIds.length ? "Once students are assigned to the current course, they will appear in this map." : "There is no upcoming class roster available to preview right now."}</p>
+      </article>
+    `;
+    return;
+  }
+
+  const courseTitles = [...new Set(
+    displayedCourseIds
+      .map((courseId) => courseMap[courseId]?.title)
+      .filter(Boolean),
+  )];
+  const tables = testingMapTablesForRoster(roster, displayedCourseIds);
+
+  metrics.testingMapContent.innerHTML = `
+    <div class="restaurant-map-context">
+      <div>
+        <p class="eyebrow">${activeCourseIds.length ? "Live Session Map" : "Preview Session Map"}</p>
+        <h4>${courseTitles.join(" and ")}</h4>
+      </div>
+      <p class="student-meta">${activeCourseIds.length ? "Hover any occupied section to review the student status and current goal." : `Previewing ${preview?.label || "the next scheduled class"} with the same roster logic used in Current Class.`}</p>
+    </div>
+    <div class="restaurant-floor-map">
+      <div class="restaurant-map-area">
+        <div class="restaurant-map-area-label">Dining floor</div>
+        <div class="restaurant-map-table-grid">
+          ${tables.map((table) => `
+            <article class="restaurant-map-table ${table.students.some(Boolean) ? "" : "restaurant-map-table-buffer"}" data-testing-table-start="${table.startIndex}" data-testing-table-capacity="${table.capacity}">
+              <div class="restaurant-map-label">${table.label}</div>
+              <div class="restaurant-map-grid ${table.layout}">
+                ${Array.from({ length: table.capacity }, (_, index) => renderTestingMapCell(table.students[index] || null, table.startIndex + index)).join("")}
+              </div>
+              ${table.students.some(Boolean) ? "" : '<div class="restaurant-map-table-note">Open table</div>'}
+            </article>
+          `).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function moveStudentInTestingMap(draggedName, targetIndex, displayedCourseIds) {
+  if (!draggedName || !displayedCourseIds.length) {
+    return;
+  }
+
+  const viewKey = testingMapViewKey(displayedCourseIds);
+  const targetCourseIds = new Set(displayedCourseIds);
+  const roster = students.filter((student) => targetCourseIds.has(student.courseId));
+  const capacity = 4;
+  const slotCount = Math.max(1, Math.ceil(roster.length / capacity) + 1) * capacity;
+  const assignments = syncTestingMapAssignments(roster, displayedCourseIds, slotCount);
+  const sourceIndex = assignments[draggedName];
+
+  if (!Number.isInteger(sourceIndex)) {
+    return;
+  }
+
+  const occupantName = Object.keys(assignments).find((name) => assignments[name] === targetIndex);
+  const nextAssignments = { ...assignments };
+
+  if (occupantName && occupantName !== draggedName) {
+    nextAssignments[occupantName] = sourceIndex;
+  }
+
+  nextAssignments[draggedName] = targetIndex;
+  testingMapAssignments = {
+    ...testingMapAssignments,
+    [viewKey]: nextAssignments,
+  };
+  persistTestingMapAssignments();
+  renderTestingMap();
+}
+
+function resolveTestingMapDropIndex(dropTarget, slotCount) {
+  if (!dropTarget) {
+    return 0;
+  }
+
+  if (dropTarget.dataset.testingTableStart !== undefined) {
+    const start = Number(dropTarget.dataset.testingTableStart || 0);
+    const capacity = Number(dropTarget.dataset.testingTableCapacity || 4);
+    const tableCells = Array.from({ length: capacity }, (_, index) => start + index);
+    const occupiedCells = new Set(
+      Array.from(document.querySelectorAll("[data-testing-student][data-testing-target-index]"))
+        .map((entry) => Number(entry.dataset.testingTargetIndex))
+        .filter((value) => Number.isInteger(value)),
+    );
+    const firstOpen = tableCells.find((cellIndex) => !occupiedCells.has(cellIndex));
+
+    return firstOpen ?? start;
+  }
+
+  return Math.max(0, Math.min(Number(dropTarget.dataset.testingTargetIndex || 0), Math.max(0, slotCount - 1)));
+}
+
+function studentIdForName(name) {
+  const value = Array.from(name).reduce((sum, char, index) => sum + (char.charCodeAt(0) * (index + 17)), 0);
+  return String((value % 9000) + 1000);
+}
+
+function courseScheduleLabel(course) {
+  return (course.groupLabel || "")
+    .replace(/^Tutoring Hours:\s*/i, "")
+    .replace(/^Lecture Hours:\s*/i, "")
+    .trim();
+}
+
 function renderCoursesCatalog() {
   if (!metrics.coursesGrid) {
     return;
@@ -1808,17 +2701,14 @@ function renderCoursesCatalog() {
     .map((course) => {
       const roster = rosterForCourse(course.id);
       const alertCount = roster.filter((student) => student.alertActive).length;
-      const avgProgress = roster.length
-        ? Math.round(roster.reduce((sum, student) => sum + student.progress, 0) / roster.length)
-        : 0;
       const attendanceHere = roster.filter((student) => student.presentToday).length;
 
       return `
         <article class="course-list-card">
           <div class="course-list-head">
             <div>
-              <p class="class-group-kicker">${course.groupLabel}</p>
               <h4 class="class-group-title static">${course.title}</h4>
+              <p class="class-group-kicker">${courseScheduleLabel(course)}</p>
               <p class="course-list-copy">${course.overview}</p>
             </div>
             <div class="course-list-actions">
@@ -1830,7 +2720,6 @@ function renderCoursesCatalog() {
           <div class="course-list-metrics">
             <span>${roster.length} student${roster.length === 1 ? "" : "s"}</span>
             <span>${attendanceHere} here today</span>
-            <span>${avgProgress}% avg progress</span>
             <span>${alertCount} alert${alertCount === 1 ? "" : "s"}</span>
           </div>
 
@@ -1845,7 +2734,7 @@ function renderCoursesCatalog() {
                         (student) => `
                           <a class="course-list-roster-item" href="student.html?student=${encodeURIComponent(student.name)}">
                             <strong>${student.name}</strong>
-                            <span>Seat ${student.seat}</span>
+                            <span>ID ${studentIdForName(student.name)}</span>
                           </a>
                         `,
                       )
@@ -1855,16 +2744,6 @@ function renderCoursesCatalog() {
                 : '<p class="course-list-inline">No students assigned yet.</p>'
             }
           </div>
-
-          <div class="course-list-section">
-            <p class="metric-label">General Expectations</p>
-            <div class="course-list-stack">
-              ${course.expectations
-                .slice(0, 3)
-                .map((expectation) => `<div class="course-list-item">${expectation}</div>`)
-                .join("")}
-            </div>
-          </div>
         </article>
       `;
     })
@@ -1872,12 +2751,7 @@ function renderCoursesCatalog() {
 }
 
 function renderStudents() {
-  const activeCourseIds = currentClassCourseIds();
-  const preview = nextScheduledClassPreview();
-  const previewCourseIds = !activeCourseIds.length && currentClassPreviewActive && preview
-    ? preview.courseIds
-    : [];
-  const displayedCourseIds = activeCourseIds.length ? activeCourseIds : previewCourseIds;
+  const { activeCourseIds, preview, displayedCourseIds } = currentClassDisplayState();
   const visibleStudents = students.filter(
     (student) => displayedCourseIds.includes(student.courseId) && filters[currentFilter](student),
   );
@@ -1937,7 +2811,7 @@ function renderStudents() {
         <section class="class-group">
           <div class="class-group-header">
             <div>
-              <p class="class-group-kicker">${course.groupLabel}</p>
+              <p class="class-group-kicker">${courseScheduleLabel(course)}</p>
               <a class="class-group-title" href="${courseDetailsUrl(course.id)}">${course.title}</a>
               <p class="class-group-copy">${course.focus}</p>
             </div>
@@ -1987,6 +2861,7 @@ function reloadStudents() {
   renderCoursesCatalog();
   renderCurrentClassAvailability();
   renderStudents();
+  renderTestingMap();
 }
 
 function moveStudent(draggedName, targetName) {
@@ -2006,6 +2881,7 @@ function moveStudent(draggedName, targetName) {
   reseatStudents();
   persistStudents();
   renderStudents();
+  renderTestingMap();
 }
 
 function setFilter(nextFilter) {
@@ -2016,6 +2892,7 @@ function setFilter(nextFilter) {
   });
 
   renderStudents();
+  renderTestingMap();
 }
 
 function setView(nextView) {
@@ -2039,13 +2916,7 @@ document.querySelectorAll(".nav-link").forEach((button) => {
 });
 
 metrics.sidebarToggle?.addEventListener("click", () => {
-  sidebarHidden = true;
-  persistSidebarHidden();
-  renderSidebarVisibility();
-});
-
-metrics.sidebarShowButton?.addEventListener("click", () => {
-  sidebarHidden = false;
+  sidebarHidden = !sidebarHidden;
   persistSidebarHidden();
   renderSidebarVisibility();
 });
@@ -2102,6 +2973,27 @@ metrics.timeoffRows?.addEventListener("click", (event) => {
 });
 
 document.addEventListener("click", (event) => {
+  const documentPromptButton = event.target.closest("[data-document-prompt]");
+
+  if (documentPromptButton) {
+    openDocumentPrompt(documentPromptButton.dataset.documentPrompt);
+    return;
+  }
+
+  const documentThreadButton = event.target.closest("[data-document-thread]");
+
+  if (documentThreadButton) {
+    openDocumentThread(documentThreadButton.dataset.documentThread);
+    return;
+  }
+
+  const printButton = event.target.closest("[data-print-paystub]");
+
+  if (printButton) {
+    printMonthlyPaystub(printButton.dataset.printPaystub);
+    return;
+  }
+
   const toggle = event.target.closest("[data-statement-toggle]");
 
   if (!toggle) {
@@ -2170,6 +3062,20 @@ metrics.logoutConfirm.addEventListener("click", () => {
   closeLogoutModal();
   setLoggedOut(true);
 });
+metrics.subplanClose?.addEventListener("click", closeSubplanModal);
+metrics.subplanCancel?.addEventListener("click", closeSubplanModal);
+metrics.subplanSave?.addEventListener("click", saveSubplanLink);
+metrics.subplanOpenExisting?.addEventListener("click", () => {
+  if (activeSubplanRequestIndex === null) {
+    return;
+  }
+
+  const request = timeOffRequests[activeSubplanRequestIndex];
+
+  if (request?.subPlanLink) {
+    window.open(request.subPlanLink, "_blank", "noreferrer");
+  }
+});
 metrics.signInAgain.addEventListener("click", () => {
   setLoggedOut(false);
 });
@@ -2217,6 +3123,10 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("[data-close-logout='true']")) {
     closeLogoutModal();
   }
+
+  if (event.target.closest("[data-close-subplan='true']")) {
+    closeSubplanModal();
+  }
 });
 
 document.addEventListener("keydown", (event) => {
@@ -2228,6 +3138,7 @@ document.addEventListener("keydown", (event) => {
   toggleAdvisorMenu(false);
   closeSettingsModal();
   closeLogoutModal();
+  closeSubplanModal();
 });
 
 metrics.blockTimeButton.addEventListener("click", addUnavailableBlock);
@@ -2281,6 +3192,7 @@ metrics.studentGrid.addEventListener("click", (event) => {
   if (previewButton) {
     currentClassPreviewActive = true;
     renderStudents();
+    renderTestingMap();
     return;
   }
 
@@ -2289,6 +3201,7 @@ metrics.studentGrid.addEventListener("click", (event) => {
   if (hidePreviewButton) {
     currentClassPreviewActive = false;
     renderStudents();
+    renderTestingMap();
     return;
   }
 
@@ -2309,6 +3222,7 @@ metrics.studentGrid.addEventListener("click", (event) => {
   persistStudents();
   renderSummary();
   renderStudents();
+  renderTestingMap();
   return;
 });
 
@@ -2325,6 +3239,7 @@ metrics.studentGrid.addEventListener("click", (event) => {
     student.presentToday = !student.presentToday;
     persistStudents();
     renderStudents();
+    renderTestingMap();
     return;
   }
 
@@ -2404,6 +3319,106 @@ metrics.studentGrid.addEventListener("dragend", () => {
   });
 });
 
+metrics.testingMapContent?.addEventListener("dragstart", (event) => {
+  const cell = event.target.closest("[data-testing-student]");
+
+  if (!cell) {
+    return;
+  }
+
+  draggedStudentName = cell.dataset.testingStudent;
+  metrics.testingMapContent?.classList.add("dragging-student-map");
+  cell.classList.add("dragging");
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/plain", draggedStudentName);
+});
+
+metrics.testingMapContent?.addEventListener("dragover", (event) => {
+  const cell = event.target.closest("[data-testing-target-index], [data-testing-table-start]");
+
+  if (!cell || cell.dataset.testingStudent === draggedStudentName) {
+    return;
+  }
+
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "move";
+  cell.classList.add("drag-over");
+});
+
+metrics.testingMapContent?.addEventListener("dragleave", (event) => {
+  const cell = event.target.closest("[data-testing-target-index], [data-testing-table-start]");
+
+  if (!cell) {
+    return;
+  }
+
+  cell.classList.remove("drag-over");
+});
+
+metrics.testingMapContent?.addEventListener("drop", (event) => {
+  const cell = event.target.closest("[data-testing-target-index], [data-testing-table-start]");
+
+  if (!cell) {
+    return;
+  }
+
+  event.preventDefault();
+  document.querySelectorAll(".restaurant-map-cell, .restaurant-map-table").forEach((entry) => {
+    entry.classList.remove("drag-over", "dragging");
+  });
+
+  const { displayedCourseIds } = currentClassDisplayState();
+  const rosterLength = students.filter((student) => displayedCourseIds.includes(student.courseId)).length;
+  const slotCount = Math.max(1, Math.ceil(rosterLength / 4) + 1) * 4;
+  const targetIndex = resolveTestingMapDropIndex(cell, slotCount);
+  moveStudentInTestingMap(draggedStudentName, targetIndex, displayedCourseIds);
+  draggedStudentName = null;
+  metrics.testingMapContent?.classList.remove("dragging-student-map");
+});
+
+metrics.testingMapContent?.addEventListener("dragend", () => {
+  draggedStudentName = null;
+  metrics.testingMapContent?.classList.remove("dragging-student-map");
+  document.querySelectorAll(".restaurant-map-cell, .restaurant-map-table").forEach((entry) => {
+    entry.classList.remove("drag-over", "dragging");
+  });
+});
+
+metrics.testingMapContent?.addEventListener("click", (event) => {
+  const alertButton = event.target.closest(".seat-alert");
+
+  if (alertButton && !alertButton.classList.contains("hidden")) {
+    const student = students.find((entry) => entry.name === alertButton.dataset.student);
+
+    if (!student) {
+      return;
+    }
+
+    student.alertActive = false;
+    student.needsHelp = false;
+    persistStudents();
+    renderSummary();
+    renderStudents();
+    renderTestingMap();
+    return;
+  }
+
+  const attendanceButton = event.target.closest(".attendance-box");
+
+  if (attendanceButton) {
+    const student = students.find((entry) => entry.name === attendanceButton.dataset.attendanceStudent);
+
+    if (!student) {
+      return;
+    }
+
+    student.presentToday = !student.presentToday;
+    persistStudents();
+    renderStudents();
+    renderTestingMap();
+  }
+});
+
 window.addEventListener("storage", (event) => {
   if (event.key === "portal-students") {
     reloadStudents();
@@ -2428,11 +3443,17 @@ window.addEventListener("storage", (event) => {
     renderSummary();
     setLoggedOut(Boolean(instructorSettings.loggedOut));
   }
+
+  if (event.key === testingMapStorageKey) {
+    testingMapAssignments = loadTestingMapAssignments();
+    renderTestingMap();
+  }
 });
 
 window.setInterval(() => {
   renderCurrentClassAvailability();
   renderStudents();
+  renderTestingMap();
 }, 60000);
 
 ensureSidebarViews();
@@ -2446,6 +3467,7 @@ renderTimeOffRequests();
 renderCoursesCatalog();
 renderCurrentClassAvailability();
 renderStudents();
+renderTestingMap();
 setView(currentView);
 setScheduleTab(currentScheduleTab);
 setLoggedOut(Boolean(instructorSettings.loggedOut));
