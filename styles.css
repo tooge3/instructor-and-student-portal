@@ -2664,6 +2664,27 @@ body {
   letter-spacing: 0.04em;
 }
 
+.restaurant-map-seat-alert {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #fff6f4;
+  border: 1px solid #f0d4d0;
+  color: var(--warning);
+  font-size: 0.72rem;
+  font-weight: 700;
+  box-shadow: 0 8px 16px rgba(179, 61, 41, 0.16);
+}
+
+.restaurant-map-seat-alert.bouncing {
+  animation: bounce-alert 1.2s infinite;
+}
+
 .restaurant-map-seat-shell {
   position: relative;
   overflow: visible;

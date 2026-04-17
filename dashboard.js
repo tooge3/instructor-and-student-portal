@@ -2501,6 +2501,7 @@ function renderTestingMapCell(student, rosterIndex) {
   return `
     <div class="restaurant-map-seat-shell" data-testing-target-index="${rosterIndex}">
       <button class="restaurant-map-cell occupied${presenceClass}${alertClass}" type="button" draggable="true" data-testing-student="${student.name}" data-testing-target-index="${rosterIndex}" aria-label="${student.name}">
+        ${student.alertActive ? '<span class="restaurant-map-seat-alert bouncing" aria-hidden="true">!</span>' : ""}
         <span class="restaurant-map-cell-marker" aria-hidden="true">${student.name.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span>
       </button>
       <article class="restaurant-map-widget" aria-label="${student.name} details">
@@ -2862,6 +2863,20 @@ function reloadStudents() {
   renderCurrentClassAvailability();
   renderStudents();
   renderTestingMap();
+}
+
+function ensureTestingAlertStudent(name) {
+  const targetStudent = students.find((student) => student.name === name);
+
+  if (!targetStudent) {
+    return;
+  }
+
+  if (!targetStudent.needsHelp || !targetStudent.alertActive) {
+    targetStudent.needsHelp = true;
+    targetStudent.alertActive = true;
+    persistStudents();
+  }
 }
 
 function moveStudent(draggedName, targetName) {
@@ -3460,6 +3475,7 @@ ensureSidebarViews();
 renderInstructorAccount();
 renderFaqMessage("bot", "Hi. I can answer questions from the Daily Documents resources. Try asking about time-off requests, payment guidance, Zoom, office rules, or substitute plans.");
 metrics.weeklyHoursLabel.textContent = computeWeeklyHoursLabel();
+ensureTestingAlertStudent("Hannah Cho");
 renderSummary();
 renderSchedule();
 renderUnavailabilityList();
