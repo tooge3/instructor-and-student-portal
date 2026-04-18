@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web Development Foundations Tutoring</title>
+  <title>Python Foundations Tutoring</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
@@ -16,29 +16,29 @@
 
       <header class="course-hero panel">
         <div class="course-hero-copy">
-          <p class="eyebrow">Web Development Foundations Tutoring</p>
-          <h1>Web Development Foundations Tutoring</h1>
-          <p class="course-group-label">Tutoring Hours: Tuesday and Thursday, 3:15 PM - 4:45 PM</p>
-          <p class="course-overview-copy">A dedicated Chemistry Foundations workspace for concept recovery, packet review, intervention planning, and roster-specific support notes.</p>
+          <p class="eyebrow">Python Foundations Tutoring</p>
+          <h1>Python Foundations Tutoring</h1>
+          <p class="course-group-label">Tutoring Hours: Monday, Wednesday, and Friday, 3:30 PM - 5:00 PM</p>
+          <p class="course-overview-copy">A dedicated Python Foundations workspace for tutoring plans, coding practice follow-up, progress recovery, and roster-specific support notes.</p>
         </div>
         <div class="course-hero-side">
           <div class="course-chip-row">
             <div class="metric-card course-metric-card">
               <p class="metric-label">Roster</p>
-              <strong id="chemistry-student-count">0 students</strong>
+              <strong id="biology-student-count">0 students</strong>
             </div>
             <div class="metric-card course-metric-card">
               <p class="metric-label">Average Progress</p>
-              <strong id="chemistry-average-progress">0%</strong>
+              <strong id="biology-average-progress">0%</strong>
             </div>
             <div class="metric-card course-metric-card">
               <p class="metric-label">Active Alerts</p>
-              <strong id="chemistry-alert-count">0</strong>
+              <strong id="biology-alert-count">0</strong>
             </div>
           </div>
           <div class="student-primary-actions">
-            <a class="curriculum-link-button primary" href="https://example.com/curriculum/chemistry-prep" target="_blank" rel="noreferrer">Curriculum</a>
-            <a class="curriculum-link-button secondary" href="https://example.com/rewards/chemistry-prep" target="_blank" rel="noreferrer">CM Rewards</a>
+            <a class="curriculum-link-button primary" href="https://example.com/curriculum/biology-201" target="_blank" rel="noreferrer">Curriculum</a>
+            <a class="curriculum-link-button secondary" href="https://example.com/rewards/biology-201" target="_blank" rel="noreferrer">CM Rewards</a>
           </div>
         </div>
       </header>
@@ -46,8 +46,8 @@
       <section class="course-detail-grid">
         <article class="panel course-roster-panel">
           <p class="eyebrow">Current Roster</p>
-          <h3>Students in Chemistry Foundations</h3>
-          <div id="chemistry-roster" class="course-roster-grid"></div>
+          <h3>Students in Python Foundations Tutoring</h3>
+          <div id="biology-roster" class="course-roster-grid"></div>
         </article>
       </section>
 
@@ -55,19 +55,19 @@
         <article class="panel">
           <p class="eyebrow">Class Snapshot</p>
           <h3>What this page covers</h3>
-          <div id="chemistry-summary" class="course-list"></div>
+          <div id="biology-summary" class="course-list"></div>
         </article>
 
         <article class="panel">
           <p class="eyebrow">Course Checkpoints</p>
           <h3>Upcoming milestones</h3>
-          <div id="chemistry-milestones" class="course-list"></div>
+          <div id="biology-milestones" class="course-list"></div>
         </article>
 
         <article class="panel">
           <p class="eyebrow">General Expectations</p>
           <h3>What students should be doing</h3>
-          <div id="chemistry-expectations" class="course-list"></div>
+          <div id="biology-expectations" class="course-list"></div>
         </article>
 
         <article class="panel">
@@ -75,13 +75,13 @@
           <h3>Save notes to a student record</h3>
           <p class="metric-caption">Choose a student, save a note, and it will appear in the roster notes column.</p>
           <div class="course-note-editor">
-            <label class="schedule-label" for="chemistry-student-select">Student</label>
-            <select id="chemistry-student-select" class="schedule-input"></select>
-            <label class="schedule-label" for="chemistry-course-note">Note</label>
-            <textarea id="chemistry-course-note" class="course-note-input" placeholder="Add a student note for Chemistry Foundations..."></textarea>
+            <label class="schedule-label" for="biology-student-select">Student</label>
+            <select id="biology-student-select" class="schedule-input"></select>
+            <label class="schedule-label" for="biology-course-note">Note</label>
+            <textarea id="biology-course-note" class="course-note-input" placeholder="Add a student note for Python Foundations Tutoring..."></textarea>
             <div class="course-note-actions">
-              <span id="chemistry-course-note-status" class="course-note-status">No student note saved yet.</span>
-              <button id="chemistry-course-note-save" class="schedule-button" type="button">Save Note</button>
+              <span id="biology-course-note-status" class="course-note-status">No student note saved yet.</span>
+              <button id="biology-course-note-save" class="schedule-button" type="button">Save Note</button>
             </div>
           </div>
         </article>
@@ -91,23 +91,20 @@
           <h3>Submit required student reports</h3>
           <p class="metric-caption">Submit a report for one student at a time. Admin will see the same submitted record immediately.</p>
           <div class="course-note-editor">
-            <label class="schedule-label" for="chemistry-report-student-select">Student</label>
-            <select id="chemistry-report-student-select" class="schedule-input"></select>
-            <label class="schedule-label" for="chemistry-report-summary">Student summary</label>
-            <textarea id="chemistry-report-summary" class="course-note-input" placeholder="Summarize how the student is doing in this course."></textarea>
-            <label class="schedule-label" for="chemistry-report-assignment-update">Assignment update</label>
-            <textarea id="chemistry-report-assignment-update" class="course-note-input" placeholder="Note assignment completion, missing work, or recovery status."></textarea>
-            <label class="schedule-label" for="chemistry-report-attendance-update">Attendance and progress</label>
-            <textarea id="chemistry-report-attendance-update" class="course-note-input" placeholder="Describe attendance, pacing, and current progress."></textarea>
-            <label class="schedule-label" for="chemistry-report-next-step">Next steps</label>
-            <textarea id="chemistry-report-next-step" class="course-note-input" placeholder="What should happen before the next class or check-in?"></textarea>
+            <label class="schedule-label" for="biology-report-student-select">Student</label>
+            <select id="biology-report-student-select" class="schedule-input"></select>
+            <label class="schedule-label" for="biology-report-assignment-update">Assignment update</label>
+            <textarea id="biology-report-assignment-update" class="course-note-input" placeholder="Note assignment completion, missing work, or recovery status."></textarea>
+            <label class="schedule-label" for="biology-report-next-step">Next steps</label>
+            <textarea id="biology-report-next-step" class="course-note-input" placeholder="What should happen before the next class or check-in?"></textarea>
             <div class="course-note-actions">
-              <span id="chemistry-report-status" class="course-note-status">No student report submitted yet.</span>
-              <button id="chemistry-report-save" class="schedule-button" type="button">Submit Report</button>
+              <span id="biology-report-status" class="course-note-status">No student report submitted yet.</span>
+              <button id="biology-report-save" class="schedule-button" type="button">Submit Report</button>
             </div>
           </div>
-          <div id="chemistry-report-list" class="course-report-list"></div>
-          <div id="chemistry-session-history" class="course-session-history"></div>
+          <div id="biology-weekly-summary" class="course-weekly-summary"></div>
+          <div id="biology-report-list" class="course-report-list"></div>
+          <div id="biology-session-history" class="course-session-history"></div>
         </article>
       </section>
 
@@ -150,7 +147,26 @@
     </section>
   </div>
 
+  <div id="report-history-modal" class="modal-shell hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-report-history-modal="true"></div>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="report-history-modal-title">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Student Reports</p>
+          <h3 id="report-history-modal-title">Report history</h3>
+          <p id="report-history-modal-summary" class="metric-caption"></p>
+        </div>
+        <button id="report-history-modal-close" class="modal-close" type="button" aria-label="Close report history">x</button>
+      </div>
+      <div id="report-history-modal-list" class="notes-modal-list"></div>
+      <div class="modal-actions">
+        <button id="report-history-modal-edit" class="schedule-button schedule-button-secondary" type="button">Update Report</button>
+        <button id="report-history-modal-done" class="schedule-button" type="button">Done</button>
+      </div>
+    </section>
+  </div>
+
   <script src="data.js"></script>
-  <script src="chemistry-foundations-roster-page.js"></script>
+  <script src="python-foundations-roster-page.js"></script>
 </body>
 </html>

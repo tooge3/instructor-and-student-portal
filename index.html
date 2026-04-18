@@ -33,6 +33,7 @@
           <button class="nav-link" data-view="documents" type="button">Daily Documents</button>
           <button class="nav-link" data-view="payment" type="button">Payment</button>
           <button class="nav-link" data-view="testing" type="button">Testing</button>
+          <a class="nav-link nav-link-anchor" href="admin.html">Administrator Portal</a>
         </nav>
       </div>
 
@@ -78,9 +79,9 @@
       <section class="dashboard-home-grid" aria-label="Dashboard home highlights">
         <article class="metric-card home-card">
           <p class="metric-label">Reminders</p>
-          <div class="home-subsection home-subsection-top">
+          <div id="home-urgent-section" class="home-subsection home-subsection-top">
             <p class="home-subsection-label">Urgent</p>
-            <div class="home-list">
+            <div id="home-urgent-list" class="home-list">
               <p class="home-list-item urgent">
                 <span class="urgent-bullet" aria-hidden="true"></span>
                 <span>Jordan Kim still needs immediate lab makeup follow-up before the next tutoring block.</span>
@@ -445,6 +446,33 @@
         <button id="subplan-cancel" class="schedule-button schedule-button-secondary" type="button">Cancel</button>
         <button id="subplan-save" class="schedule-button" type="button">Save Link</button>
       </div>
+    </section>
+  </div>
+
+  <div id="student-report-modal" class="modal-shell hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-student-report="true"></div>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="student-report-title">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Student Report</p>
+          <h3 id="student-report-title">Submit required report</h3>
+          <p id="student-report-meta" class="metric-caption"></p>
+        </div>
+        <button id="student-report-close" class="modal-close" type="button" aria-label="Close student report">x</button>
+      </div>
+      <form id="student-report-form" class="settings-form">
+        <label class="schedule-label" for="student-report-assignment-update">Assignment update</label>
+        <textarea id="student-report-assignment-update" class="course-note-input" placeholder="Note assignment completion, missing work, or recovery status."></textarea>
+
+        <label class="schedule-label" for="student-report-next-step">Next steps</label>
+        <textarea id="student-report-next-step" class="course-note-input" placeholder="What should happen before the next class or check-in?"></textarea>
+
+        <div class="modal-actions">
+          <span id="student-report-status" class="course-note-status">Fill out both fields before submitting.</span>
+          <button id="student-report-cancel" class="schedule-button schedule-button-secondary" type="button">Cancel</button>
+          <button class="schedule-button" type="submit">Submit Report</button>
+        </div>
+      </form>
     </section>
   </div>
 

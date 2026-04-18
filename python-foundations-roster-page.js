@@ -11,12 +11,11 @@ const biologyPage = {
   planningSave: document.getElementById("biology-course-note-save"),
   planningStatus: document.getElementById("biology-course-note-status"),
   reportStudentSelect: document.getElementById("biology-report-student-select"),
-  reportSummary: document.getElementById("biology-report-summary"),
   reportAssignmentUpdate: document.getElementById("biology-report-assignment-update"),
-  reportAttendanceUpdate: document.getElementById("biology-report-attendance-update"),
   reportNextStep: document.getElementById("biology-report-next-step"),
   reportSave: document.getElementById("biology-report-save"),
   reportStatus: document.getElementById("biology-report-status"),
+  weeklySummary: document.getElementById("biology-weekly-summary"),
   reportList: document.getElementById("biology-report-list"),
   sessionHistory: document.getElementById("biology-session-history"),
   roster: document.getElementById("biology-roster"),
@@ -31,10 +30,17 @@ const biologyPage = {
   notesModalList: document.getElementById("notes-modal-list"),
   notesModalClose: document.getElementById("notes-modal-close"),
   notesModalDone: document.getElementById("notes-modal-done"),
+  reportHistoryModal: document.getElementById("report-history-modal"),
+  reportHistorySummary: document.getElementById("report-history-modal-summary"),
+  reportHistoryList: document.getElementById("report-history-modal-list"),
+  reportHistoryClose: document.getElementById("report-history-modal-close"),
+  reportHistoryDone: document.getElementById("report-history-modal-done"),
+  reportHistoryEdit: document.getElementById("report-history-modal-edit"),
 };
 
 let biologyActiveGoalStudent = null;
 let biologyActiveNotesStudent = null;
+let biologyActiveReportStudent = null;
 
 function biologyCourseData() {
   return window.portalStore.getCourse(BIOLOGY_ID);
@@ -81,7 +87,10 @@ function biologyWriteNotesByStudent(notes) {
 }
 
 function biologyReportsByStudent() {
-  return window.portalStore.getStudentCourseReports(BIOLOGY_ID);
+  return window.portalStore.ensureStudentCourseReports(
+    BIOLOGY_ID,
+    biologyStudents().map((student) => student.name),
+  );
 }
 
 function prefillBiologyReportTarget() {
@@ -102,7 +111,7 @@ function prefillBiologyReportTarget() {
   biologyPage.reportStatus.textContent = `Ready to submit a report for ${reportStudent}.`;
   const reportPanel = biologyPage.reportStudentSelect.closest(".panel");
   reportPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
-  biologyPage.reportSummary?.focus();
+  biologyPage.reportAssignmentUpdate?.focus();
 }
 
 function biologyStatus(student) {
@@ -129,6 +138,83 @@ function biologySnapshotLine(label, value) {
   return `<strong>${label}:</strong> ${value}`;
 }
 
+function biologyReportStatus(report) {
+  return {
+    completed: report?.completedReports || 0,
+    expected: report?.expectedReports || 3,
+    complete: Boolean(report?.complete),
+  };
+}
+
+function biologyWeekRangeLabel() {
+  const today = new Date();
+  const mondayOffset = (today.getDay() + 6) % 7;
+  const start = new Date(today);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(today.getDate() - mondayOffset);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+
+  return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+}
+
+function renderBiologyWeeklySummary(roster) {
+  if (!biologyPage.weeklySummary) {
+    return;
+  }
+
+  const course = biologyCourseData();
+  const reports = biologyReportsByStudent();
+  const totals = roster.reduce((summary, student) => {
+    const reportStatus = biologyReportStatus(reports[student.name]);
+
+    return {
+      completed: summary.completed + reportStatus.completed,
+      expected: summary.expected + reportStatus.expected,
+      coveredStudents: summary.coveredStudents + (reportStatus.complete ? 1 : 0),
+    };
+  }, { completed: 0, expected: 0, coveredStudents: 0 });
+  const missingStudents = roster
+    .filter((student) => !biologyReportStatus(reports[student.name]).complete)
+    .map((student) => student.name);
+  const sessionPlan = [
+    "Mon · Variables and input/output warm-up",
+    "Wed · Functions and loops practice",
+    "Fri · Debug check and report follow-up",
+  ];
+  const pendingLabel = missingStudents.length
+    ? missingStudents.slice(0, 3).join(", ")
+    : "Everyone is covered for the current cycle.";
+  const pendingSuffix = missingStudents.length > 3 ? ` +${missingStudents.length - 3} more` : "";
+
+  biologyPage.weeklySummary.innerHTML = `
+    <div class="course-weekly-summary-head">
+      <div>
+        <p class="eyebrow">This Week</p>
+        <h4>Week of ${biologyWeekRangeLabel()}</h4>
+      </div>
+      <p class="course-weekly-focus">${course.currentObjective}</p>
+    </div>
+    <div class="course-weekly-grid">
+      <article class="course-weekly-card">
+        <p class="course-weekly-label">Sessions</p>
+        <strong>${sessionPlan.length} scheduled</strong>
+        <p class="course-report-preview">${sessionPlan.join(" · ")}</p>
+      </article>
+      <article class="course-weekly-card">
+        <p class="course-weekly-label">Report Coverage</p>
+        <strong>${totals.completed}/${totals.expected} submitted</strong>
+        <p class="course-report-preview">${totals.coveredStudents}/${roster.length || 0} students fully covered on the current report cycle.</p>
+      </article>
+      <article class="course-weekly-card ${missingStudents.length ? "attention" : ""}">
+        <p class="course-weekly-label">Still Pending</p>
+        <strong>${missingStudents.length}</strong>
+        <p class="course-report-preview">${pendingLabel}${pendingSuffix}</p>
+      </article>
+    </div>
+  `;
+}
+
 function biologyRosterCards(roster) {
   if (!roster.length) {
     return `<div class="course-roster-empty">No students loaded for Biology 201.</div>`;
@@ -136,6 +222,7 @@ function biologyRosterCards(roster) {
 
   const goalOverrides = biologyReadGoalOverrides();
   const studentNotes = biologyReadNotesByStudent();
+  const reports = biologyReportsByStudent();
   const rows = roster.map((student) => {
     const status = biologyStatus(student);
     const goal = goalOverrides[student.name] || student.goal || "No goal listed yet.";
@@ -144,6 +231,7 @@ function biologyRosterCards(roster) {
       : "No current follow-up listed.";
     const noteEntries = studentNotes[student.name] || [];
     const hasNotes = noteEntries.length > 0;
+    const reportStatus = biologyReportStatus(reports[student.name]);
 
     return `
       <div class="course-roster-row">
@@ -170,6 +258,12 @@ function biologyRosterCards(roster) {
             <span class="course-notes-icon" aria-hidden="true"></span>
           </button>
         </div>
+        <div class="course-roster-reports-cell">
+          <button class="course-report-pill ${reportStatus.complete ? "filled" : "missing"}" type="button" data-focus-biology-report="${student.name}" aria-label="Review reports for ${student.name}">
+            <span>${reportStatus.completed}/${reportStatus.expected}</span>
+            <span class="course-report-pill-hover">${reportStatus.completed} of ${reportStatus.expected} reports completed</span>
+          </button>
+        </div>
       </div>
     `;
   }).join("");
@@ -181,6 +275,7 @@ function biologyRosterCards(roster) {
         <div>Goals</div>
         <div>Status</div>
         <div>Notes</div>
+        <div>Reports</div>
       </div>
       ${rows}
     </div>
@@ -211,15 +306,16 @@ function renderBiologyReports(roster) {
   const reports = biologyReportsByStudent();
   const cards = roster.map((student) => {
     const report = reports[student.name];
+    const reportStatus = biologyReportStatus(report);
 
     return `
-      <article class="course-report-card ${report ? "submitted" : "missing"}">
+      <article class="course-report-card ${reportStatus.complete ? "submitted" : "missing"}">
         <div class="course-report-card-top">
           <strong>${student.name}</strong>
-          <span class="status-chip ${report ? "ok" : "warning"}">${report ? "Submitted" : "Missing"}</span>
+          <span class="status-chip ${reportStatus.complete ? "ok" : "warning"}">${reportStatus.complete ? "All Submitted" : "Missing"}</span>
         </div>
-        <p class="metric-caption">${report ? `Submitted ${new Date(report.submittedAt).toLocaleDateString("en-US")}` : "No report submitted yet."}</p>
-        ${report ? `<p class="course-report-preview">${report.summary}</p>` : ""}
+        <p class="metric-caption">${reportStatus.completed}/${reportStatus.expected} reports completed${report?.submittedAt ? ` · Latest ${new Date(report.submittedAt).toLocaleDateString("en-US")}` : ""}</p>
+        ${report?.assignmentUpdate ? `<p class="course-report-preview">${report.assignmentUpdate}</p>` : ""}
       </article>
     `;
   }).join("");
@@ -257,8 +353,8 @@ function renderBiologySessionHistory(roster) {
 
   biologyPage.sessionHistory.innerHTML = `
     <div class="course-session-history-head">
-      <p class="eyebrow">Previous Sessions</p>
-      <h4>Recent class history</h4>
+      <p class="eyebrow">Weekly History</p>
+      <h4>Recent class details</h4>
     </div>
     <div class="course-session-history-grid">
       ${entries.map((entry) => `
@@ -300,6 +396,41 @@ function closeBiologyNotesModal() {
   biologyPage.notesModal.setAttribute("aria-hidden", "true");
 }
 
+function renderBiologyReportHistoryModal() {
+  if (!biologyActiveReportStudent || !biologyPage.reportHistoryList) {
+    return;
+  }
+
+  const report = biologyReportsByStudent()[biologyActiveReportStudent];
+  const reportStatus = biologyReportStatus(report);
+  const orderedHistory = [...(report?.history || [])]
+    .sort((left, right) => new Date(right.submittedAt) - new Date(left.submittedAt));
+
+  if (biologyPage.reportHistorySummary) {
+    biologyPage.reportHistorySummary.textContent = `${reportStatus.completed}/${reportStatus.expected} reports completed for ${biologyActiveReportStudent}.`;
+  }
+
+  biologyPage.reportHistoryList.innerHTML = orderedHistory.length
+    ? orderedHistory.map((entry, index) => `
+        <article class="notes-entry">
+          <div class="notes-entry-head">
+            <p class="notes-entry-date">Report ${orderedHistory.length - index} · ${new Date(entry.submittedAt).toLocaleString()}</p>
+          </div>
+          <div class="report-history-sections">
+            <p class="notes-entry-body"><strong>Assignment Update:</strong> ${entry.assignmentUpdate}</p>
+            <p class="notes-entry-body"><strong>Next Steps:</strong> ${entry.nextStep}</p>
+          </div>
+        </article>
+      `).join("")
+    : `<p class="notes-empty">No submitted reports for ${biologyActiveReportStudent} yet.</p>`;
+}
+
+function closeBiologyReportHistoryModal() {
+  biologyActiveReportStudent = null;
+  biologyPage.reportHistoryModal?.classList.add("hidden");
+  biologyPage.reportHistoryModal?.setAttribute("aria-hidden", "true");
+}
+
 function renderBiologyRosterPage() {
   const course = biologyCourseData();
   const roster = biologyStudents();
@@ -309,14 +440,15 @@ function renderBiologyRosterPage() {
   const activeAlerts = roster.filter((student) => student.alertActive).length;
   const presentCount = roster.filter((student) => student.presentToday).length;
   const absentCount = roster.length - presentCount;
-  document.title = `${course.title} | Biology 201 Course Page`;
+  document.title = `${course.title} | Python Foundations Course Page`;
   biologyPage.studentCount.textContent = `${roster.length} student${roster.length === 1 ? "" : "s"}`;
   biologyPage.averageProgress.textContent = `${averageProgress}%`;
   biologyPage.alertCount.textContent = `${activeAlerts}`;
   renderBiologyStudentOptions(roster);
   biologyPage.planningStatus.textContent = "Save a note to attach it to the selected student.";
-  biologyPage.reportStatus.textContent = "Submit a student report to update the admin view.";
+  biologyPage.reportStatus.textContent = "Submit concise weekly reports to update the admin view.";
   biologyPage.roster.innerHTML = biologyRosterCards(roster);
+  renderBiologyWeeklySummary(roster);
   renderBiologyReports(roster);
   renderBiologySessionHistory(roster);
   prefillBiologyReportTarget();
@@ -361,32 +493,36 @@ biologyPage.planningSave?.addEventListener("click", () => {
 
 biologyPage.reportSave?.addEventListener("click", () => {
   const studentName = biologyPage.reportStudentSelect?.value;
-  const summary = biologyPage.reportSummary?.value.trim();
   const assignmentUpdate = biologyPage.reportAssignmentUpdate?.value.trim();
-  const attendanceUpdate = biologyPage.reportAttendanceUpdate?.value.trim();
   const nextStep = biologyPage.reportNextStep?.value.trim();
 
-  if (!studentName || !summary || !assignmentUpdate || !attendanceUpdate || !nextStep) {
-    biologyPage.reportStatus.textContent = "Complete all report fields before submitting.";
+  if (!studentName || !assignmentUpdate || !nextStep) {
+    biologyPage.reportStatus.textContent = "Complete both report fields before submitting.";
     return;
   }
 
   window.portalStore.saveStudentCourseReport(BIOLOGY_ID, studentName, {
-    summary,
     assignmentUpdate,
-    attendanceUpdate,
     nextStep,
   });
 
-  biologyPage.reportSummary.value = "";
   biologyPage.reportAssignmentUpdate.value = "";
-  biologyPage.reportAttendanceUpdate.value = "";
   biologyPage.reportNextStep.value = "";
   biologyPage.reportStatus.textContent = `Submitted report for ${studentName}.`;
   renderBiologyRosterPage();
 });
 
 biologyPage.roster?.addEventListener("click", (event) => {
+  const reportButton = event.target.closest("[data-focus-biology-report]");
+
+  if (reportButton && biologyPage.reportStudentSelect) {
+    biologyActiveReportStudent = reportButton.dataset.focusBiologyReport;
+    renderBiologyReportHistoryModal();
+    biologyPage.reportHistoryModal?.classList.remove("hidden");
+    biologyPage.reportHistoryModal?.setAttribute("aria-hidden", "false");
+    return;
+  }
+
   const button = event.target.closest("[data-edit-biology-goal]");
 
   if (!button) {
@@ -480,6 +616,27 @@ biologyPage.notesModal?.addEventListener("click", (event) => {
   renderBiologyNotesModal();
 });
 
+biologyPage.reportHistoryClose?.addEventListener("click", closeBiologyReportHistoryModal);
+biologyPage.reportHistoryDone?.addEventListener("click", closeBiologyReportHistoryModal);
+biologyPage.reportHistoryEdit?.addEventListener("click", () => {
+  if (!biologyActiveReportStudent || !biologyPage.reportStudentSelect) {
+    closeBiologyReportHistoryModal();
+    return;
+  }
+
+  biologyPage.reportStudentSelect.value = biologyActiveReportStudent;
+  biologyPage.reportStatus.textContent = `Ready to update the report history for ${biologyActiveReportStudent}.`;
+  closeBiologyReportHistoryModal();
+  const reportPanel = biologyPage.reportStudentSelect.closest(".panel");
+  reportPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+  biologyPage.reportAssignmentUpdate?.focus();
+});
+biologyPage.reportHistoryModal?.addEventListener("click", (event) => {
+  if (event.target.closest("[data-close-report-history-modal='true']")) {
+    closeBiologyReportHistoryModal();
+  }
+});
+
 window.addEventListener("storage", (event) => {
   if (
     event.key === "portal-students" ||
@@ -490,6 +647,9 @@ window.addEventListener("storage", (event) => {
     renderBiologyRosterPage();
     if (biologyActiveNotesStudent) {
       renderBiologyNotesModal();
+    }
+    if (biologyActiveReportStudent) {
+      renderBiologyReportHistoryModal();
     }
   }
 });

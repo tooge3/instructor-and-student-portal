@@ -1,7 +1,7 @@
 const defaultCourses = [
   {
     id: "biology-201",
-    title: "Biology 201 Tutoring",
+    title: "Python Foundations Tutoring",
     groupLabel: "Tutoring Hours: Monday and Wednesday, 3:30 PM - 5:00 PM",
     scheduleSummary: "Mon, Wed, and Fri after school with guided biology tutoring and lab support.",
     deliveryMode: "In person small-group tutoring",
@@ -10,7 +10,7 @@ const defaultCourses = [
     currentObjective: "Help students complete genetics practice, repair missing lab submissions, and strengthen CER writing.",
     sessionFormat: "Warm-up review, missing lab check, guided tutoring block, and exit reflection.",
     progressBenchmark: "Students should be at or above 80% completion on Unit 4 assignments before Friday.",
-    curriculumLabel: "Open Biology 201",
+    curriculumLabel: "Open Python Foundations",
     curriculumUrl: "https://example.com/curriculum/biology-201",
     rewardsUrl: "https://example.com/rewards/biology-201",
     overview: "A subject-specific tutoring block for biology students who need lab reinforcement, quiz recovery, and guided practice.",
@@ -57,7 +57,7 @@ const defaultCourses = [
   },
   {
     id: "chemistry-prep",
-    title: "Chemistry Foundations Tutoring",
+    title: "Web Development Foundations Tutoring",
     groupLabel: "Tutoring Hours: Tuesday and Thursday, 3:15 PM - 4:45 PM",
     scheduleSummary: "Tue and Thu tutoring blocks focused on chemistry reteaching and assignment recovery.",
     deliveryMode: "Hybrid tutoring with guided packet review",
@@ -66,7 +66,7 @@ const defaultCourses = [
     currentObjective: "Reinforce balancing equations, complete correction packets, and prepare students for checkpoint retakes.",
     sessionFormat: "Mini reteach, packet correction block, one-on-one check-ins, and checkpoint prep.",
     progressBenchmark: "Students should finish the active correction packet before asking for reassessment approval.",
-    curriculumLabel: "Open Chemistry Prep",
+    curriculumLabel: "Open Web Development Foundations",
     curriculumUrl: "https://example.com/curriculum/chemistry-prep",
     rewardsUrl: "https://example.com/rewards/chemistry-prep",
     overview: "A chemistry tutoring course focused on core concept recovery, assessment prep, and assignment completion support.",
@@ -113,7 +113,7 @@ const defaultCourses = [
   },
   {
     id: "stem-bridge",
-    title: "Algebra II Lecture Lab",
+    title: "JavaScript Lecture Lab",
     groupLabel: "Lecture Hours: Monday and Thursday, 4:45 PM - 6:15 PM",
     scheduleSummary: "Mon and Thu lecture-lab sessions with direct instruction, guided examples, and problem review.",
     deliveryMode: "Live lecture lab with guided note checks",
@@ -122,7 +122,7 @@ const defaultCourses = [
     currentObjective: "Build fluency with quadratics, support guided notes completion, and prepare students for the next quiz.",
     sessionFormat: "Direct lecture, worked examples, guided note check, and independent problem set support.",
     progressBenchmark: "Students should complete the quadratics practice check before the next Thursday block.",
-    curriculumLabel: "Open Algebra II",
+    curriculumLabel: "Open JavaScript Lecture Lab",
     curriculumUrl: "https://example.com/curriculum/algebra-ii",
     rewardsUrl: "https://example.com/rewards/algebra-ii",
     overview: "A structured lecture-lab course for Algebra II students who need direct instruction, guided examples, and homework support.",
@@ -377,6 +377,7 @@ const defaultStudents = [
 ];
 
 const storageKey = "portal-students";
+const studentCourseReportsStorageKey = "portal-student-course-reports";
 const legacySeedNames = [
   "Ariana Patel",
   "Jordan Kim",
@@ -408,6 +409,9 @@ function inferCourseId(student) {
     "Biology 201 Tutoring": "biology-201",
     "Chemistry Foundations Tutoring": "chemistry-prep",
     "Algebra II Lecture Lab": "stem-bridge",
+    "Python Foundations Tutoring": "biology-201",
+    "Web Development Foundations Tutoring": "chemistry-prep",
+    "JavaScript Lecture Lab": "stem-bridge",
   };
   const legacyMatch = legacyTitleMap[student.courseId] || legacyTitleMap[student.cohort];
 
@@ -553,6 +557,201 @@ function loadStudents() {
   }
 }
 
+function loadStudentCourseReports() {
+  const stored = window.localStorage.getItem(studentCourseReportsStorageKey);
+
+  if (!stored) {
+    const normalized = normalizeStudentCourseReports({});
+    saveStudentCourseReports(normalized);
+    return normalized;
+  }
+
+  try {
+    const normalized = normalizeStudentCourseReports(JSON.parse(stored));
+    window.localStorage.setItem(studentCourseReportsStorageKey, JSON.stringify(normalized));
+    return normalized;
+  } catch (error) {
+    const normalized = normalizeStudentCourseReports({});
+    saveStudentCourseReports(normalized);
+    return normalized;
+  }
+}
+
+function saveStudentCourseReports(reportMap) {
+  window.localStorage.setItem(
+    studentCourseReportsStorageKey,
+    JSON.stringify(normalizeStudentCourseReports(reportMap)),
+  );
+}
+
+function buildSeedStudentCourseReports() {
+  const seededReports = {};
+  const seededStudents = defaultStudents.map((student, index) => studentWithCourse(student, index));
+  const dateBase = new Date("2026-04-16T15:00:00");
+  const totalExpectedReports = seededStudents.length * 3;
+  const targetCompletedReports = Math.max(1, Math.round(totalExpectedReports * 0.95));
+  let completedReportsRemaining = targetCompletedReports;
+
+  seededStudents.forEach((student, index) => {
+    const expectedReports = 3;
+    const remainingStudents = seededStudents.length - index;
+    const minimumFutureCapacity = Math.max(0, remainingStudents - 1) * expectedReports;
+    const completedReports = Math.max(
+      0,
+      Math.min(
+        expectedReports,
+        completedReportsRemaining - minimumFutureCapacity > 0
+          ? Math.min(expectedReports, completedReportsRemaining - minimumFutureCapacity)
+          : Math.min(expectedReports - 1, completedReportsRemaining),
+      ),
+    );
+    const history = Array.from({ length: completedReports }, (_, historyIndex) => {
+      const submittedAt = new Date(dateBase);
+      submittedAt.setDate(dateBase.getDate() - ((completedReports - historyIndex) * 7) - (index % 3));
+
+      return {
+        submittedAt: submittedAt.toISOString(),
+        summary: `${student.name} completed the ${historyIndex + 1 === completedReports ? "latest" : "previous"} check-in with steady engagement in ${student.cohort}.`,
+        assignmentUpdate: historyIndex % 2 === 0
+          ? "Core practice set was completed with only minor revisions needed."
+          : "Student made progress on assigned work and still has one follow-up item remaining.",
+        attendanceUpdate: student.presentToday
+          ? "Attendance remained consistent and class pacing stayed on target."
+          : "Attendance has been mixed, so pacing notes were included for follow-up.",
+        nextStep: historyIndex + 1 === completedReports
+          ? "Continue with the next guided assignment and review the flagged concept before the next session."
+          : "Return to the missed concept checkpoint and bring questions to the next class.",
+      };
+    });
+
+    seededReports[student.courseId] = seededReports[student.courseId] || {};
+    seededReports[student.courseId][student.name] = {
+      courseId: student.courseId,
+      studentName: student.name,
+      expectedReports,
+      history,
+    };
+
+    completedReportsRemaining -= completedReports;
+  });
+
+  return seededReports;
+}
+
+function normalizeStudentCourseReportRecord(report, courseId, studentName) {
+  const history = Array.isArray(report?.history)
+    ? report.history
+        .filter((entry) => entry && entry.submittedAt)
+        .sort((left, right) => new Date(left.submittedAt) - new Date(right.submittedAt))
+    : report?.submittedAt
+      ? [{
+          submittedAt: report.submittedAt,
+          summary: report.summary || "",
+          assignmentUpdate: report.assignmentUpdate || "",
+          attendanceUpdate: report.attendanceUpdate || "",
+          nextStep: report.nextStep || "",
+        }]
+      : [];
+
+  const latest = history[history.length - 1] || null;
+  const expectedReports = Math.max(report?.expectedReports || 3, history.length);
+
+  return {
+    courseId,
+    studentName,
+    expectedReports,
+    completedReports: history.length,
+    complete: history.length >= expectedReports,
+    history,
+    submittedAt: latest?.submittedAt || null,
+    summary: latest?.summary || "",
+    assignmentUpdate: latest?.assignmentUpdate || "",
+    attendanceUpdate: latest?.attendanceUpdate || "",
+    nextStep: latest?.nextStep || "",
+  };
+}
+
+function normalizeStudentCourseReports(reportMap) {
+  const seededReports = buildSeedStudentCourseReports();
+  const mergedReports = clone(seededReports);
+
+  Object.entries(reportMap || {}).forEach(([courseId, reportsByStudent]) => {
+    mergedReports[courseId] = mergedReports[courseId] || {};
+
+    Object.entries(reportsByStudent || {}).forEach(([studentName, report]) => {
+      const seededReport = mergedReports[courseId]?.[studentName]
+        ? normalizeStudentCourseReportRecord(mergedReports[courseId][studentName], courseId, studentName)
+        : normalizeStudentCourseReportRecord({}, courseId, studentName);
+      const storedReport = normalizeStudentCourseReportRecord(report, courseId, studentName);
+
+      mergedReports[courseId][studentName] = normalizeStudentCourseReportRecord(
+        {
+          ...storedReport,
+          expectedReports: Math.max(seededReport.expectedReports || 3, storedReport.expectedReports || 3),
+          history: (storedReport.history?.length || 0) >= (seededReport.history?.length || 0)
+            ? storedReport.history
+            : seededReport.history,
+        },
+        courseId,
+        studentName,
+      );
+    });
+  });
+
+  return mergedReports;
+}
+
+function seededHistoryForCourseStudent(courseId, studentName, studentIndex, totalStudents) {
+  const expectedReports = 3;
+  const totalExpected = totalStudents * expectedReports;
+  const targetCompleted = Math.max(1, Math.round(totalExpected * 0.95));
+  const threshold = targetCompleted / expectedReports;
+  const fullyCompleteCount = Math.floor(threshold);
+  const partialRemainder = targetCompleted - (fullyCompleteCount * expectedReports);
+  let completedReports = expectedReports;
+
+  if (studentIndex < fullyCompleteCount) {
+    completedReports = expectedReports;
+  } else if (studentIndex === fullyCompleteCount && partialRemainder > 0) {
+    completedReports = partialRemainder;
+  } else {
+    completedReports = 0;
+  }
+
+  const course = courseLookup()[courseId];
+  const student = loadStudents().find((entry) => entry.name === studentName);
+  const dateBase = new Date("2026-04-16T15:00:00");
+  const history = Array.from({ length: completedReports }, (_, historyIndex) => {
+    const submittedAt = new Date(dateBase);
+    submittedAt.setDate(dateBase.getDate() - ((completedReports - historyIndex) * 7) - (studentIndex % 3));
+
+    return {
+      submittedAt: submittedAt.toISOString(),
+      summary: `${studentName} completed the ${historyIndex + 1 === completedReports ? "latest" : "previous"} check-in with steady engagement in ${course?.title || "this class"}.`,
+      assignmentUpdate: historyIndex % 2 === 0
+        ? "Core practice set was completed with only minor revisions needed."
+        : "Student made progress on assigned work and still has one follow-up item remaining.",
+      attendanceUpdate: student?.presentToday
+        ? "Attendance remained consistent and class pacing stayed on target."
+        : "Attendance has been mixed, so pacing notes were included for follow-up.",
+      nextStep: historyIndex + 1 === completedReports
+        ? "Continue with the next guided assignment and review the flagged concept before the next session."
+        : "Return to the missed concept checkpoint and bring questions to the next class.",
+    };
+  });
+
+  return normalizeStudentCourseReportRecord(
+    {
+      courseId,
+      studentName,
+      expectedReports,
+      history,
+    },
+    courseId,
+    studentName,
+  );
+}
+
 window.portalStore = {
   getStudents() {
     return loadStudents();
@@ -584,14 +783,76 @@ window.portalStore = {
     return loadStudents().filter((student) => student.courseId === courseId);
   },
 
+  getStudentCourseReports(courseId) {
+    const reports = loadStudentCourseReports();
+    return clone(reports[courseId] || {});
+  },
+
+  getStudentCourseReport(courseId, studentName) {
+    const reports = loadStudentCourseReports();
+    return reports[courseId]?.[studentName] ? clone(reports[courseId][studentName]) : null;
+  },
+
+  ensureStudentCourseReports(courseId, studentNames) {
+    const reports = loadStudentCourseReports();
+    reports[courseId] = reports[courseId] || {};
+
+    (studentNames || []).forEach((studentName, index) => {
+      const existing = reports[courseId][studentName]
+        ? normalizeStudentCourseReportRecord(reports[courseId][studentName], courseId, studentName)
+        : null;
+
+      if (!existing || (existing.completedReports || 0) === 0) {
+        reports[courseId][studentName] = seededHistoryForCourseStudent(
+          courseId,
+          studentName,
+          index,
+          studentNames.length,
+        );
+      }
+    });
+
+    saveStudentCourseReports(reports);
+    return clone(reports[courseId]);
+  },
+
+  saveStudentCourseReport(courseId, studentName, report) {
+    const reports = loadStudentCourseReports();
+    const existing = reports[courseId]?.[studentName]
+      ? normalizeStudentCourseReportRecord(reports[courseId][studentName], courseId, studentName)
+      : normalizeStudentCourseReportRecord({}, courseId, studentName);
+    const submittedAt = report.submittedAt || new Date().toISOString();
+
+    reports[courseId] = reports[courseId] || {};
+    reports[courseId][studentName] = normalizeStudentCourseReportRecord(
+      {
+        ...existing,
+        expectedReports: existing.expectedReports || 3,
+        history: [
+          ...(existing.history || []),
+          {
+            submittedAt,
+            summary: report.summary || "",
+            assignmentUpdate: report.assignmentUpdate || "",
+            attendanceUpdate: report.attendanceUpdate || "",
+            nextStep: report.nextStep || "",
+          },
+        ],
+      },
+      courseId,
+      studentName,
+    );
+    saveStudentCourseReports(reports);
+  },
+
   courseWorkspaceUrl(courseId) {
     const pageMap = {
-      "biology-201": "biology-201.html",
-      "chemistry-prep": "chemistry-foundations.html",
-      "stem-bridge": "algebra-ii.html",
+      "biology-201": "python-foundations.html",
+      "chemistry-prep": "web-development-foundations.html",
+      "stem-bridge": "javascript-lecture-lab.html",
     };
 
-    return pageMap[courseId] || "algebra-ii.html";
+    return pageMap[courseId] || "javascript-lecture-lab.html";
   },
 
   courseDetailsUrl(courseId) {

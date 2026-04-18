@@ -11,12 +11,11 @@ const algebraPage = {
   planningSave: document.getElementById("algebra-course-note-save"),
   planningStatus: document.getElementById("algebra-course-note-status"),
   reportStudentSelect: document.getElementById("algebra-report-student-select"),
-  reportSummary: document.getElementById("algebra-report-summary"),
   reportAssignmentUpdate: document.getElementById("algebra-report-assignment-update"),
-  reportAttendanceUpdate: document.getElementById("algebra-report-attendance-update"),
   reportNextStep: document.getElementById("algebra-report-next-step"),
   reportSave: document.getElementById("algebra-report-save"),
   reportStatus: document.getElementById("algebra-report-status"),
+  weeklySummary: document.getElementById("algebra-weekly-summary"),
   reportList: document.getElementById("algebra-report-list"),
   sessionHistory: document.getElementById("algebra-session-history"),
   roster: document.getElementById("algebra-roster"),
@@ -31,10 +30,17 @@ const algebraPage = {
   notesModalList: document.getElementById("notes-modal-list"),
   notesModalClose: document.getElementById("notes-modal-close"),
   notesModalDone: document.getElementById("notes-modal-done"),
+  reportHistoryModal: document.getElementById("report-history-modal"),
+  reportHistorySummary: document.getElementById("report-history-modal-summary"),
+  reportHistoryList: document.getElementById("report-history-modal-list"),
+  reportHistoryClose: document.getElementById("report-history-modal-close"),
+  reportHistoryDone: document.getElementById("report-history-modal-done"),
+  reportHistoryEdit: document.getElementById("report-history-modal-edit"),
 };
 
 let algebraActiveGoalStudent = null;
 let algebraActiveNotesStudent = null;
+let algebraActiveReportStudent = null;
 
 function algebraCourseData() {
   return window.portalStore.getCourse(ALGEBRA_ID);
@@ -81,7 +87,10 @@ function algebraWriteNotesByStudent(notes) {
 }
 
 function algebraReportsByStudent() {
-  return window.portalStore.getStudentCourseReports(ALGEBRA_ID);
+  return window.portalStore.ensureStudentCourseReports(
+    ALGEBRA_ID,
+    algebraStudents().map((student) => student.name),
+  );
 }
 
 function prefillAlgebraReportTarget() {
@@ -102,7 +111,7 @@ function prefillAlgebraReportTarget() {
   algebraPage.reportStatus.textContent = `Ready to submit a report for ${reportStudent}.`;
   const reportPanel = algebraPage.reportStudentSelect.closest(".panel");
   reportPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
-  algebraPage.reportSummary?.focus();
+  algebraPage.reportAssignmentUpdate?.focus();
 }
 
 function algebraStatus(student) {
@@ -129,6 +138,82 @@ function algebraSnapshotLine(label, value) {
   return `<strong>${label}:</strong> ${value}`;
 }
 
+function algebraReportStatus(report) {
+  return {
+    completed: report?.completedReports || 0,
+    expected: report?.expectedReports || 3,
+    complete: Boolean(report?.complete),
+  };
+}
+
+function algebraWeekRangeLabel() {
+  const today = new Date();
+  const mondayOffset = (today.getDay() + 6) % 7;
+  const start = new Date(today);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(today.getDate() - mondayOffset);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+
+  return `${start.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${end.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
+}
+
+function renderAlgebraWeeklySummary(roster) {
+  if (!algebraPage.weeklySummary) {
+    return;
+  }
+
+  const course = algebraCourseData();
+  const reports = algebraReportsByStudent();
+  const totals = roster.reduce((summary, student) => {
+    const reportStatus = algebraReportStatus(reports[student.name]);
+
+    return {
+      completed: summary.completed + reportStatus.completed,
+      expected: summary.expected + reportStatus.expected,
+      coveredStudents: summary.coveredStudents + (reportStatus.complete ? 1 : 0),
+    };
+  }, { completed: 0, expected: 0, coveredStudents: 0 });
+  const missingStudents = roster
+    .filter((student) => !algebraReportStatus(reports[student.name]).complete)
+    .map((student) => student.name);
+  const sessionPlan = [
+    "Mon · Functions and parameter flow",
+    "Thu · Arrays, iteration, and debug lab",
+  ];
+  const pendingLabel = missingStudents.length
+    ? missingStudents.slice(0, 3).join(", ")
+    : "Everyone is covered for the current cycle.";
+  const pendingSuffix = missingStudents.length > 3 ? ` +${missingStudents.length - 3} more` : "";
+
+  algebraPage.weeklySummary.innerHTML = `
+    <div class="course-weekly-summary-head">
+      <div>
+        <p class="eyebrow">This Week</p>
+        <h4>Week of ${algebraWeekRangeLabel()}</h4>
+      </div>
+      <p class="course-weekly-focus">${course.currentObjective}</p>
+    </div>
+    <div class="course-weekly-grid">
+      <article class="course-weekly-card">
+        <p class="course-weekly-label">Sessions</p>
+        <strong>${sessionPlan.length} scheduled</strong>
+        <p class="course-report-preview">${sessionPlan.join(" · ")}</p>
+      </article>
+      <article class="course-weekly-card">
+        <p class="course-weekly-label">Report Coverage</p>
+        <strong>${totals.completed}/${totals.expected} submitted</strong>
+        <p class="course-report-preview">${totals.coveredStudents}/${roster.length || 0} students fully covered on the current report cycle.</p>
+      </article>
+      <article class="course-weekly-card ${missingStudents.length ? "attention" : ""}">
+        <p class="course-weekly-label">Still Pending</p>
+        <strong>${missingStudents.length}</strong>
+        <p class="course-report-preview">${pendingLabel}${pendingSuffix}</p>
+      </article>
+    </div>
+  `;
+}
+
 function algebraRosterMarkup(roster) {
   if (!roster.length) {
     return `<div class="course-roster-empty">No students loaded for Algebra II.</div>`;
@@ -136,6 +221,7 @@ function algebraRosterMarkup(roster) {
 
   const goalOverrides = algebraReadGoalOverrides();
   const studentNotes = algebraReadNotesByStudent();
+  const reports = algebraReportsByStudent();
   const rows = roster.map((student) => {
     const status = algebraStatus(student);
     const goal = goalOverrides[student.name] || student.goal || "No goal listed yet.";
@@ -144,6 +230,7 @@ function algebraRosterMarkup(roster) {
       : "No current follow-up listed.";
     const noteEntries = studentNotes[student.name] || [];
     const hasNotes = noteEntries.length > 0;
+    const reportStatus = algebraReportStatus(reports[student.name]);
 
     return `
       <div class="course-roster-row">
@@ -170,6 +257,12 @@ function algebraRosterMarkup(roster) {
             <span class="course-notes-icon" aria-hidden="true"></span>
           </button>
         </div>
+        <div class="course-roster-reports-cell">
+          <button class="course-report-pill ${reportStatus.complete ? "filled" : "missing"}" type="button" data-focus-algebra-report="${student.name}" aria-label="Review reports for ${student.name}">
+            <span>${reportStatus.completed}/${reportStatus.expected}</span>
+            <span class="course-report-pill-hover">${reportStatus.completed} of ${reportStatus.expected} reports completed</span>
+          </button>
+        </div>
       </div>
     `;
   }).join("");
@@ -181,6 +274,7 @@ function algebraRosterMarkup(roster) {
         <div>Goals</div>
         <div>Status</div>
         <div>Notes</div>
+        <div>Reports</div>
       </div>
       ${rows}
     </div>
@@ -211,15 +305,16 @@ function renderAlgebraReports(roster) {
   const reports = algebraReportsByStudent();
   algebraPage.reportList.innerHTML = roster.map((student) => {
     const report = reports[student.name];
+    const reportStatus = algebraReportStatus(report);
 
     return `
-      <article class="course-report-card ${report ? "submitted" : "missing"}">
+      <article class="course-report-card ${reportStatus.complete ? "submitted" : "missing"}">
         <div class="course-report-card-top">
           <strong>${student.name}</strong>
-          <span class="status-chip ${report ? "ok" : "warning"}">${report ? "Submitted" : "Missing"}</span>
+          <span class="status-chip ${reportStatus.complete ? "ok" : "warning"}">${reportStatus.complete ? "All Submitted" : "Missing"}</span>
         </div>
-        <p class="metric-caption">${report ? `Submitted ${new Date(report.submittedAt).toLocaleDateString("en-US")}` : "No report submitted yet."}</p>
-        ${report ? `<p class="course-report-preview">${report.summary}</p>` : ""}
+        <p class="metric-caption">${reportStatus.completed}/${reportStatus.expected} reports completed${report?.submittedAt ? ` · Latest ${new Date(report.submittedAt).toLocaleDateString("en-US")}` : ""}</p>
+        ${report?.assignmentUpdate ? `<p class="course-report-preview">${report.assignmentUpdate}</p>` : ""}
       </article>
     `;
   }).join("");
@@ -255,8 +350,8 @@ function renderAlgebraSessionHistory(roster) {
 
   algebraPage.sessionHistory.innerHTML = `
     <div class="course-session-history-head">
-      <p class="eyebrow">Previous Sessions</p>
-      <h4>Recent class history</h4>
+      <p class="eyebrow">Weekly History</p>
+      <h4>Recent class details</h4>
     </div>
     <div class="course-session-history-grid">
       ${entries.map((entry) => `
@@ -298,6 +393,41 @@ function closeAlgebraNotesModal() {
   algebraPage.notesModal.setAttribute("aria-hidden", "true");
 }
 
+function renderAlgebraReportHistoryModal() {
+  if (!algebraActiveReportStudent || !algebraPage.reportHistoryList) {
+    return;
+  }
+
+  const report = algebraReportsByStudent()[algebraActiveReportStudent];
+  const reportStatus = algebraReportStatus(report);
+  const orderedHistory = [...(report?.history || [])]
+    .sort((left, right) => new Date(right.submittedAt) - new Date(left.submittedAt));
+
+  if (algebraPage.reportHistorySummary) {
+    algebraPage.reportHistorySummary.textContent = `${reportStatus.completed}/${reportStatus.expected} reports completed for ${algebraActiveReportStudent}.`;
+  }
+
+  algebraPage.reportHistoryList.innerHTML = orderedHistory.length
+    ? orderedHistory.map((entry, index) => `
+        <article class="notes-entry">
+          <div class="notes-entry-head">
+            <p class="notes-entry-date">Report ${orderedHistory.length - index} · ${new Date(entry.submittedAt).toLocaleString()}</p>
+          </div>
+          <div class="report-history-sections">
+            <p class="notes-entry-body"><strong>Assignment Update:</strong> ${entry.assignmentUpdate}</p>
+            <p class="notes-entry-body"><strong>Next Steps:</strong> ${entry.nextStep}</p>
+          </div>
+        </article>
+      `).join("")
+    : `<p class="notes-empty">No submitted reports for ${algebraActiveReportStudent} yet.</p>`;
+}
+
+function closeAlgebraReportHistoryModal() {
+  algebraActiveReportStudent = null;
+  algebraPage.reportHistoryModal?.classList.add("hidden");
+  algebraPage.reportHistoryModal?.setAttribute("aria-hidden", "true");
+}
+
 function renderAlgebraRosterPage() {
   const course = algebraCourseData();
   const roster = algebraStudents();
@@ -310,14 +440,15 @@ function renderAlgebraRosterPage() {
   const behindStudents = roster
     .filter((student) => student.needsHelp || student.alertActive || student.progress < 75 || student.attendance < 85)
     .map((student) => student.name);
-  document.title = `${course.title} | Algebra II Course Page`;
+  document.title = `${course.title} | JavaScript Lecture Lab Course Page`;
   algebraPage.studentCount.textContent = `${roster.length} student${roster.length === 1 ? "" : "s"}`;
   algebraPage.averageProgress.textContent = `${averageProgress}%`;
   algebraPage.alertCount.textContent = `${activeAlerts}`;
   renderAlgebraStudentOptions(roster);
   algebraPage.planningStatus.textContent = "Save a note to attach it to the selected student.";
-  algebraPage.reportStatus.textContent = "Submit a student report to update the admin view.";
+  algebraPage.reportStatus.textContent = "Submit concise weekly reports to update the admin view.";
   algebraPage.roster.innerHTML = algebraRosterMarkup(roster);
+  renderAlgebraWeeklySummary(roster);
   renderAlgebraReports(roster);
   renderAlgebraSessionHistory(roster);
   prefillAlgebraReportTarget();
@@ -359,32 +490,36 @@ algebraPage.planningSave?.addEventListener("click", () => {
 
 algebraPage.reportSave?.addEventListener("click", () => {
   const studentName = algebraPage.reportStudentSelect?.value;
-  const summary = algebraPage.reportSummary?.value.trim();
   const assignmentUpdate = algebraPage.reportAssignmentUpdate?.value.trim();
-  const attendanceUpdate = algebraPage.reportAttendanceUpdate?.value.trim();
   const nextStep = algebraPage.reportNextStep?.value.trim();
 
-  if (!studentName || !summary || !assignmentUpdate || !attendanceUpdate || !nextStep) {
-    algebraPage.reportStatus.textContent = "Complete all report fields before submitting.";
+  if (!studentName || !assignmentUpdate || !nextStep) {
+    algebraPage.reportStatus.textContent = "Complete both report fields before submitting.";
     return;
   }
 
   window.portalStore.saveStudentCourseReport(ALGEBRA_ID, studentName, {
-    summary,
     assignmentUpdate,
-    attendanceUpdate,
     nextStep,
   });
 
-  algebraPage.reportSummary.value = "";
   algebraPage.reportAssignmentUpdate.value = "";
-  algebraPage.reportAttendanceUpdate.value = "";
   algebraPage.reportNextStep.value = "";
   algebraPage.reportStatus.textContent = `Submitted report for ${studentName}.`;
   renderAlgebraRosterPage();
 });
 
 algebraPage.roster?.addEventListener("click", (event) => {
+  const reportButton = event.target.closest("[data-focus-algebra-report]");
+
+  if (reportButton && algebraPage.reportStudentSelect) {
+    algebraActiveReportStudent = reportButton.dataset.focusAlgebraReport;
+    renderAlgebraReportHistoryModal();
+    algebraPage.reportHistoryModal?.classList.remove("hidden");
+    algebraPage.reportHistoryModal?.setAttribute("aria-hidden", "false");
+    return;
+  }
+
   const button = event.target.closest("[data-edit-algebra-goal]");
 
   if (!button) {
@@ -478,6 +613,27 @@ algebraPage.notesModal?.addEventListener("click", (event) => {
   renderAlgebraNotesModal();
 });
 
+algebraPage.reportHistoryClose?.addEventListener("click", closeAlgebraReportHistoryModal);
+algebraPage.reportHistoryDone?.addEventListener("click", closeAlgebraReportHistoryModal);
+algebraPage.reportHistoryEdit?.addEventListener("click", () => {
+  if (!algebraActiveReportStudent || !algebraPage.reportStudentSelect) {
+    closeAlgebraReportHistoryModal();
+    return;
+  }
+
+  algebraPage.reportStudentSelect.value = algebraActiveReportStudent;
+  algebraPage.reportStatus.textContent = `Ready to update the report history for ${algebraActiveReportStudent}.`;
+  closeAlgebraReportHistoryModal();
+  const reportPanel = algebraPage.reportStudentSelect.closest(".panel");
+  reportPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+  algebraPage.reportAssignmentUpdate?.focus();
+});
+algebraPage.reportHistoryModal?.addEventListener("click", (event) => {
+  if (event.target.closest("[data-close-report-history-modal='true']")) {
+    closeAlgebraReportHistoryModal();
+  }
+});
+
 window.addEventListener("storage", (event) => {
   if (
     event.key === "portal-students" ||
@@ -488,6 +644,9 @@ window.addEventListener("storage", (event) => {
     renderAlgebraRosterPage();
     if (algebraActiveNotesStudent) {
       renderAlgebraNotesModal();
+    }
+    if (algebraActiveReportStudent) {
+      renderAlgebraReportHistoryModal();
     }
   }
 });

@@ -198,6 +198,11 @@ body {
   cursor: pointer;
 }
 
+.nav-link-anchor {
+  display: block;
+  text-decoration: none;
+}
+
 .nav-link.active,
 .nav-link:hover {
   background: #eef4ff;
@@ -649,6 +654,95 @@ body {
   gap: 10px;
   background: #fff6f4;
   border-color: #f0d4d0;
+}
+
+.home-urgent-link {
+  color: #9f2f1f;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.home-urgent-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.home-urgent-copy {
+  display: inline-block;
+  font-weight: 600;
+  transform: translateY(0);
+  min-width: 0;
+}
+
+.home-urgent-count-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.home-urgent-count-wrap::after {
+  content: "";
+  position: absolute;
+  left: -12px;
+  bottom: calc(100% - 2px);
+  transform: none;
+  width: calc(100% + 160px);
+  height: 20px;
+}
+
+.home-urgent-count {
+  color: #9f2f1f;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.home-urgent-hover {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  display: grid;
+  gap: 8px;
+  min-width: 320px;
+  max-width: 420px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(18, 27, 43, 0.96);
+  color: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
+  z-index: 30;
+}
+
+.home-urgent-count-wrap:hover .home-urgent-hover,
+.home-urgent-count-wrap:focus-within .home-urgent-hover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.home-urgent-hover-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.home-urgent-hover-link strong {
+  font-family: "Space Grotesk", sans-serif;
 }
 
 .urgent-bullet {
@@ -2839,11 +2933,43 @@ body {
 }
 
 .restaurant-map-widget-head-actions {
-  display: grid;
-  justify-items: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 8px;
   flex: 0 0 auto;
   align-self: center;
+}
+
+.restaurant-map-widget-head-row,
+.seat-top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.student-link-quiet {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.student-link-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(68, 111, 237, 0.18);
+  border-radius: 999px;
+  background: #f5f8ff;
+  text-decoration: none;
+}
+
+.top-action-attendance {
+  min-height: 38px;
+  padding: 0 12px;
+  white-space: nowrap;
 }
 
 .restaurant-map-widget-head h4 {
@@ -2902,12 +3028,64 @@ body {
 }
 
 @media (max-width: 1180px) {
+  .admin-summary-grid,
+  .admin-course-grid,
+  .admin-payroll-summary,
+  .admin-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-grid-two {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-table-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-table-tools {
+    justify-content: flex-start;
+  }
+
+  .admin-search-input {
+    min-width: 0;
+    width: 100%;
+  }
+
   .restaurant-map-board {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 760px) {
+  .admin-hero {
+    flex-direction: column;
+  }
+
+  .admin-summary-grid,
+  .admin-course-grid,
+  .admin-payroll-summary,
+  .admin-instructor-details,
+  .admin-quick-grid,
+  .admin-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-pagination {
+    align-items: stretch;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .admin-hero-actions {
+    justify-content: flex-start;
+  }
+
+  .admin-dashboard {
+    padding: 20px;
+  }
+
   .restaurant-header {
     align-items: start;
     flex-direction: column;
@@ -3071,6 +3249,11 @@ body {
 .seat-alert.hidden {
   opacity: 0;
   pointer-events: none;
+}
+
+.seat-top-actions .seat-alert.hidden,
+.restaurant-map-widget-head-row .seat-alert.hidden {
+  display: none;
 }
 
 .seat-alert.bouncing {
@@ -3346,6 +3529,788 @@ body {
 .student-shell {
   max-width: 1080px;
   margin: 0 auto;
+}
+
+.admin-page {
+  min-height: 100vh;
+  padding: 0;
+}
+
+.admin-shell {
+  width: 100%;
+  display: grid;
+  gap: 22px;
+}
+
+.admin-app-shell {
+  min-height: 100vh;
+}
+
+.admin-sidebar {
+  background: #fafbfc;
+}
+
+.admin-sidebar-card p {
+  color: var(--muted);
+}
+
+.admin-sidebar-search {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+}
+
+.admin-sidebar-search h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.admin-sidebar-search .admin-search-input {
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-search-panel {
+  margin-top: 18px;
+}
+
+.admin-page-search {
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-dashboard {
+  padding: 32px;
+}
+
+.admin-hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 28px;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  box-shadow: var(--shadow);
+}
+
+.admin-hero h1 {
+  margin: 8px 0 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(1.9rem, 3vw, 2.8rem);
+  max-width: 15ch;
+}
+
+.admin-hero-copy {
+  margin: 12px 0 0;
+  max-width: 70ch;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.admin-hero-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.admin-directory-summary {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.admin-grid-two {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 18px;
+}
+
+.admin-panel {
+  padding: 20px;
+}
+
+.admin-location-panel {
+  margin-bottom: 18px;
+}
+
+.admin-location-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.admin-location-card {
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fbfcff;
+}
+
+.admin-location-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.admin-location-metrics span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.admin-location-metrics strong {
+  display: block;
+  margin-top: 6px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.4rem;
+}
+
+.admin-table-heading {
+  align-items: center;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.admin-table-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.admin-search-input {
+  min-width: 320px;
+}
+
+.admin-sort-links {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.admin-sort-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+
+.admin-sort-link span {
+  display: inline-block;
+  margin-left: 2px;
+  transition: transform 160ms ease, color 160ms ease;
+}
+
+.admin-sort-link:hover,
+.admin-sort-link.is-active {
+  color: var(--ink);
+}
+
+.admin-sort-link.is-active span {
+  color: var(--accent);
+}
+
+.admin-column-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-weight: inherit;
+}
+
+.admin-column-sort span {
+  color: #9aa4b2;
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+.admin-column-sort:hover,
+.admin-column-sort.is-active {
+  color: var(--ink);
+}
+
+.admin-column-sort.is-active span {
+  color: var(--accent);
+}
+
+.admin-column-sort.is-desc span {
+  transform: rotate(180deg);
+}
+
+.admin-instructor-card,
+.admin-ops-list,
+.admin-course-grid,
+.admin-payroll-summary {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-instructor-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin-instructor-main h3,
+.admin-op-item h4,
+.admin-course-card h4 {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.admin-instructor-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+}
+
+.admin-instructor-details span {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f7f9fc;
+  color: var(--muted);
+}
+
+.admin-instructor-details strong {
+  margin-right: 6px;
+  color: var(--ink);
+}
+
+.admin-op-item,
+.admin-course-card,
+.admin-payroll-card {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fbfcff;
+}
+
+.admin-op-item.warning {
+  background: #fff8f5;
+  border-color: rgba(179, 61, 41, 0.16);
+}
+
+.admin-op-item p,
+.admin-course-card p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.admin-course-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.admin-course-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-course-metrics {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.admin-course-metrics span {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #eef3fb;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+  overflow-y: visible;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fcfdff;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 860px;
+  overflow: visible;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  overflow: visible;
+}
+
+.admin-table th {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.84rem;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  background: #f7f9fc;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.admin-status-chip {
+  opacity: 1;
+  transform: none;
+}
+
+.admin-missing {
+  color: var(--warning);
+  font-weight: 700;
+}
+
+.admin-empty-state {
+  color: var(--muted);
+  padding: 18px 14px;
+}
+
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.admin-payroll-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-payroll-card {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-payroll-card span {
+  color: var(--muted);
+}
+
+.admin-payroll-card strong {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.2rem;
+}
+
+.admin-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-quick-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fbfcff;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.admin-quick-card strong {
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.admin-quick-card span {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.admin-quick-card:hover {
+  border-color: #c5d5f5;
+  box-shadow: 0 10px 20px rgba(29, 39, 51, 0.06);
+}
+
+.admin-hiring-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.admin-status-metric {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fbfcff;
+}
+
+.admin-status-metric span {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.admin-status-metric strong {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.35rem;
+}
+
+.admin-status-metric.ok {
+  border-color: rgba(50, 122, 84, 0.18);
+  background: #f6fbf7;
+}
+
+.admin-status-metric.warning {
+  border-color: rgba(179, 61, 41, 0.16);
+  background: #fff8f5;
+}
+
+.admin-status-metric.info {
+  border-color: rgba(54, 87, 191, 0.16);
+  background: #f7f9ff;
+}
+
+.admin-status-metric.muted {
+  background: #f8f9fb;
+}
+
+.admin-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.admin-action-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.admin-hiring-table {
+  min-width: 1420px;
+}
+
+.admin-inline-select {
+  min-width: 180px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.admin-link-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef3fb;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.admin-menu-button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.admin-course-detail-list {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-course-detail-card {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-course-detail-metrics {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-course-detail-metrics span {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #eef3fb;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.admin-course-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 18px;
+}
+
+.admin-course-detail-section {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-course-student-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-course-student-item {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fbfcff;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.admin-course-student-item strong {
+  display: block;
+}
+
+.admin-course-student-item span {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.admin-course-student-item .status-chip {
+  white-space: nowrap;
+}
+
+.admin-course-detail-notes {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+.admin-report-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fbfcff;
+}
+
+.admin-report-card.missing {
+  background: #fff8f5;
+  border-color: rgba(179, 61, 41, 0.16);
+}
+
+.admin-report-summary-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fbfcff;
+}
+
+.admin-report-summary-card.missing {
+  background: #fff8f5;
+  border-color: rgba(179, 61, 41, 0.16);
+}
+
+.admin-report-summary-card h4 {
+  margin: 4px 0 0;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.admin-report-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-report-copy {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.admin-report-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-report-widget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.admin-student-report-widget {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-height: 156px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(68, 111, 237, 0.12);
+  background: linear-gradient(180deg, #fbfcff 0%, #f4f7ff 100%);
+}
+
+.admin-student-report-widget.missing {
+  border-color: rgba(179, 61, 41, 0.16);
+  background: linear-gradient(180deg, #fffaf8 0%, #fff4ef 100%);
+}
+
+.admin-student-report-top {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-student-report-top strong {
+  font-family: "Space Grotesk", sans-serif;
+  line-height: 1.35;
+}
+
+.admin-student-report-widget .schedule-button {
+  margin-top: auto;
+  width: 100%;
+  justify-content: center;
+}
+
+.admin-student-report-widget .metric-caption {
+  margin: 0;
+}
+
+.admin-report-body {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-report-section {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #f7f9fc;
+}
+
+.admin-report-section h4 {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.admin-report-section p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.admin-hover-cell {
+  display: inline-block;
+  max-width: 100%;
+}
+
+.admin-hover-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  z-index: 3;
+}
+
+.admin-hover-name {
+  cursor: default;
+}
+
+.admin-hover-anchor::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  width: 14px;
+  height: 72px;
+  transform: translateY(-50%);
+}
+
+.admin-global-hover-card {
+  position: fixed;
+  z-index: 999;
+  width: min(360px, 42vw);
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 40px rgba(29, 39, 51, 0.16);
+}
+
+.admin-global-hover-card.hidden {
+  display: none;
+}
+
+.admin-global-hover-card h4 {
+  margin: 6px 0 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.15rem;
+}
+
+.admin-hover-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+  margin-top: 14px;
+}
+
+.admin-hover-grid span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-hover-grid strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink);
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
 .student-back {
@@ -3664,7 +4629,7 @@ body {
 .course-roster-header-row,
 .course-roster-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(420px, 1.55fr) minmax(160px, 0.7fr) 88px;
+  grid-template-columns: minmax(220px, 1fr) minmax(420px, 1.55fr) minmax(160px, 0.7fr) 88px 120px;
   align-items: flex-start;
   gap: 22px;
   padding: 14px 22px;
@@ -3758,6 +4723,12 @@ body {
   justify-items: center;
 }
 
+.course-roster-reports-cell {
+  display: grid;
+  justify-items: center;
+  position: relative;
+}
+
 .course-notes-button {
   width: 40px;
   height: 40px;
@@ -3775,6 +4746,62 @@ body {
 
 .course-notes-button.filled {
   color: var(--accent);
+}
+
+.course-report-pill {
+  position: relative;
+  min-width: 82px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #f7f9fc;
+  color: var(--muted);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.course-report-pill.filled {
+  color: #ffffff;
+  background: linear-gradient(135deg, #446fed 0%, #5a85ff 100%);
+  border-color: rgba(68, 111, 237, 0.28);
+}
+
+.course-report-pill.missing {
+  color: #ffffff;
+  background: linear-gradient(135deg, #cf513d 0%, #e16c56 100%);
+  border-color: rgba(207, 81, 61, 0.26);
+}
+
+.course-report-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(24, 39, 75, 0.12);
+}
+
+.course-report-pill-hover {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 200px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(18, 27, 43, 0.94);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18);
+}
+
+.course-report-pill:hover .course-report-pill-hover,
+.course-report-pill:focus-visible .course-report-pill-hover {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
 }
 
 .course-notes-icon {
@@ -3930,6 +4957,159 @@ body {
   color: var(--muted);
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+.course-report-list {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-top: 18px;
+}
+
+.course-weekly-summary {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(68, 111, 237, 0.12);
+  background: linear-gradient(180deg, #fcfdff 0%, #f5f8ff 100%);
+}
+
+.course-weekly-summary-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.course-weekly-summary-head h4 {
+  margin: 4px 0 0;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.course-weekly-focus {
+  margin: 0;
+  max-width: 540px;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 0.94rem;
+}
+
+.course-weekly-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.course-weekly-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(68, 111, 237, 0.1);
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.course-weekly-card.attention {
+  border-color: rgba(179, 61, 41, 0.18);
+  background: rgba(255, 246, 242, 0.92);
+}
+
+.course-weekly-card strong {
+  font-family: "Space Grotesk", sans-serif;
+  line-height: 1.35;
+}
+
+.course-weekly-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.course-report-card {
+  display: grid;
+  gap: 10px;
+  min-height: 118px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(68, 111, 237, 0.12);
+  background: linear-gradient(180deg, #fbfcff 0%, #f4f7ff 100%);
+}
+
+.course-report-card.missing {
+  border-color: rgba(179, 61, 41, 0.16);
+  background: linear-gradient(180deg, #fffaf8 0%, #fff4ef 100%);
+}
+
+.course-report-card-top {
+  display: grid;
+  gap: 8px;
+}
+
+.course-report-card-top strong {
+  font-family: "Space Grotesk", sans-serif;
+  line-height: 1.35;
+}
+
+.course-report-preview {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 0.92rem;
+}
+
+.report-history-sections {
+  display: grid;
+  gap: 10px;
+}
+
+.course-session-history {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.course-session-history-head h4 {
+  margin: 4px 0 0;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.course-session-history-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.course-session-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #fbfcff;
+}
+
+.course-session-card strong {
+  font-family: "Space Grotesk", sans-serif;
+  line-height: 1.35;
+}
+
+.course-session-date,
+.course-session-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.student-link-button {
+  font: inherit;
+  cursor: pointer;
 }
 
 .course-student-note-label {

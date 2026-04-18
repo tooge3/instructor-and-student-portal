@@ -2,6 +2,9 @@ let students = window.portalStore.getStudents();
 const courses = Object.fromEntries(window.portalStore.getCourses().map((course) => [course.id, course]));
 const params = new URLSearchParams(window.location.search);
 const selectedStudentName = params.get("student");
+const adminCourseContextId = params.get("adminCourse");
+const adminCourseContextTitle = params.get("adminCourseTitle");
+const adminCourseContextInstructor = params.get("adminInstructor");
 const openAssignWorkFromQuery = params.get("assignWork") === "1";
 const settingsStorageKey = "portal-instructor-settings";
 const subjectTopicMap = {
@@ -256,11 +259,26 @@ function renderAssignWorkPanel() {
 function renderStudent() {
   const student = getStudent();
   const status = studentStatus(student);
+  const classContextLabel = adminCourseContextTitle || student.cohort;
+  const classContextHref = adminCourseContextTitle ? "#" : student.curriculumUrl;
+  const classContextMeta = [
+    adminCourseContextId,
+    adminCourseContextInstructor,
+  ].filter(Boolean).join(" · ");
 
   document.title = `${student.name} | Student Dashboard`;
   elements.name.textContent = student.name;
-  elements.cohort.textContent = student.cohort;
-  elements.cohort.href = student.curriculumUrl;
+  elements.cohort.textContent = classContextLabel;
+  elements.cohort.href = classContextHref;
+  if (adminCourseContextTitle) {
+    elements.cohort.removeAttribute("target");
+    elements.cohort.removeAttribute("rel");
+    elements.cohort.title = classContextMeta;
+  } else {
+    elements.cohort.setAttribute("target", "_blank");
+    elements.cohort.setAttribute("rel", "noreferrer");
+    elements.cohort.removeAttribute("title");
+  }
   elements.seat.textContent = `Seat ${student.seat}`;
   elements.status.textContent = status.label;
   elements.status.className = `status-chip ${status.className}`;
@@ -273,8 +291,17 @@ function renderStudent() {
   renderGoalSection(student);
   elements.requestHelpButton.textContent = student.alertActive ? "Help Requested" : "Request Help";
   elements.requestHelpButton.classList.toggle("active", student.alertActive);
-  elements.curriculumLink.href = student.curriculumUrl;
-  elements.curriculumLink.textContent = "Curriculum";
+  elements.curriculumLink.href = classContextHref;
+  elements.curriculumLink.textContent = adminCourseContextTitle ? "Class Context" : "Curriculum";
+  if (adminCourseContextTitle) {
+    elements.curriculumLink.removeAttribute("target");
+    elements.curriculumLink.removeAttribute("rel");
+    elements.curriculumLink.title = `Opened from ${classContextLabel}${classContextMeta ? ` (${classContextMeta})` : ""}`;
+  } else {
+    elements.curriculumLink.setAttribute("target", "_blank");
+    elements.curriculumLink.setAttribute("rel", "noreferrer");
+    elements.curriculumLink.removeAttribute("title");
+  }
   elements.rewardsLink.href = student.rewardsUrl;
   elements.rewardsLink.textContent = "CM Rewards";
   elements.lateWork.textContent = student.assignmentsLate;

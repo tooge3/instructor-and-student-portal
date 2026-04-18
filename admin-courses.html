@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Oversight</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell admin-app-shell" id="admin-app-shell">
+    <aside class="sidebar admin-sidebar" id="admin-sidebar">
+      <div class="sidebar-main">
+        <div class="sidebar-toggle-row">
+          <button id="admin-sidebar-toggle" class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="admin-sidebar" aria-label="Hide sidebar">
+            <span class="sidebar-toggle-icon"><</span>
+            <span class="sidebar-toggle-text">Hide</span>
+          </button>
+        </div>
+        <div class="brand-block">
+          <p class="eyebrow">Administration Workspace</p>
+          <h1>North Hall Academy</h1>
+          <p class="muted">A centralized portal for staffing, student oversight, coverage planning, and payroll review.</p>
+        </div>
+        <nav class="nav-panel" aria-label="Administrator">
+          <a class="nav-link nav-link-anchor" href="admin.html">Dashboard Home</a>
+          <a class="nav-link nav-link-anchor" href="admin-instructors.html">Instructor Directory</a>
+          <a class="nav-link nav-link-anchor active" href="admin-courses.html">Course Oversight</a>
+          <a class="nav-link nav-link-anchor" href="admin-coverage.html">Coverage Requests</a>
+          <a class="nav-link nav-link-anchor" href="admin-payroll.html">Payroll</a>
+          <a class="nav-link nav-link-anchor" href="admin-students.html">Student Directory</a>
+          <a class="nav-link nav-link-anchor" href="admin-hiring.html">Hiring</a>
+          <a class="nav-link nav-link-anchor" href="index.html">Instructor Portal</a>
+        </nav>
+      </div>
+      <section class="advisor-card admin-sidebar-card">
+        <div class="advisor-card-header">
+          <div>
+            <p class="eyebrow">Administrator Account</p>
+            <h2>Operations Admin</h2>
+            <p>Regional oversight and staffing review</p>
+          </div>
+        </div>
+        <dl>
+          <div><dt>Students</dt><dd id="admin-sidebar-student-count">0</dd></div>
+          <div><dt>Alerts</dt><dd id="admin-sidebar-alert-count">0</dd></div>
+          <div><dt>Coverage</dt><dd id="admin-sidebar-coverage-count">0</dd></div>
+          <div><dt>Pending</dt><dd id="admin-sidebar-pending-count">0</dd></div>
+        </dl>
+      </section>
+    </aside>
+
+    <main class="dashboard admin-dashboard">
+      <section class="admin-shell">
+        <section class="admin-summary-grid admin-directory-summary" id="admin-course-summary"></section>
+
+        <section class="panel admin-panel admin-search-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Search</p>
+            </div>
+          </div>
+          <input id="admin-course-search" class="schedule-input admin-search-input" type="search" placeholder="Search by course, program, instructor, or location">
+        </section>
+
+        <section class="panel admin-panel">
+          <div class="panel-heading admin-table-heading">
+            <div>
+              <p class="eyebrow">Course Oversight</p>
+              <h3>Course list and health snapshot</h3>
+            </div>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table admin-directory-table">
+              <thead>
+                <tr>
+                  <th>Course</th>
+                  <th>Instructor</th>
+                  <th>Program</th>
+                  <th>Schedule</th>
+                  <th>Enrollment</th>
+                  <th>Attendance</th>
+                  <th>Alerts</th>
+                  <th>Progress</th>
+                  <th>Report</th>
+                </tr>
+              </thead>
+              <tbody id="admin-course-rows"></tbody>
+            </table>
+          </div>
+          <div class="admin-pagination">
+            <button id="admin-course-prev" class="schedule-button schedule-button-secondary" type="button">Previous</button>
+            <span id="admin-course-page-info" class="metric-caption"></span>
+            <button id="admin-course-next" class="schedule-button schedule-button-secondary" type="button">Next</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

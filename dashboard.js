@@ -7,6 +7,7 @@ const timeOffStorageKey = "portal-timeoff-requests";
 const settingsStorageKey = "portal-instructor-settings";
 const sidebarHiddenStorageKey = "portal-sidebar-hidden";
 const testingMapStorageKey = "portal-testing-map-assignments";
+let activeStudentReportName = null;
 let openScheduleMenuId = null;
 let lastAlertCount = students.filter((student) => student.alertActive).length;
 let audioUnlocked = false;
@@ -24,10 +25,10 @@ const baseSchedule = [
   {
     day: "Monday",
     slots: [
-      { time: "3:30 PM - 5:00 PM", label: "Biology 201 Tutoring", type: "session" },
+      { time: "3:30 PM - 5:00 PM", label: "Python Foundations Tutoring", type: "session" },
       {
         time: "4:45 PM - 6:15 PM",
-        label: "Algebra II Lecture Lab",
+        label: "JavaScript Lecture Lab",
         type: "session",
         locationLabel: "Online",
         locationUrl: "https://zoom.us/j/94512033421",
@@ -37,27 +38,27 @@ const baseSchedule = [
   {
     day: "Tuesday",
     slots: [
-      { time: "3:15 PM - 4:45 PM", label: "Chemistry Foundations Tutoring", type: "session" },
+      { time: "3:15 PM - 4:45 PM", label: "Web Development Foundations Tutoring", type: "session" },
       { time: "5:00 PM - 6:00 PM", label: "Parent Progress Calls", type: "session" },
     ],
   },
   {
     day: "Wednesday",
     slots: [
-      { time: "3:30 PM - 5:00 PM", label: "Biology 201 Tutoring", type: "session" },
+      { time: "3:30 PM - 5:00 PM", label: "Python Foundations Tutoring", type: "session" },
     ],
   },
   {
     day: "Thursday",
     slots: [
-      { time: "3:15 PM - 4:45 PM", label: "Chemistry Foundations Tutoring", type: "session" },
-      { time: "4:45 PM - 6:15 PM", label: "Algebra II Lecture Lab", type: "session" },
+      { time: "3:15 PM - 4:45 PM", label: "Web Development Foundations Tutoring", type: "session" },
+      { time: "4:45 PM - 6:15 PM", label: "JavaScript Lecture Lab", type: "session" },
     ],
   },
   {
     day: "Friday",
     slots: [
-      { time: "3:30 PM - 4:30 PM", label: "Biology 201 Tutoring", type: "session" },
+      { time: "3:30 PM - 4:30 PM", label: "Python Foundations Tutoring", type: "session" },
     ],
   },
 ];
@@ -106,10 +107,20 @@ const metrics = {
   subplanOpenExisting: document.getElementById("subplan-open-existing"),
   subplanLinkInput: document.getElementById("subplan-link-input"),
   subplanCopy: document.getElementById("subplan-copy"),
+  studentReportModal: document.getElementById("student-report-modal"),
+  studentReportClose: document.getElementById("student-report-close"),
+  studentReportCancel: document.getElementById("student-report-cancel"),
+  studentReportForm: document.getElementById("student-report-form"),
+  studentReportMeta: document.getElementById("student-report-meta"),
+  studentReportAssignmentUpdate: document.getElementById("student-report-assignment-update"),
+  studentReportNextStep: document.getElementById("student-report-next-step"),
+  studentReportStatus: document.getElementById("student-report-status"),
   loggedOutState: document.getElementById("logged-out-state"),
   signInAgain: document.getElementById("sign-in-again"),
   workloadCount: document.getElementById("workload-count"),
   workloadList: document.getElementById("workload-list"),
+  homeUrgentSection: document.getElementById("home-urgent-section"),
+  homeUrgentList: document.getElementById("home-urgent-list"),
   weeklyHoursLabel: document.getElementById("weekly-hours-label"),
   adjustHoursButton: document.getElementById("adjust-hours-button"),
   previousWeekButton: document.getElementById("previous-week-button"),
@@ -960,8 +971,152 @@ function courseWorkspaceUrl(courseId) {
   return window.portalStore.courseWorkspaceUrl(courseId);
 }
 
+function studentReportUrl(student) {
+  const course = courseForStudent(student);
+  const baseUrl = courseWorkspaceUrl(course.id);
+  return `${baseUrl}?reportStudent=${encodeURIComponent(student.name)}`;
+}
+
+function openStudentReportModal(studentName) {
+  const student = students.find((entry) => entry.name === studentName);
+
+  if (!student || !metrics.studentReportModal) {
+    return;
+  }
+
+  const course = courseForStudent(student);
+  const existingReport = window.portalStore.getStudentCourseReport(course.id, student.name);
+  activeStudentReportName = student.name;
+  metrics.studentReportMeta.textContent = `${student.name} · ${course.title}`;
+  metrics.studentReportAssignmentUpdate.value = existingReport?.assignmentUpdate || "";
+  metrics.studentReportNextStep.value = existingReport?.nextStep || "";
+  metrics.studentReportStatus.textContent = existingReport
+    ? `Previously submitted ${new Date(existingReport.submittedAt).toLocaleDateString("en-US")}.`
+    : "Fill out both fields before submitting.";
+  metrics.studentReportModal.classList.remove("hidden");
+  metrics.studentReportModal.setAttribute("aria-hidden", "false");
+  metrics.studentReportAssignmentUpdate.focus();
+}
+
+function closeStudentReportModal() {
+  activeStudentReportName = null;
+  metrics.studentReportModal?.classList.add("hidden");
+  metrics.studentReportModal?.setAttribute("aria-hidden", "true");
+}
+
+function saveStudentReportFromModal() {
+  if (!activeStudentReportName) {
+    return;
+  }
+
+  const student = students.find((entry) => entry.name === activeStudentReportName);
+
+  if (!student) {
+    closeStudentReportModal();
+    return;
+  }
+
+  const assignmentUpdate = metrics.studentReportAssignmentUpdate.value.trim();
+  const nextStep = metrics.studentReportNextStep.value.trim();
+
+  if (!assignmentUpdate || !nextStep) {
+    metrics.studentReportStatus.textContent = "Complete both fields before submitting.";
+    return;
+  }
+
+  const course = courseForStudent(student);
+  window.portalStore.saveStudentCourseReport(course.id, student.name, {
+    assignmentUpdate,
+    nextStep,
+  });
+  metrics.studentReportStatus.textContent = `Submitted report for ${student.name}.`;
+  renderStudents();
+  renderTestingMap();
+  closeStudentReportModal();
+}
+
 function rosterForCourse(courseId) {
   return students.filter((student) => student.courseId === courseId);
+}
+
+function reportProgressForCourse(courseId) {
+  const roster = rosterForCourse(courseId);
+  const reportsByStudent = window.portalStore.getStudentCourseReports(courseId);
+
+  return roster.reduce((summary, student) => {
+    const report = reportsByStudent[student.name];
+    const expected = Math.max(report?.expectedReports || 3, report?.completedReports || 0);
+    const completed = Math.min(report?.completedReports || 0, expected);
+
+    return {
+      expected: summary.expected + expected,
+      completed: summary.completed + completed,
+      missing: summary.missing + Math.max(expected - completed, 0),
+      studentsMissing: summary.studentsMissing + (completed < expected ? 1 : 0),
+    };
+  }, {
+    expected: 0,
+    completed: 0,
+    missing: 0,
+    studentsMissing: 0,
+  });
+}
+
+function renderUrgentReminders() {
+  if (!metrics.homeUrgentList || !metrics.homeUrgentSection) {
+    return;
+  }
+
+  const urgentItems = window.portalStore.getCourses()
+    .map((course) => {
+      const progress = reportProgressForCourse(course.id);
+      return progress.missing
+        ? {
+            course,
+            progress,
+          }
+        : null;
+    })
+    .filter(Boolean)
+    .sort((left, right) => right.progress.missing - left.progress.missing);
+
+  metrics.homeUrgentSection.classList.toggle("hidden", urgentItems.length === 0);
+
+  metrics.homeUrgentList.innerHTML = urgentItems.length
+    ? (() => {
+        const totalMissing = urgentItems.reduce((sum, item) => sum + item.progress.missing, 0);
+        const totalStudentsMissing = urgentItems.reduce((sum, item) => sum + item.progress.studentsMissing, 0);
+
+        return `
+          <p class="home-list-item urgent">
+            <span class="urgent-bullet" aria-hidden="true"></span>
+            <span class="home-urgent-summary">
+              <span class="home-urgent-count-wrap">
+                <a class="home-urgent-count" href="${courseWorkspaceUrl(urgentItems[0].course.id)}" aria-label="${totalMissing} missing reports across ${urgentItems.length} classes">
+                  ${totalMissing} missing report${totalMissing === 1 ? "" : "s"}
+                </a>
+                <span class="home-urgent-hover">
+                  <strong>${totalMissing} missing report${totalMissing === 1 ? "" : "s"}</strong>
+                  <span>${totalStudentsMissing} student${totalStudentsMissing === 1 ? "" : "s"} still missing submissions.</span>
+                  ${urgentItems.map(({ course, progress }) => `
+                    <a class="home-urgent-hover-link" href="${courseWorkspaceUrl(course.id)}">
+                      <span>${course.title}</span>
+                      <strong>${progress.missing}</strong>
+                    </a>
+                  `).join("")}
+                </span>
+              </span>
+              <span class="home-urgent-copy">Student reports still need follow-up.</span>
+            </span>
+          </p>
+        `;
+      })()
+    : `
+      <p class="home-list-item urgent">
+        <span class="urgent-bullet" aria-hidden="true"></span>
+        <span>No urgent report reminders right now.</span>
+      </p>
+    `;
 }
 
 function courseForScheduleLabel(label) {
@@ -1691,6 +1846,7 @@ function renderSummary() {
   metrics.assistanceCard.classList.toggle("hidden", helpCount === 0);
   metrics.activeStudentCount.textContent = students.length;
   metrics.urgentAlertCount.textContent = helpCount;
+  renderUrgentReminders();
   metrics.workloadCount.textContent = `${todaySessions.length} ${todaySessions.length === 1 ? "session" : "sessions"}`;
   metrics.workloadList.innerHTML = todaySessions.length
     ? `
@@ -2328,6 +2484,8 @@ function studentStatus(student) {
 function renderSeatCard(student) {
   const status = studentStatus(student);
   const course = courseForStudent(student);
+  const existingReport = window.portalStore.getStudentCourseReport(course.id, student.name);
+  const reportButtonLabel = existingReport ? "Edit Report" : "Submit Report";
   const initials = student.name
     .split(" ")
     .map((part) => part[0])
@@ -2348,14 +2506,21 @@ function renderSeatCard(student) {
       <div class="seat-label">Seat ${student.seat}</div>
       <div class="seat-top">
         <div class="seat-avatar">${initials}</div>
-        <button class="${alertClasses}" type="button" data-student="${student.name}" aria-label="${student.alertActive ? `Disable alert for ${student.name}` : `${student.name} alert disabled`}">
-          !
-        </button>
+        <div class="seat-top-actions">
+          <button class="student-link student-link-quiet student-link-pill student-link-button" type="button" data-open-student-report="${student.name}">${reportButtonLabel}</button>
+          <button class="attendance-box ${attendanceClass} top-action-attendance" type="button" data-attendance-student="${student.name}" aria-label="Mark ${student.name} as ${student.presentToday ? "absent" : "here"}">
+            <span class="attendance-icon">${attendanceIcon}</span>
+            <span>${attendanceLabel}</span>
+          </button>
+          <button class="${alertClasses}" type="button" data-student="${student.name}" aria-label="${student.alertActive ? `Disable alert for ${student.name}` : `${student.name} alert disabled`}">
+            !
+          </button>
+        </div>
       </div>
       <div class="student-head">
         <div>
           <h4>${student.name}</h4>
-          <a class="student-course-link" href="${courseDetailsUrl(course.id)}">${course.title}</a>
+          <a class="student-course-link" href="${courseWorkspaceUrl(course.id)}">${course.title}</a>
           <p class="student-group-meta">${course.groupLabel}</p>
         </div>
         <div class="status-chip ${status.className}">${status.label}</div>
@@ -2367,10 +2532,6 @@ function renderSeatCard(student) {
             <span>Attendance</span>
             <strong>${student.attendance}%</strong>
           </div>
-          <button class="attendance-box ${attendanceClass}" type="button" data-attendance-student="${student.name}" aria-label="Mark ${student.name} as ${student.presentToday ? "absent" : "here"}">
-            <span class="attendance-icon">${attendanceIcon}</span>
-            <span>${attendanceLabel}</span>
-          </button>
         </div>
 
         <div class="seat-stat">
@@ -2497,6 +2658,8 @@ function renderTestingMapCell(student, rosterIndex) {
   const studentParam = encodeURIComponent(student.name);
   const assignWorkUrl = `student.html?student=${studentParam}&assignWork=1`;
   const course = courseForStudent(student);
+  const existingReport = window.portalStore.getStudentCourseReport(course.id, student.name);
+  const reportButtonLabel = existingReport ? "Edit Report" : "Submit Report";
 
   return `
     <div class="restaurant-map-seat-shell" data-testing-target-index="${rosterIndex}">
@@ -2512,8 +2675,15 @@ function renderTestingMapCell(student, rosterIndex) {
             <p class="student-group-meta">${courseScheduleLabel(course)}</p>
           </div>
           <div class="restaurant-map-widget-head-actions">
+            <div class="restaurant-map-widget-head-row">
+              <button class="student-link student-link-quiet student-link-pill student-link-button" type="button" data-open-student-report="${student.name}">${reportButtonLabel}</button>
+              <button class="attendance-box ${attendanceClass} top-action-attendance" type="button" data-attendance-student="${student.name}" aria-label="Mark ${student.name} as ${student.presentToday ? "absent" : "here"}">
+                <span class="attendance-icon">${attendanceIcon}</span>
+                <span>${presenceLabel}</span>
+              </button>
+              <button class="${alertButtonClass}" type="button" data-student="${student.name}" aria-label="${student.alertActive ? `Disable alert for ${student.name}` : `${student.name} alert disabled`}">!</button>
+            </div>
             <div class="status-chip ${status.className}">${status.label}</div>
-            <button class="${alertButtonClass}" type="button" data-student="${student.name}" aria-label="${student.alertActive ? `Disable alert for ${student.name}` : `${student.name} alert disabled`}">!</button>
           </div>
         </div>
         <div class="restaurant-map-widget-meta">
@@ -2525,10 +2695,6 @@ function renderTestingMapCell(student, rosterIndex) {
               <span>Attendance</span>
               <strong>${student.attendance}%</strong>
             </div>
-            <button class="attendance-box ${attendanceClass}" type="button" data-attendance-student="${student.name}" aria-label="Mark ${student.name} as ${student.presentToday ? "absent" : "here"}">
-              <span class="attendance-icon">${attendanceIcon}</span>
-              <span>${presenceLabel}</span>
-            </button>
           </div>
           <div class="seat-stat">
             <div class="seat-stat-head">
@@ -2860,9 +3026,19 @@ function reloadStudents() {
   renderSummary();
   renderSchedule();
   renderCoursesCatalog();
+  renderCurrentClassSurfaces();
+}
+
+function renderCurrentClassSurfaces() {
   renderCurrentClassAvailability();
-  renderStudents();
-  renderTestingMap();
+
+  if (currentView === "class") {
+    renderStudents();
+  }
+
+  if (currentView === "testing") {
+    renderTestingMap();
+  }
 }
 
 function ensureTestingAlertStudent(name) {
@@ -2895,8 +3071,7 @@ function moveStudent(draggedName, targetName) {
   students.splice(toIndex, 0, movedStudent);
   reseatStudents();
   persistStudents();
-  renderStudents();
-  renderTestingMap();
+  renderCurrentClassSurfaces();
 }
 
 function setFilter(nextFilter) {
@@ -2906,8 +3081,13 @@ function setFilter(nextFilter) {
     button.classList.toggle("active", button.dataset.filter === nextFilter);
   });
 
-  renderStudents();
-  renderTestingMap();
+  if (currentView === "class") {
+    renderStudents();
+  }
+
+  if (currentView === "testing") {
+    renderTestingMap();
+  }
 }
 
 function setView(nextView) {
@@ -2920,6 +3100,16 @@ function setView(nextView) {
   document.querySelectorAll("[data-view-panel]").forEach((panel) => {
     panel.classList.toggle("active", panel.dataset.viewPanel === nextView);
   });
+
+  if (nextView === "class") {
+    renderCurrentClassAvailability();
+    renderStudents();
+  }
+
+  if (nextView === "testing") {
+    renderCurrentClassAvailability();
+    renderTestingMap();
+  }
 }
 
 document.querySelectorAll(".filter-button").forEach((button) => {
@@ -3080,6 +3270,12 @@ metrics.logoutConfirm.addEventListener("click", () => {
 metrics.subplanClose?.addEventListener("click", closeSubplanModal);
 metrics.subplanCancel?.addEventListener("click", closeSubplanModal);
 metrics.subplanSave?.addEventListener("click", saveSubplanLink);
+metrics.studentReportClose?.addEventListener("click", closeStudentReportModal);
+metrics.studentReportCancel?.addEventListener("click", closeStudentReportModal);
+metrics.studentReportForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  saveStudentReportFromModal();
+});
 metrics.subplanOpenExisting?.addEventListener("click", () => {
   if (activeSubplanRequestIndex === null) {
     return;
@@ -3142,6 +3338,10 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("[data-close-subplan='true']")) {
     closeSubplanModal();
   }
+
+  if (event.target.closest("[data-close-student-report='true']")) {
+    closeStudentReportModal();
+  }
 });
 
 document.addEventListener("keydown", (event) => {
@@ -3154,6 +3354,7 @@ document.addEventListener("keydown", (event) => {
   closeSettingsModal();
   closeLogoutModal();
   closeSubplanModal();
+  closeStudentReportModal();
 });
 
 metrics.blockTimeButton.addEventListener("click", addUnavailableBlock);
@@ -3217,6 +3418,13 @@ metrics.studentGrid.addEventListener("click", (event) => {
     currentClassPreviewActive = false;
     renderStudents();
     renderTestingMap();
+    return;
+  }
+
+  const reportButton = event.target.closest("[data-open-student-report]");
+
+  if (reportButton) {
+    openStudentReportModal(reportButton.dataset.openStudentReport);
     return;
   }
 
@@ -3400,6 +3608,13 @@ metrics.testingMapContent?.addEventListener("dragend", () => {
 });
 
 metrics.testingMapContent?.addEventListener("click", (event) => {
+  const reportButton = event.target.closest("[data-open-student-report]");
+
+  if (reportButton) {
+    openStudentReportModal(reportButton.dataset.openStudentReport);
+    return;
+  }
+
   const alertButton = event.target.closest(".seat-alert");
 
   if (alertButton && !alertButton.classList.contains("hidden")) {
@@ -3461,14 +3676,14 @@ window.addEventListener("storage", (event) => {
 
   if (event.key === testingMapStorageKey) {
     testingMapAssignments = loadTestingMapAssignments();
-    renderTestingMap();
+    if (currentView === "testing") {
+      renderTestingMap();
+    }
   }
 });
 
 window.setInterval(() => {
-  renderCurrentClassAvailability();
-  renderStudents();
-  renderTestingMap();
+  renderCurrentClassSurfaces();
 }, 60000);
 
 ensureSidebarViews();
@@ -3482,8 +3697,6 @@ renderUnavailabilityList();
 renderTimeOffRequests();
 renderCoursesCatalog();
 renderCurrentClassAvailability();
-renderStudents();
-renderTestingMap();
 setView(currentView);
 setScheduleTab(currentScheduleTab);
 setLoggedOut(Boolean(instructorSettings.loggedOut));

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Algebra II Lecture Lab</title>
+  <title>JavaScript Lecture Lab</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
@@ -16,8 +16,8 @@
 
       <header class="course-hero panel">
         <div class="course-hero-copy">
-          <p class="eyebrow">Algebra II Lecture Lab</p>
-          <h1>Algebra II Lecture Lab</h1>
+          <p class="eyebrow">JavaScript Lecture Lab</p>
+          <h1>JavaScript Lecture Lab</h1>
           <p class="course-group-label">Lecture Hours: Monday and Thursday, 4:45 PM - 6:15 PM</p>
           <p class="course-overview-copy">A dedicated Algebra II workspace for lecture notes, guided examples, intervention planning, and roster follow-up.</p>
         </div>
@@ -84,6 +84,30 @@
               <button id="algebra-course-note-save" class="schedule-button" type="button">Save Note</button>
             </div>
           </div>
+        </article>
+
+        <article class="panel">
+          <p class="eyebrow">Student Reports</p>
+          <h3>Submit required student reports</h3>
+          <p class="metric-caption">Submit a report for one student at a time. Admin will see the same submitted record immediately.</p>
+          <div class="course-note-editor">
+            <label class="schedule-label" for="algebra-report-student-select">Student</label>
+            <select id="algebra-report-student-select" class="schedule-input"></select>
+            <label class="schedule-label" for="algebra-report-summary">Student summary</label>
+            <textarea id="algebra-report-summary" class="course-note-input" placeholder="Summarize how the student is doing in this course."></textarea>
+            <label class="schedule-label" for="algebra-report-assignment-update">Assignment update</label>
+            <textarea id="algebra-report-assignment-update" class="course-note-input" placeholder="Note assignment completion, missing work, or recovery status."></textarea>
+            <label class="schedule-label" for="algebra-report-attendance-update">Attendance and progress</label>
+            <textarea id="algebra-report-attendance-update" class="course-note-input" placeholder="Describe attendance, pacing, and current progress."></textarea>
+            <label class="schedule-label" for="algebra-report-next-step">Next steps</label>
+            <textarea id="algebra-report-next-step" class="course-note-input" placeholder="What should happen before the next class or check-in?"></textarea>
+            <div class="course-note-actions">
+              <span id="algebra-report-status" class="course-note-status">No student report submitted yet.</span>
+              <button id="algebra-report-save" class="schedule-button" type="button">Submit Report</button>
+            </div>
+          </div>
+          <div id="algebra-report-list" class="course-report-list"></div>
+          <div id="algebra-session-history" class="course-session-history"></div>
         </article>
       </section>
 

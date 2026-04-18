@@ -19,7 +19,7 @@
           <p class="eyebrow">Web Development Foundations Tutoring</p>
           <h1>Web Development Foundations Tutoring</h1>
           <p class="course-group-label">Tutoring Hours: Tuesday and Thursday, 3:15 PM - 4:45 PM</p>
-          <p class="course-overview-copy">A dedicated Chemistry Foundations workspace for concept recovery, packet review, intervention planning, and roster-specific support notes.</p>
+          <p class="course-overview-copy">A dedicated Web Development Foundations workspace for concept recovery, build review, intervention planning, and roster-specific support notes.</p>
         </div>
         <div class="course-hero-side">
           <div class="course-chip-row">
@@ -46,7 +46,7 @@
       <section class="course-detail-grid">
         <article class="panel course-roster-panel">
           <p class="eyebrow">Current Roster</p>
-          <h3>Students in Chemistry Foundations</h3>
+          <h3>Students in Web Development Foundations Tutoring</h3>
           <div id="chemistry-roster" class="course-roster-grid"></div>
         </article>
       </section>
@@ -78,7 +78,7 @@
             <label class="schedule-label" for="chemistry-student-select">Student</label>
             <select id="chemistry-student-select" class="schedule-input"></select>
             <label class="schedule-label" for="chemistry-course-note">Note</label>
-            <textarea id="chemistry-course-note" class="course-note-input" placeholder="Add a student note for Chemistry Foundations..."></textarea>
+            <textarea id="chemistry-course-note" class="course-note-input" placeholder="Add a student note for Web Development Foundations Tutoring..."></textarea>
             <div class="course-note-actions">
               <span id="chemistry-course-note-status" class="course-note-status">No student note saved yet.</span>
               <button id="chemistry-course-note-save" class="schedule-button" type="button">Save Note</button>
@@ -93,12 +93,8 @@
           <div class="course-note-editor">
             <label class="schedule-label" for="chemistry-report-student-select">Student</label>
             <select id="chemistry-report-student-select" class="schedule-input"></select>
-            <label class="schedule-label" for="chemistry-report-summary">Student summary</label>
-            <textarea id="chemistry-report-summary" class="course-note-input" placeholder="Summarize how the student is doing in this course."></textarea>
             <label class="schedule-label" for="chemistry-report-assignment-update">Assignment update</label>
             <textarea id="chemistry-report-assignment-update" class="course-note-input" placeholder="Note assignment completion, missing work, or recovery status."></textarea>
-            <label class="schedule-label" for="chemistry-report-attendance-update">Attendance and progress</label>
-            <textarea id="chemistry-report-attendance-update" class="course-note-input" placeholder="Describe attendance, pacing, and current progress."></textarea>
             <label class="schedule-label" for="chemistry-report-next-step">Next steps</label>
             <textarea id="chemistry-report-next-step" class="course-note-input" placeholder="What should happen before the next class or check-in?"></textarea>
             <div class="course-note-actions">
@@ -106,6 +102,7 @@
               <button id="chemistry-report-save" class="schedule-button" type="button">Submit Report</button>
             </div>
           </div>
+          <div id="chemistry-weekly-summary" class="course-weekly-summary"></div>
           <div id="chemistry-report-list" class="course-report-list"></div>
           <div id="chemistry-session-history" class="course-session-history"></div>
         </article>
@@ -150,7 +147,26 @@
     </section>
   </div>
 
+  <div id="report-history-modal" class="modal-shell hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-report-history-modal="true"></div>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="report-history-modal-title">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Student Reports</p>
+          <h3 id="report-history-modal-title">Report history</h3>
+          <p id="report-history-modal-summary" class="metric-caption"></p>
+        </div>
+        <button id="report-history-modal-close" class="modal-close" type="button" aria-label="Close report history">x</button>
+      </div>
+      <div id="report-history-modal-list" class="notes-modal-list"></div>
+      <div class="modal-actions">
+        <button id="report-history-modal-edit" class="schedule-button schedule-button-secondary" type="button">Update Report</button>
+        <button id="report-history-modal-done" class="schedule-button" type="button">Done</button>
+      </div>
+    </section>
+  </div>
+
   <script src="data.js"></script>
-  <script src="chemistry-foundations-roster-page.js"></script>
+  <script src="web-development-foundations-roster-page.js"></script>
 </body>
 </html>

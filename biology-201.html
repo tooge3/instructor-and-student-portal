@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Biology 201 Tutoring</title>
+  <title>Python Foundations Tutoring</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
@@ -16,8 +16,8 @@
 
       <header class="course-hero panel">
         <div class="course-hero-copy">
-          <p class="eyebrow">Biology 201 Tutoring</p>
-          <h1>Biology 201 Tutoring</h1>
+          <p class="eyebrow">Python Foundations Tutoring</p>
+          <h1>Python Foundations Tutoring</h1>
           <p class="course-group-label">Tutoring Hours: Monday, Wednesday, and Friday, 3:30 PM - 5:00 PM</p>
           <p class="course-overview-copy">A dedicated Biology 201 workspace for tutoring plans, lab follow-up, progress recovery, and roster-specific support notes.</p>
         </div>
@@ -84,6 +84,30 @@
               <button id="biology-course-note-save" class="schedule-button" type="button">Save Note</button>
             </div>
           </div>
+        </article>
+
+        <article class="panel">
+          <p class="eyebrow">Student Reports</p>
+          <h3>Submit required student reports</h3>
+          <p class="metric-caption">Submit a report for one student at a time. Admin will see the same submitted record immediately.</p>
+          <div class="course-note-editor">
+            <label class="schedule-label" for="biology-report-student-select">Student</label>
+            <select id="biology-report-student-select" class="schedule-input"></select>
+            <label class="schedule-label" for="biology-report-summary">Student summary</label>
+            <textarea id="biology-report-summary" class="course-note-input" placeholder="Summarize how the student is doing in this course."></textarea>
+            <label class="schedule-label" for="biology-report-assignment-update">Assignment update</label>
+            <textarea id="biology-report-assignment-update" class="course-note-input" placeholder="Note assignment completion, missing work, or recovery status."></textarea>
+            <label class="schedule-label" for="biology-report-attendance-update">Attendance and progress</label>
+            <textarea id="biology-report-attendance-update" class="course-note-input" placeholder="Describe attendance, pacing, and current progress."></textarea>
+            <label class="schedule-label" for="biology-report-next-step">Next steps</label>
+            <textarea id="biology-report-next-step" class="course-note-input" placeholder="What should happen before the next class or check-in?"></textarea>
+            <div class="course-note-actions">
+              <span id="biology-report-status" class="course-note-status">No student report submitted yet.</span>
+              <button id="biology-report-save" class="schedule-button" type="button">Submit Report</button>
+            </div>
+          </div>
+          <div id="biology-report-list" class="course-report-list"></div>
+          <div id="biology-session-history" class="course-session-history"></div>
         </article>
       </section>
 

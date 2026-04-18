@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hiring Pipeline</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell admin-app-shell" id="admin-app-shell">
+    <aside class="sidebar admin-sidebar" id="admin-sidebar">
+      <div class="sidebar-main">
+        <div class="sidebar-toggle-row">
+          <button id="admin-sidebar-toggle" class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="admin-sidebar" aria-label="Hide sidebar">
+            <span class="sidebar-toggle-icon"><</span>
+            <span class="sidebar-toggle-text">Hide</span>
+          </button>
+        </div>
+        <div class="brand-block">
+          <p class="eyebrow">Administration Workspace</p>
+          <h1>North Hall Academy</h1>
+          <p class="muted">A centralized portal for staffing, student oversight, coverage planning, payroll review, and hiring workflow.</p>
+        </div>
+        <nav class="nav-panel" aria-label="Administrator">
+          <a class="nav-link nav-link-anchor" href="admin.html">Dashboard Home</a>
+          <a class="nav-link nav-link-anchor" href="admin-instructors.html">Instructor Directory</a>
+          <a class="nav-link nav-link-anchor" href="admin-courses.html">Course Oversight</a>
+          <a class="nav-link nav-link-anchor" href="admin-coverage.html">Coverage Requests</a>
+          <a class="nav-link nav-link-anchor" href="admin-payroll.html">Payroll</a>
+          <a class="nav-link nav-link-anchor" href="admin-students.html">Student Directory</a>
+          <a class="nav-link nav-link-anchor active" href="admin-hiring.html">Hiring</a>
+          <a class="nav-link nav-link-anchor" href="index.html">Instructor Portal</a>
+        </nav>
+      </div>
+      <section class="advisor-card admin-sidebar-card">
+        <div class="advisor-card-header">
+          <div>
+            <p class="eyebrow">Administrator Account</p>
+            <h2>Operations Admin</h2>
+            <p>Regional oversight and staffing review</p>
+          </div>
+        </div>
+        <dl>
+          <div><dt>Students</dt><dd id="admin-sidebar-student-count">0</dd></div>
+          <div><dt>Alerts</dt><dd id="admin-sidebar-alert-count">0</dd></div>
+          <div><dt>Coverage</dt><dd id="admin-sidebar-coverage-count">0</dd></div>
+          <div><dt>Pending</dt><dd id="admin-sidebar-pending-count">0</dd></div>
+        </dl>
+      </section>
+    </aside>
+
+    <main class="dashboard admin-dashboard">
+      <section class="admin-shell">
+        <header class="admin-hero">
+          <div>
+            <p class="eyebrow">Hiring</p>
+            <h1>Candidate pipeline and hiring operations</h1>
+            <p class="admin-hero-copy">Track application flow, interview movement, offers, hires, and declines in one readable pipeline view.</p>
+          </div>
+        </header>
+
+        <section class="admin-hiring-summary" id="admin-hiring-summary"></section>
+
+        <section class="panel admin-panel">
+          <div class="panel-heading admin-table-heading">
+            <div>
+              <p class="eyebrow">Hiring Pipeline</p>
+              <h3>Candidate search and workflow controls</h3>
+            </div>
+            <div class="admin-table-tools">
+              <input id="admin-hiring-search" class="schedule-input admin-search-input" type="search" placeholder="Search by candidate, email, phone, location, or status">
+            </div>
+          </div>
+
+          <div class="admin-filter-grid">
+            <label class="schedule-field">
+              <span>Minimum Date</span>
+              <input id="admin-hiring-min-date" class="schedule-input" type="date">
+            </label>
+            <label class="schedule-field">
+              <span>Maximum Date</span>
+              <input id="admin-hiring-max-date" class="schedule-input" type="date">
+            </label>
+            <label class="schedule-field">
+              <span>Filter Status</span>
+              <select id="admin-hiring-status" class="schedule-select">
+                <option value="">All statuses</option>
+                <option value="Applied">Applied</option>
+                <option value="Applied (Local)">Applied (Local)</option>
+                <option value="Bootstrap">Bootstrap</option>
+                <option value="Bootstrap Returned">Bootstrap Returned</option>
+                <option value="Bootstrap Reviewed">Bootstrap Reviewed</option>
+                <option value="Interview Requested">Interview Requested</option>
+                <option value="Interview Complete">Interview Complete</option>
+                <option value="Hiring Offer">Hiring Offer</option>
+                <option value="Hired">Hired</option>
+                <option value="Declined &amp; Rejected">Declined &amp; Rejected</option>
+                <option value="Duplicate">Duplicate</option>
+              </select>
+            </label>
+            <label class="schedule-field">
+              <span>Filter Location</span>
+              <select id="admin-hiring-location" class="schedule-select">
+                <option value="">All locations</option>
+                <option value="Irvine">Irvine</option>
+                <option value="Redmond">Redmond</option>
+                <option value="Bothell">Bothell</option>
+                <option value="Factoria">Factoria</option>
+                <option value="Online">Online</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="admin-action-row">
+            <button class="schedule-button schedule-button-secondary" type="button">Send Emails</button>
+            <button class="schedule-button schedule-button-secondary" type="button">Change Status</button>
+            <button class="schedule-button" type="button">Track Status</button>
+            <button class="schedule-button schedule-button-secondary" type="button">Create Contract</button>
+            <button class="schedule-button schedule-button-secondary" type="button">Assign Document</button>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table admin-hiring-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Full Name</th>
+                  <th>Preferred</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Adult</th>
+                  <th>Status</th>
+                  <th>Pronoun</th>
+                  <th>Location</th>
+                  <th>Language</th>
+                  <th>History</th>
+                  <th>Detail</th>
+                  <th>Notes</th>
+                  <th>Menu</th>
+                </tr>
+              </thead>
+              <tbody id="admin-hiring-rows"></tbody>
+            </table>
+          </div>
+
+          <div class="admin-pagination">
+            <button id="admin-hiring-prev" class="schedule-button schedule-button-secondary" type="button">Previous</button>
+            <span id="admin-hiring-page-info" class="metric-caption"></span>
+            <button id="admin-hiring-next" class="schedule-button schedule-button-secondary" type="button">Next</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
