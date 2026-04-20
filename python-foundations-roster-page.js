@@ -1,6 +1,7 @@
 const BIOLOGY_ID = "biology-201";
 const BIOLOGY_NOTES_KEY = "portal-notes-biology-201";
 const BIOLOGY_GOALS_KEY = "portal-goals-biology-201";
+const BIOLOGY_CURRENT_SESSION = 11;
 const biologyPage = {
   studentCount: document.getElementById("biology-student-count"),
   averageProgress: document.getElementById("biology-average-progress"),
@@ -36,11 +37,19 @@ const biologyPage = {
   reportHistoryClose: document.getElementById("report-history-modal-close"),
   reportHistoryDone: document.getElementById("report-history-modal-done"),
   reportHistoryEdit: document.getElementById("report-history-modal-edit"),
+  sessionsPanel: document.getElementById("biology-sessions-panel"),
+  sessionModal: document.getElementById("course-session-modal"),
+  sessionModalTitle: document.getElementById("course-session-modal-title"),
+  sessionModalSummary: document.getElementById("course-session-modal-summary"),
+  sessionModalList: document.getElementById("course-session-modal-list"),
+  sessionModalClose: document.getElementById("course-session-modal-close"),
+  sessionModalDone: document.getElementById("course-session-modal-done"),
 };
 
 let biologyActiveGoalStudent = null;
 let biologyActiveNotesStudent = null;
 let biologyActiveReportStudent = null;
+let biologySessionEntries = [];
 
 function biologyCourseData() {
   return window.portalStore.getCourse(BIOLOGY_ID);
@@ -369,6 +378,73 @@ function renderBiologySessionHistory(roster) {
   `;
 }
 
+function renderBiologySessionsTab(roster) {
+  if (!biologyPage.sessionsPanel || !window.CourseSessionsUI) {
+    return;
+  }
+
+  biologySessionEntries = window.CourseSessionsUI.buildSessionEntries({
+    course: biologyCourseData(),
+    roster,
+    reportsByStudent: biologyReportsByStudent(),
+    currentSession: BIOLOGY_CURRENT_SESSION,
+    totalSessions: 16,
+    isOpenClass: false,
+  });
+
+  biologyPage.sessionsPanel.innerHTML = window.CourseSessionsUI.renderSessionsPanel(biologySessionEntries);
+}
+
+function openBiologySessionReports(entryIndex) {
+  const entry = biologySessionEntries[Number(entryIndex)];
+
+  if (!entry) {
+    return;
+  }
+
+  window.CourseSessionsUI.openSessionModal(
+    {
+      modal: biologyPage.sessionModal,
+      title: biologyPage.sessionModalTitle,
+      summary: biologyPage.sessionModalSummary,
+      list: biologyPage.sessionModalList,
+    },
+    {
+      title: `Session ${entry.label} reports`,
+      summary: `${entry.dateLabel} · ${entry.timeLabel}`,
+      body: window.CourseSessionsUI.renderSessionReportsBody(entry),
+    },
+  );
+}
+
+function openBiologySessionAttendance(entryIndex) {
+  const entry = biologySessionEntries[Number(entryIndex)];
+
+  if (!entry) {
+    return;
+  }
+
+  window.CourseSessionsUI.openSessionModal(
+    {
+      modal: biologyPage.sessionModal,
+      title: biologyPage.sessionModalTitle,
+      summary: biologyPage.sessionModalSummary,
+      list: biologyPage.sessionModalList,
+    },
+    {
+      title: `Session ${entry.label} attendance`,
+      summary: `${entry.dateLabel} · ${entry.timeLabel} · ${entry.attendancePillLabel}`,
+      body: window.CourseSessionsUI.renderSessionAttendanceBody(entry),
+    },
+  );
+}
+
+function closeBiologySessionModal() {
+  window.CourseSessionsUI?.closeSessionModal({
+    modal: biologyPage.sessionModal,
+  });
+}
+
 function renderBiologyNotesModal() {
   if (!biologyActiveNotesStudent || !biologyPage.notesModalList) {
     return;
@@ -451,6 +527,7 @@ function renderBiologyRosterPage() {
   renderBiologyWeeklySummary(roster);
   renderBiologyReports(roster);
   renderBiologySessionHistory(roster);
+  renderBiologySessionsTab(roster);
   prefillBiologyReportTarget();
   const behindStudents = roster
     .filter((student) => student.needsHelp || student.alertActive || student.progress < 75 || student.attendance < 85)
@@ -634,6 +711,44 @@ biologyPage.reportHistoryEdit?.addEventListener("click", () => {
 biologyPage.reportHistoryModal?.addEventListener("click", (event) => {
   if (event.target.closest("[data-close-report-history-modal='true']")) {
     closeBiologyReportHistoryModal();
+  }
+});
+
+document.addEventListener("click", (event) => {
+  const tabButton = event.target.closest("[data-course-tab-target]");
+
+  if (!tabButton) {
+    return;
+  }
+
+  const target = tabButton.dataset.courseTabTarget;
+  document.querySelectorAll("[data-course-tab-target]").forEach((button) => {
+    button.classList.toggle("active", button === tabButton);
+  });
+  document.querySelectorAll("[data-course-tab-panel]").forEach((panel) => {
+    panel.classList.toggle("hidden", panel.dataset.courseTabPanel !== target);
+  });
+});
+
+biologyPage.sessionsPanel?.addEventListener("click", (event) => {
+  const reportButton = event.target.closest("[data-open-course-session-reports]");
+  const attendanceButton = event.target.closest("[data-open-course-session-attendance]");
+
+  if (reportButton) {
+    openBiologySessionReports(reportButton.dataset.openCourseSessionReports);
+    return;
+  }
+
+  if (attendanceButton) {
+    openBiologySessionAttendance(attendanceButton.dataset.openCourseSessionAttendance);
+  }
+});
+
+biologyPage.sessionModalClose?.addEventListener("click", closeBiologySessionModal);
+biologyPage.sessionModalDone?.addEventListener("click", closeBiologySessionModal);
+biologyPage.sessionModal?.addEventListener("click", (event) => {
+  if (event.target.closest("[data-close-course-session-modal='true']")) {
+    closeBiologySessionModal();
   }
 });
 

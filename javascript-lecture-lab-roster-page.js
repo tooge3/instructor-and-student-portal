@@ -1,6 +1,7 @@
 const ALGEBRA_ID = "stem-bridge";
 const ALGEBRA_NOTES_KEY = "portal-notes-algebra-ii";
 const ALGEBRA_GOALS_KEY = "portal-goals-algebra-ii";
+const ALGEBRA_CURRENT_SESSION = 9;
 const algebraPage = {
   studentCount: document.getElementById("algebra-student-count"),
   averageProgress: document.getElementById("algebra-average-progress"),
@@ -36,11 +37,19 @@ const algebraPage = {
   reportHistoryClose: document.getElementById("report-history-modal-close"),
   reportHistoryDone: document.getElementById("report-history-modal-done"),
   reportHistoryEdit: document.getElementById("report-history-modal-edit"),
+  sessionsPanel: document.getElementById("algebra-sessions-panel"),
+  sessionModal: document.getElementById("course-session-modal"),
+  sessionModalTitle: document.getElementById("course-session-modal-title"),
+  sessionModalSummary: document.getElementById("course-session-modal-summary"),
+  sessionModalList: document.getElementById("course-session-modal-list"),
+  sessionModalClose: document.getElementById("course-session-modal-close"),
+  sessionModalDone: document.getElementById("course-session-modal-done"),
 };
 
 let algebraActiveGoalStudent = null;
 let algebraActiveNotesStudent = null;
 let algebraActiveReportStudent = null;
+let algebraSessionEntries = [];
 
 function algebraCourseData() {
   return window.portalStore.getCourse(ALGEBRA_ID);
@@ -366,6 +375,73 @@ function renderAlgebraSessionHistory(roster) {
   `;
 }
 
+function renderAlgebraSessionsTab(roster) {
+  if (!algebraPage.sessionsPanel || !window.CourseSessionsUI) {
+    return;
+  }
+
+  algebraSessionEntries = window.CourseSessionsUI.buildSessionEntries({
+    course: algebraCourseData(),
+    roster,
+    reportsByStudent: algebraReportsByStudent(),
+    currentSession: ALGEBRA_CURRENT_SESSION,
+    totalSessions: 16,
+    isOpenClass: false,
+  });
+
+  algebraPage.sessionsPanel.innerHTML = window.CourseSessionsUI.renderSessionsPanel(algebraSessionEntries);
+}
+
+function openAlgebraSessionReports(entryIndex) {
+  const entry = algebraSessionEntries[Number(entryIndex)];
+
+  if (!entry) {
+    return;
+  }
+
+  window.CourseSessionsUI.openSessionModal(
+    {
+      modal: algebraPage.sessionModal,
+      title: algebraPage.sessionModalTitle,
+      summary: algebraPage.sessionModalSummary,
+      list: algebraPage.sessionModalList,
+    },
+    {
+      title: `Session ${entry.label} reports`,
+      summary: `${entry.dateLabel} · ${entry.timeLabel}`,
+      body: window.CourseSessionsUI.renderSessionReportsBody(entry),
+    },
+  );
+}
+
+function openAlgebraSessionAttendance(entryIndex) {
+  const entry = algebraSessionEntries[Number(entryIndex)];
+
+  if (!entry) {
+    return;
+  }
+
+  window.CourseSessionsUI.openSessionModal(
+    {
+      modal: algebraPage.sessionModal,
+      title: algebraPage.sessionModalTitle,
+      summary: algebraPage.sessionModalSummary,
+      list: algebraPage.sessionModalList,
+    },
+    {
+      title: `Session ${entry.label} attendance`,
+      summary: `${entry.dateLabel} · ${entry.timeLabel} · ${entry.attendancePillLabel}`,
+      body: window.CourseSessionsUI.renderSessionAttendanceBody(entry),
+    },
+  );
+}
+
+function closeAlgebraSessionModal() {
+  window.CourseSessionsUI?.closeSessionModal({
+    modal: algebraPage.sessionModal,
+  });
+}
+
 function renderAlgebraNotesModal() {
   if (!algebraActiveNotesStudent || !algebraPage.notesModalList) {
     return;
@@ -451,6 +527,7 @@ function renderAlgebraRosterPage() {
   renderAlgebraWeeklySummary(roster);
   renderAlgebraReports(roster);
   renderAlgebraSessionHistory(roster);
+  renderAlgebraSessionsTab(roster);
   prefillAlgebraReportTarget();
 
   algebraList(algebraPage.summary, [
@@ -631,6 +708,44 @@ algebraPage.reportHistoryEdit?.addEventListener("click", () => {
 algebraPage.reportHistoryModal?.addEventListener("click", (event) => {
   if (event.target.closest("[data-close-report-history-modal='true']")) {
     closeAlgebraReportHistoryModal();
+  }
+});
+
+document.addEventListener("click", (event) => {
+  const tabButton = event.target.closest("[data-course-tab-target]");
+
+  if (!tabButton) {
+    return;
+  }
+
+  const target = tabButton.dataset.courseTabTarget;
+  document.querySelectorAll("[data-course-tab-target]").forEach((button) => {
+    button.classList.toggle("active", button === tabButton);
+  });
+  document.querySelectorAll("[data-course-tab-panel]").forEach((panel) => {
+    panel.classList.toggle("hidden", panel.dataset.courseTabPanel !== target);
+  });
+});
+
+algebraPage.sessionsPanel?.addEventListener("click", (event) => {
+  const reportButton = event.target.closest("[data-open-course-session-reports]");
+  const attendanceButton = event.target.closest("[data-open-course-session-attendance]");
+
+  if (reportButton) {
+    openAlgebraSessionReports(reportButton.dataset.openCourseSessionReports);
+    return;
+  }
+
+  if (attendanceButton) {
+    openAlgebraSessionAttendance(attendanceButton.dataset.openCourseSessionAttendance);
+  }
+});
+
+algebraPage.sessionModalClose?.addEventListener("click", closeAlgebraSessionModal);
+algebraPage.sessionModalDone?.addEventListener("click", closeAlgebraSessionModal);
+algebraPage.sessionModal?.addEventListener("click", (event) => {
+  if (event.target.closest("[data-close-course-session-modal='true']")) {
+    closeAlgebraSessionModal();
   }
 });
 

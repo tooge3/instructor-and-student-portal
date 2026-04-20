@@ -43,69 +43,82 @@
         </div>
       </header>
 
-      <section class="course-detail-grid">
-        <article class="panel course-roster-panel">
-          <p class="eyebrow">Current Roster</p>
-          <h3>Students in Python Foundations Tutoring</h3>
-          <div id="biology-roster" class="course-roster-grid"></div>
-        </article>
-      </section>
+      <section class="course-tab-shell">
+        <div class="course-tab-row">
+          <button class="course-tab-button active" type="button" data-course-tab-target="overview">Overview</button>
+          <button class="course-tab-button" type="button" data-course-tab-target="sessions">Sessions</button>
+        </div>
 
-      <section class="course-transfer-grid">
-        <article class="panel">
-          <p class="eyebrow">Class Snapshot</p>
-          <h3>What this page covers</h3>
-          <div id="biology-summary" class="course-list"></div>
-        </article>
+        <div class="course-tab-panel" data-course-tab-panel="overview">
+          <section class="course-detail-grid">
+            <article class="panel course-roster-panel">
+              <p class="eyebrow">Current Roster</p>
+              <h3>Students in Python Foundations Tutoring</h3>
+              <div id="biology-roster" class="course-roster-grid"></div>
+            </article>
+          </section>
 
-        <article class="panel">
-          <p class="eyebrow">Course Checkpoints</p>
-          <h3>Upcoming milestones</h3>
-          <div id="biology-milestones" class="course-list"></div>
-        </article>
+          <section class="course-transfer-grid">
+            <article class="panel">
+              <p class="eyebrow">Class Snapshot</p>
+              <h3>What this page covers</h3>
+              <div id="biology-summary" class="course-list"></div>
+            </article>
 
-        <article class="panel">
-          <p class="eyebrow">General Expectations</p>
-          <h3>What students should be doing</h3>
-          <div id="biology-expectations" class="course-list"></div>
-        </article>
+            <article class="panel">
+              <p class="eyebrow">Course Checkpoints</p>
+              <h3>Upcoming milestones</h3>
+              <div id="biology-milestones" class="course-list"></div>
+            </article>
 
-        <article class="panel">
-          <p class="eyebrow">Student Notes</p>
-          <h3>Save notes to a student record</h3>
-          <p class="metric-caption">Choose a student, save a note, and it will appear in the roster notes column.</p>
-          <div class="course-note-editor">
-            <label class="schedule-label" for="biology-student-select">Student</label>
-            <select id="biology-student-select" class="schedule-input"></select>
-            <label class="schedule-label" for="biology-course-note">Note</label>
-            <textarea id="biology-course-note" class="course-note-input" placeholder="Add a student note for Python Foundations Tutoring..."></textarea>
-            <div class="course-note-actions">
-              <span id="biology-course-note-status" class="course-note-status">No student note saved yet.</span>
-              <button id="biology-course-note-save" class="schedule-button" type="button">Save Note</button>
-            </div>
-          </div>
-        </article>
+            <article class="panel">
+              <p class="eyebrow">General Expectations</p>
+              <h3>What students should be doing</h3>
+              <div id="biology-expectations" class="course-list"></div>
+            </article>
 
-        <article class="panel">
-          <p class="eyebrow">Student Reports</p>
-          <h3>Submit required student reports</h3>
-          <p class="metric-caption">Submit a report for one student at a time. Admin will see the same submitted record immediately.</p>
-          <div class="course-note-editor">
-            <label class="schedule-label" for="biology-report-student-select">Student</label>
-            <select id="biology-report-student-select" class="schedule-input"></select>
-            <label class="schedule-label" for="biology-report-assignment-update">Assignment update</label>
-            <textarea id="biology-report-assignment-update" class="course-note-input" placeholder="Note assignment completion, missing work, or recovery status."></textarea>
-            <label class="schedule-label" for="biology-report-next-step">Next steps</label>
-            <textarea id="biology-report-next-step" class="course-note-input" placeholder="What should happen before the next class or check-in?"></textarea>
-            <div class="course-note-actions">
-              <span id="biology-report-status" class="course-note-status">No student report submitted yet.</span>
-              <button id="biology-report-save" class="schedule-button" type="button">Submit Report</button>
-            </div>
-          </div>
-          <div id="biology-weekly-summary" class="course-weekly-summary"></div>
-          <div id="biology-report-list" class="course-report-list"></div>
-          <div id="biology-session-history" class="course-session-history"></div>
-        </article>
+            <article class="panel">
+              <p class="eyebrow">Student Notes</p>
+              <h3>Save notes to a student record</h3>
+              <p class="metric-caption">Choose a student, save a note, and it will appear in the roster notes column.</p>
+              <div class="course-note-editor">
+                <label class="schedule-label" for="biology-student-select">Student</label>
+                <select id="biology-student-select" class="schedule-input"></select>
+                <label class="schedule-label" for="biology-course-note">Note</label>
+                <textarea id="biology-course-note" class="course-note-input" placeholder="Add a student note for Python Foundations Tutoring..."></textarea>
+                <div class="course-note-actions">
+                  <span id="biology-course-note-status" class="course-note-status">No student note saved yet.</span>
+                  <button id="biology-course-note-save" class="schedule-button" type="button">Save Note</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel">
+              <p class="eyebrow">Student Reports</p>
+              <h3>Submit required student reports</h3>
+              <p class="metric-caption">Submit a report for one student at a time. Admin will see the same submitted record immediately.</p>
+              <div class="course-note-editor">
+                <label class="schedule-label" for="biology-report-student-select">Student</label>
+                <select id="biology-report-student-select" class="schedule-input"></select>
+                <label class="schedule-label" for="biology-report-assignment-update">Assignment update</label>
+                <textarea id="biology-report-assignment-update" class="course-note-input" placeholder="Note assignment completion, missing work, or recovery status."></textarea>
+                <label class="schedule-label" for="biology-report-next-step">Next steps</label>
+                <textarea id="biology-report-next-step" class="course-note-input" placeholder="What should happen before the next class or check-in?"></textarea>
+                <div class="course-note-actions">
+                  <span id="biology-report-status" class="course-note-status">No student report submitted yet.</span>
+                  <button id="biology-report-save" class="schedule-button" type="button">Submit Report</button>
+                </div>
+              </div>
+              <div id="biology-weekly-summary" class="course-weekly-summary"></div>
+              <div id="biology-report-list" class="course-report-list"></div>
+              <div id="biology-session-history" class="course-session-history"></div>
+            </article>
+          </section>
+        </div>
+
+        <div class="course-tab-panel hidden" data-course-tab-panel="sessions">
+          <div id="biology-sessions-panel"></div>
+        </div>
       </section>
 
     </section>
@@ -166,7 +179,26 @@
     </section>
   </div>
 
+  <div id="course-session-modal" class="modal-shell hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-course-session-modal="true"></div>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="course-session-modal-title">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Session Detail</p>
+          <h3 id="course-session-modal-title">Session detail</h3>
+          <p id="course-session-modal-summary" class="metric-caption"></p>
+        </div>
+        <button id="course-session-modal-close" class="modal-close" type="button" aria-label="Close session detail">x</button>
+      </div>
+      <div id="course-session-modal-list" class="notes-modal-list"></div>
+      <div class="modal-actions">
+        <button id="course-session-modal-done" class="schedule-button" type="button">Done</button>
+      </div>
+    </section>
+  </div>
+
   <script src="data.js"></script>
+  <script src="course-sessions-shared.js"></script>
   <script src="python-foundations-roster-page.js"></script>
 </body>
 </html>

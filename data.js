@@ -378,6 +378,7 @@ const defaultStudents = [
 
 const storageKey = "portal-students";
 const studentCourseReportsStorageKey = "portal-student-course-reports";
+let studentCourseReportsCache = null;
 const legacySeedNames = [
   "Ariana Patel",
   "Jordan Kim",
@@ -558,29 +559,36 @@ function loadStudents() {
 }
 
 function loadStudentCourseReports() {
+  if (studentCourseReportsCache) {
+    return studentCourseReportsCache;
+  }
+
   const stored = window.localStorage.getItem(studentCourseReportsStorageKey);
 
   if (!stored) {
     const normalized = normalizeStudentCourseReports({});
     saveStudentCourseReports(normalized);
-    return normalized;
+    return studentCourseReportsCache;
   }
 
   try {
     const normalized = normalizeStudentCourseReports(JSON.parse(stored));
+    studentCourseReportsCache = normalized;
     window.localStorage.setItem(studentCourseReportsStorageKey, JSON.stringify(normalized));
-    return normalized;
+    return studentCourseReportsCache;
   } catch (error) {
     const normalized = normalizeStudentCourseReports({});
     saveStudentCourseReports(normalized);
-    return normalized;
+    return studentCourseReportsCache;
   }
 }
 
 function saveStudentCourseReports(reportMap) {
+  const normalized = normalizeStudentCourseReports(reportMap);
+  studentCourseReportsCache = normalized;
   window.localStorage.setItem(
     studentCourseReportsStorageKey,
-    JSON.stringify(normalizeStudentCourseReports(reportMap)),
+    JSON.stringify(normalized),
   );
 }
 
@@ -788,6 +796,10 @@ window.portalStore = {
     return clone(reports[courseId] || {});
   },
 
+  getAllStudentCourseReports() {
+    return clone(loadStudentCourseReports());
+  },
+
   getStudentCourseReport(courseId, studentName) {
     const reports = loadStudentCourseReports();
     return reports[courseId]?.[studentName] ? clone(reports[courseId][studentName]) : null;
@@ -796,6 +808,7 @@ window.portalStore = {
   ensureStudentCourseReports(courseId, studentNames) {
     const reports = loadStudentCourseReports();
     reports[courseId] = reports[courseId] || {};
+    let changed = false;
 
     (studentNames || []).forEach((studentName, index) => {
       const existing = reports[courseId][studentName]
@@ -809,10 +822,14 @@ window.portalStore = {
           index,
           studentNames.length,
         );
+        changed = true;
       }
     });
 
-    saveStudentCourseReports(reports);
+    if (changed) {
+      saveStudentCourseReports(reports);
+    }
+
     return clone(reports[courseId]);
   },
 

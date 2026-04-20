@@ -1,6 +1,7 @@
 const CHEMISTRY_ID = "chemistry-prep";
 const CHEMISTRY_NOTES_KEY = "portal-notes-chemistry-foundations";
 const CHEMISTRY_GOALS_KEY = "portal-goals-chemistry-foundations";
+const CHEMISTRY_CURRENT_SESSION = 10;
 const chemistryPage = {
   studentCount: document.getElementById("chemistry-student-count"),
   averageProgress: document.getElementById("chemistry-average-progress"),
@@ -36,11 +37,19 @@ const chemistryPage = {
   reportHistoryClose: document.getElementById("report-history-modal-close"),
   reportHistoryDone: document.getElementById("report-history-modal-done"),
   reportHistoryEdit: document.getElementById("report-history-modal-edit"),
+  sessionsPanel: document.getElementById("chemistry-sessions-panel"),
+  sessionModal: document.getElementById("course-session-modal"),
+  sessionModalTitle: document.getElementById("course-session-modal-title"),
+  sessionModalSummary: document.getElementById("course-session-modal-summary"),
+  sessionModalList: document.getElementById("course-session-modal-list"),
+  sessionModalClose: document.getElementById("course-session-modal-close"),
+  sessionModalDone: document.getElementById("course-session-modal-done"),
 };
 
 let chemistryActiveGoalStudent = null;
 let chemistryActiveNotesStudent = null;
 let chemistryActiveReportStudent = null;
+let chemistrySessionEntries = [];
 
 function chemistryCourseData() {
   return window.portalStore.getCourse(CHEMISTRY_ID);
@@ -366,6 +375,73 @@ function renderChemistrySessionHistory(roster) {
   `;
 }
 
+function renderChemistrySessionsTab(roster) {
+  if (!chemistryPage.sessionsPanel || !window.CourseSessionsUI) {
+    return;
+  }
+
+  chemistrySessionEntries = window.CourseSessionsUI.buildSessionEntries({
+    course: chemistryCourseData(),
+    roster,
+    reportsByStudent: chemistryReportsByStudent(),
+    currentSession: CHEMISTRY_CURRENT_SESSION,
+    totalSessions: 16,
+    isOpenClass: false,
+  });
+
+  chemistryPage.sessionsPanel.innerHTML = window.CourseSessionsUI.renderSessionsPanel(chemistrySessionEntries);
+}
+
+function openChemistrySessionReports(entryIndex) {
+  const entry = chemistrySessionEntries[Number(entryIndex)];
+
+  if (!entry) {
+    return;
+  }
+
+  window.CourseSessionsUI.openSessionModal(
+    {
+      modal: chemistryPage.sessionModal,
+      title: chemistryPage.sessionModalTitle,
+      summary: chemistryPage.sessionModalSummary,
+      list: chemistryPage.sessionModalList,
+    },
+    {
+      title: `Session ${entry.label} reports`,
+      summary: `${entry.dateLabel} · ${entry.timeLabel}`,
+      body: window.CourseSessionsUI.renderSessionReportsBody(entry),
+    },
+  );
+}
+
+function openChemistrySessionAttendance(entryIndex) {
+  const entry = chemistrySessionEntries[Number(entryIndex)];
+
+  if (!entry) {
+    return;
+  }
+
+  window.CourseSessionsUI.openSessionModal(
+    {
+      modal: chemistryPage.sessionModal,
+      title: chemistryPage.sessionModalTitle,
+      summary: chemistryPage.sessionModalSummary,
+      list: chemistryPage.sessionModalList,
+    },
+    {
+      title: `Session ${entry.label} attendance`,
+      summary: `${entry.dateLabel} · ${entry.timeLabel} · ${entry.attendancePillLabel}`,
+      body: window.CourseSessionsUI.renderSessionAttendanceBody(entry),
+    },
+  );
+}
+
+function closeChemistrySessionModal() {
+  window.CourseSessionsUI?.closeSessionModal({
+    modal: chemistryPage.sessionModal,
+  });
+}
+
 function renderChemistryNotesModal() {
   if (!chemistryActiveNotesStudent || !chemistryPage.notesModalList) {
     return;
@@ -448,6 +524,7 @@ function renderChemistryRosterPage() {
   renderChemistryWeeklySummary(roster);
   renderChemistryReports(roster);
   renderChemistrySessionHistory(roster);
+  renderChemistrySessionsTab(roster);
   prefillChemistryReportTarget();
   const behindStudents = roster
     .filter((student) => student.needsHelp || student.alertActive || student.progress < 75 || student.attendance < 85)
@@ -631,6 +708,44 @@ chemistryPage.reportHistoryEdit?.addEventListener("click", () => {
 chemistryPage.reportHistoryModal?.addEventListener("click", (event) => {
   if (event.target.closest("[data-close-report-history-modal='true']")) {
     closeChemistryReportHistoryModal();
+  }
+});
+
+document.addEventListener("click", (event) => {
+  const tabButton = event.target.closest("[data-course-tab-target]");
+
+  if (!tabButton) {
+    return;
+  }
+
+  const target = tabButton.dataset.courseTabTarget;
+  document.querySelectorAll("[data-course-tab-target]").forEach((button) => {
+    button.classList.toggle("active", button === tabButton);
+  });
+  document.querySelectorAll("[data-course-tab-panel]").forEach((panel) => {
+    panel.classList.toggle("hidden", panel.dataset.courseTabPanel !== target);
+  });
+});
+
+chemistryPage.sessionsPanel?.addEventListener("click", (event) => {
+  const reportButton = event.target.closest("[data-open-course-session-reports]");
+  const attendanceButton = event.target.closest("[data-open-course-session-attendance]");
+
+  if (reportButton) {
+    openChemistrySessionReports(reportButton.dataset.openCourseSessionReports);
+    return;
+  }
+
+  if (attendanceButton) {
+    openChemistrySessionAttendance(attendanceButton.dataset.openCourseSessionAttendance);
+  }
+});
+
+chemistryPage.sessionModalClose?.addEventListener("click", closeChemistrySessionModal);
+chemistryPage.sessionModalDone?.addEventListener("click", closeChemistrySessionModal);
+chemistryPage.sessionModal?.addEventListener("click", (event) => {
+  if (event.target.closest("[data-close-course-session-modal='true']")) {
+    closeChemistrySessionModal();
   }
 });
 

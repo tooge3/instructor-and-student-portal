@@ -82,7 +82,7 @@
                   <th>Languages</th>
                   <th><button id="admin-instructor-sort-course-load" class="admin-column-sort" type="button">Course Load <span aria-hidden="true">↑</span></button></th>
                   <th>Status</th>
-                  <th>Alerts</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="admin-instructor-rows"></tbody>
@@ -96,6 +96,104 @@
         </section>
       </section>
     </main>
+  </div>
+
+  <div id="admin-accident-modal" class="modal-shell hidden" aria-hidden="true">
+    <article class="modal-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Report Accident</p>
+          <h3 id="admin-accident-title">Instructor incident report</h3>
+          <p id="admin-accident-meta" class="metric-caption"></p>
+        </div>
+        <button id="admin-accident-close" class="modal-close" type="button" aria-label="Close accident report">x</button>
+      </div>
+      <div class="settings-form">
+        <label class="schedule-label" for="admin-accident-type">Incident type</label>
+        <select id="admin-accident-type" class="schedule-input">
+          <option value="Classroom injury">Classroom injury</option>
+          <option value="Slip or fall">Slip or fall</option>
+          <option value="Equipment issue">Equipment issue</option>
+          <option value="Facility concern">Facility concern</option>
+          <option value="Other">Other</option>
+        </select>
+        <label class="schedule-label" for="admin-accident-date">Date</label>
+        <input id="admin-accident-date" class="schedule-input" type="date">
+        <label class="schedule-label" for="admin-accident-notes">Notes</label>
+        <textarea id="admin-accident-notes" class="course-note-input" placeholder="Add the incident details, follow-up, and any immediate action taken."></textarea>
+      </div>
+      <div class="modal-actions">
+        <span id="admin-accident-status" class="metric-caption"></span>
+        <button id="admin-accident-cancel" class="schedule-button schedule-button-secondary" type="button">Cancel</button>
+        <button id="admin-accident-save" class="schedule-button" type="button">Save Report</button>
+      </div>
+    </article>
+  </div>
+
+  <div id="admin-edit-instructor-modal" class="modal-shell admin-edit-instructor-shell hidden" aria-hidden="true">
+    <article class="modal-card admin-edit-instructor-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Edit Instructor</p>
+          <h3 id="admin-edit-instructor-title">Update instructor record</h3>
+          <p id="admin-edit-instructor-meta" class="metric-caption"></p>
+        </div>
+        <button id="admin-edit-instructor-close" class="modal-close" type="button" aria-label="Close edit instructor">x</button>
+      </div>
+      <div class="settings-form">
+        <div class="admin-edit-inline-grid">
+          <div>
+            <label class="schedule-label" for="admin-edit-instructor-username">Username</label>
+            <input id="admin-edit-instructor-username" class="schedule-input" type="text" placeholder="maya.brooks">
+          </div>
+          <div>
+            <label class="schedule-label" for="admin-edit-instructor-password">Password</label>
+            <input id="admin-edit-instructor-password" class="schedule-input" type="text" placeholder="Temporary password">
+          </div>
+        </div>
+        <div class="admin-edit-inline-grid">
+          <div>
+            <label class="schedule-label" for="admin-edit-instructor-status">Status</label>
+            <select id="admin-edit-instructor-status" class="schedule-input">
+              <option value="Active">Active</option>
+              <option value="Waitlist">Waitlist</option>
+              <option value="Inactive">Inactive</option>
+              <option value="Transitioning">Transitioning</option>
+            </select>
+          </div>
+          <div>
+            <label class="schedule-label" for="admin-edit-instructor-rank">Rank</label>
+            <input id="admin-edit-instructor-rank" class="schedule-input" type="text" placeholder="Lead Instructor">
+          </div>
+        </div>
+        <label class="schedule-label" for="admin-edit-instructor-salary">Salary Rate</label>
+        <input id="admin-edit-instructor-salary" class="schedule-input" type="text" placeholder="$42/hr">
+        <label class="schedule-label" for="admin-edit-instructor-email">Email</label>
+        <input id="admin-edit-instructor-email" class="schedule-input" type="email">
+        <label class="schedule-label" for="admin-edit-instructor-phone">Phone</label>
+        <input id="admin-edit-instructor-phone" class="schedule-input" type="text">
+        <label class="schedule-label" for="admin-edit-instructor-locations">Locations</label>
+        <input id="admin-edit-instructor-locations" class="schedule-input" type="text" placeholder="Comma-separated locations">
+        <label class="schedule-label" for="admin-edit-instructor-languages">Languages</label>
+        <input id="admin-edit-instructor-languages" class="schedule-input" type="text" placeholder="Comma-separated languages">
+        <div class="admin-edit-tag-section">
+          <span class="schedule-label">Notes Tags</span>
+          <div class="admin-edit-tag-grid" id="admin-edit-instructor-tags">
+            <label class="admin-edit-tag-option"><input type="checkbox" value="Good comms">Good comms</label>
+            <label class="admin-edit-tag-option"><input type="checkbox" value="HS age">HS age</label>
+            <label class="admin-edit-tag-option"><input type="checkbox" value="Risky">Risky</label>
+            <label class="admin-edit-tag-option"><input type="checkbox" value="Low work load">Low work load</label>
+            <label class="admin-edit-tag-option"><input type="checkbox" value="Lower level only">Lower level only</label>
+            <label class="admin-edit-tag-option"><input type="checkbox" value="weak comms">weak comms</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <span id="admin-edit-instructor-status-note" class="metric-caption"></span>
+        <button id="admin-edit-instructor-cancel" class="schedule-button schedule-button-secondary" type="button">Cancel</button>
+        <button id="admin-edit-instructor-save" class="schedule-button" type="button">Save Changes</button>
+      </div>
+    </article>
   </div>
 
   <script src="data.js"></script>
