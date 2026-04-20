@@ -118,6 +118,7 @@ const adminState = {
   hiringPage: 1,
   studentQuery: "",
   studentSort: "name",
+  studentSortDirection: "asc",
   instructorQuery: "",
   instructorSort: "name",
   instructorSortDirection: "asc",
@@ -1545,16 +1546,17 @@ function sortStudentRecords(records) {
     const leftCourse = sharedCourses.find((entry) => entry.id === left.courseId)?.title || left.cohort || "";
     const rightCourse = sharedCourses.find((entry) => entry.id === right.courseId)?.title || right.cohort || "";
 
+    let result = 0;
+
     if (adminState.studentSort === "id") {
-      return compareText(leftId, rightId);
+      result = compareText(leftId, rightId);
+    } else if (adminState.studentSort === "courseLoad") {
+      result = compareText(leftCourse, rightCourse) || compareText(left.name, right.name);
+    } else {
+      result = compareText(left.name, right.name);
     }
 
-    if (adminState.studentSort === "courseLoad") {
-      const courseCompare = compareText(leftCourse, rightCourse);
-      return courseCompare || compareText(left.name, right.name);
-    }
-
-    return compareText(left.name, right.name);
+    return adminState.studentSortDirection === "desc" ? -result : result;
   });
 
   return sorted;
@@ -1571,6 +1573,9 @@ function syncSortChips() {
   metrics.studentSortName?.classList.toggle("is-active", adminState.studentSort === "name");
   metrics.studentSortId?.classList.toggle("is-active", adminState.studentSort === "id");
   metrics.studentSortCourse?.classList.toggle("is-active", adminState.studentSort === "courseLoad");
+  metrics.studentSortName?.classList.toggle("is-desc", adminState.studentSort === "name" && adminState.studentSortDirection === "desc");
+  metrics.studentSortId?.classList.toggle("is-desc", adminState.studentSort === "id" && adminState.studentSortDirection === "desc");
+  metrics.studentSortCourse?.classList.toggle("is-desc", adminState.studentSort === "courseLoad" && adminState.studentSortDirection === "desc");
 }
 
 function toggleInstructorSort(nextSort) {
@@ -1584,6 +1589,18 @@ function toggleInstructorSort(nextSort) {
   adminState.instructorPage = 1;
   syncSortChips();
   renderInstructorDirectory();
+}
+
+function toggleStudentSort(nextSort) {
+  if (adminState.studentSort === nextSort) {
+    adminState.studentSortDirection = adminState.studentSortDirection === "asc" ? "desc" : "asc";
+  } else {
+    adminState.studentSort = nextSort;
+    adminState.studentSortDirection = "asc";
+  }
+
+  syncSortChips();
+  renderStudents();
 }
 
 function operationalStudentLocation(student) {
@@ -2282,8 +2299,8 @@ function renderStudents() {
 
       return `
         <tr>
-          <td>ID ${studentIdForName(student.name)}</td>
           <td><a class="student-link" href="student.html?student=${encodeURIComponent(student.name)}">${student.name}</a></td>
+          <td>ID ${studentIdForName(student.name)}</td>
           <td>${course?.title || student.cohort}</td>
           <td><span class="status-chip ${status.className} admin-status-chip">${status.label}</span></td>
           <td>${student.attendance}%</td>
@@ -2847,21 +2864,15 @@ metrics.studentSearch?.addEventListener("input", (event) => {
 });
 
 metrics.studentSortName?.addEventListener("click", () => {
-  adminState.studentSort = "name";
-  syncSortChips();
-  renderStudents();
+  toggleStudentSort("name");
 });
 
 metrics.studentSortId?.addEventListener("click", () => {
-  adminState.studentSort = "id";
-  syncSortChips();
-  renderStudents();
+  toggleStudentSort("id");
 });
 
 metrics.studentSortCourse?.addEventListener("click", () => {
-  adminState.studentSort = "courseLoad";
-  syncSortChips();
-  renderStudents();
+  toggleStudentSort("courseLoad");
 });
 
 metrics.instructorPrev?.addEventListener("click", () => {

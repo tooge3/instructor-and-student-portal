@@ -117,6 +117,20 @@
           </div>
         </article>
       </section>
+
+      <section class="panel potential-classes-panel" id="potential-classes-panel" aria-label="Potential classes">
+        <div class="panel-heading potential-classes-heading">
+          <div>
+            <p class="eyebrow">Potential Classes</p>
+            <h3>Suggested class openings that fit your current calendar</h3>
+          </div>
+          <div id="potential-classes-indicator" class="potential-classes-indicator hidden" aria-live="polite">
+            <span class="potential-classes-pulse" aria-hidden="true"></span>
+            <span id="potential-classes-count">0 new</span>
+          </div>
+        </div>
+        <div id="potential-classes-list" class="potential-classes-list"></div>
+      </section>
       </section>
 
       <section class="dashboard-view" data-view-panel="courses">
@@ -474,6 +488,38 @@
         </div>
       </form>
     </section>
+  </div>
+
+  <div id="potential-class-reply-modal" class="modal-shell hidden" aria-hidden="true">
+    <div class="modal-card">
+      <button id="potential-class-reply-close" class="modal-close" type="button" aria-label="Close potential class reply">x</button>
+      <p class="eyebrow">Potential Classes</p>
+      <h3>Reply to class opening</h3>
+      <p id="potential-class-reply-meta" class="metric-caption"></p>
+      <form id="potential-class-reply-form" class="settings-form">
+        <div class="settings-field">
+          <span class="settings-label">Availability Response</span>
+          <div class="choice-chip-group" role="radiogroup" aria-label="Potential class response">
+            <label class="choice-chip">
+              <input type="radio" name="potential-class-response" value="accept">
+              <span>I can accept this class</span>
+            </label>
+            <label class="choice-chip">
+              <input type="radio" name="potential-class-response" value="decline">
+              <span>I cannot accept this class</span>
+            </label>
+          </div>
+        </div>
+        <div class="settings-field potential-class-notes-field">
+          <label class="settings-label" for="potential-class-reply-message">Notes</label>
+          <textarea id="potential-class-reply-message" class="settings-input settings-textarea potential-class-notes-input" rows="5" placeholder="Add any context, preferences, or follow-up details for this class."></textarea>
+        </div>
+        <div class="modal-actions potential-class-reply-actions">
+          <button id="potential-class-reply-cancel" class="schedule-button schedule-button-secondary" type="button">Cancel</button>
+          <button class="schedule-button" type="submit">Send Reply</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <div id="logged-out-state" class="logged-out-state hidden" aria-hidden="true">

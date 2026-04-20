@@ -69,21 +69,14 @@
               <p class="eyebrow">Student Directory</p>
               <h3>Student roster, progress, and current goals</h3>
             </div>
-            <div class="admin-table-tools">
-              <div class="admin-sort-links" aria-label="Student sorting">
-                <button id="admin-student-sort-name" class="admin-sort-link is-active" type="button">Name <span aria-hidden="true">↑</span></button>
-                <button id="admin-student-sort-id" class="admin-sort-link" type="button">ID <span aria-hidden="true">↑</span></button>
-                <button id="admin-student-sort-course" class="admin-sort-link" type="button">Course <span aria-hidden="true">↑</span></button>
-              </div>
-            </div>
           </div>
           <div class="admin-table-wrap">
             <table class="admin-table admin-student-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Student</th>
-                  <th>Course</th>
+                  <th><button id="admin-student-sort-name" class="admin-column-sort is-active" type="button">Name <span aria-hidden="true">&uarr;</span></button></th>
+                  <th><button id="admin-student-sort-id" class="admin-column-sort" type="button">ID <span aria-hidden="true">&uarr;</span></button></th>
+                  <th><button id="admin-student-sort-course" class="admin-column-sort" type="button">Course <span aria-hidden="true">&uarr;</span></button></th>
                   <th>Status</th>
                   <th>Attendance</th>
                   <th>Progress</th>

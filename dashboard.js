@@ -7,7 +7,9 @@ const timeOffStorageKey = "portal-timeoff-requests";
 const settingsStorageKey = "portal-instructor-settings";
 const sidebarHiddenStorageKey = "portal-sidebar-hidden";
 const testingMapStorageKey = "portal-testing-map-assignments";
+const potentialClassRepliesStorageKey = "portal-potential-class-replies";
 let activeStudentReportName = null;
+let activePotentialClassId = null;
 let openScheduleMenuId = null;
 let lastAlertCount = students.filter((student) => student.alertActive).length;
 let audioUnlocked = false;
@@ -66,6 +68,7 @@ let unavailableBlocks = loadUnavailableBlocks();
 let timeOffRequests = loadTimeOffRequests();
 let instructorSettings = loadInstructorSettings();
 let testingMapAssignments = loadTestingMapAssignments();
+let potentialClassReplies = loadPotentialClassReplies();
 
 const filters = {
   all: () => true,
@@ -73,6 +76,16 @@ const filters = {
   attendance: (student) => !student.presentToday,
 };
 const hourlyRate = 40;
+const potentialClassCatalog = [
+  { id: "potential-python-tuesday", subject: "Python Foundations Tutoring", day: "Tuesday", time: "1:30 PM - 3:00 PM", startDate: "2026-05-05", endDate: "2026-06-23", location: "Irvine" },
+  { id: "potential-web-monday", subject: "Web Development Foundations Tutoring", day: "Monday", time: "1:00 PM - 2:30 PM", startDate: "2026-05-04", endDate: "2026-06-22", location: "Online" },
+  { id: "potential-game-thursday", subject: "Game Design with Scratch", day: "Thursday", time: "1:00 PM - 2:30 PM", startDate: "2026-05-07", endDate: "2026-06-25", location: "Irvine" },
+  { id: "potential-robotics-wednesday", subject: "Intro to Robotics", day: "Wednesday", time: "12:30 PM - 2:00 PM", startDate: "2026-05-06", endDate: "2026-06-24", location: "Online" },
+  { id: "potential-html-friday", subject: "HTML and CSS Studio", day: "Friday", time: "1:15 PM - 2:45 PM", startDate: "2026-05-08", endDate: "2026-06-26", location: "Irvine" },
+  { id: "potential-ui-friday", subject: "UI Design Foundations", day: "Friday", time: "10:30 AM - 12:00 PM", startDate: "2026-05-08", endDate: "2026-06-26", location: "Online" },
+  { id: "potential-python-monday", subject: "Python Foundations Tutoring", day: "Monday", time: "5:15 PM - 6:45 PM", startDate: "2026-05-04", endDate: "2026-06-22", location: "Online" },
+  { id: "potential-js-tuesday", subject: "JavaScript Lecture Lab", day: "Tuesday", time: "5:15 PM - 6:45 PM", startDate: "2026-05-05", endDate: "2026-06-23", location: "Online" },
+];
 
 const metrics = {
   assistanceCard: document.getElementById("assistance-card"),
@@ -115,12 +128,22 @@ const metrics = {
   studentReportAssignmentUpdate: document.getElementById("student-report-assignment-update"),
   studentReportNextStep: document.getElementById("student-report-next-step"),
   studentReportStatus: document.getElementById("student-report-status"),
+  potentialClassReplyModal: document.getElementById("potential-class-reply-modal"),
+  potentialClassReplyClose: document.getElementById("potential-class-reply-close"),
+  potentialClassReplyCancel: document.getElementById("potential-class-reply-cancel"),
+  potentialClassReplyForm: document.getElementById("potential-class-reply-form"),
+  potentialClassReplyMeta: document.getElementById("potential-class-reply-meta"),
+  potentialClassReplyMessage: document.getElementById("potential-class-reply-message"),
   loggedOutState: document.getElementById("logged-out-state"),
   signInAgain: document.getElementById("sign-in-again"),
   workloadCount: document.getElementById("workload-count"),
   workloadList: document.getElementById("workload-list"),
   homeUrgentSection: document.getElementById("home-urgent-section"),
   homeUrgentList: document.getElementById("home-urgent-list"),
+  potentialClassesPanel: document.getElementById("potential-classes-panel"),
+  potentialClassesIndicator: document.getElementById("potential-classes-indicator"),
+  potentialClassesCount: document.getElementById("potential-classes-count"),
+  potentialClassesList: document.getElementById("potential-classes-list"),
   weeklyHoursLabel: document.getElementById("weekly-hours-label"),
   adjustHoursButton: document.getElementById("adjust-hours-button"),
   previousWeekButton: document.getElementById("previous-week-button"),
@@ -853,6 +876,24 @@ function loadSidebarHidden() {
   return window.localStorage.getItem(sidebarHiddenStorageKey) === "true";
 }
 
+function loadPotentialClassReplies() {
+  const stored = window.localStorage.getItem(potentialClassRepliesStorageKey);
+
+  if (!stored) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(stored);
+  } catch (error) {
+    return {};
+  }
+}
+
+function persistPotentialClassReplies() {
+  window.localStorage.setItem(potentialClassRepliesStorageKey, JSON.stringify(potentialClassReplies));
+}
+
 function persistSidebarHidden() {
   window.localStorage.setItem(sidebarHiddenStorageKey, String(sidebarHidden));
 }
@@ -952,6 +993,186 @@ function loadInstructorSettings() {
 
 function persistStudents() {
   window.portalStore.saveStudents(students);
+}
+
+function weekdayNameFromDate(dateText) {
+  const date = new Date(`${dateText}T12:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date);
+}
+
+function dateRangesOverlap(startA, endA, startB, endB) {
+  const aStart = new Date(`${startA}T12:00:00`);
+  const aEnd = new Date(`${endA}T12:00:00`);
+  const bStart = new Date(`${startB}T12:00:00`);
+  const bEnd = new Date(`${endB}T12:00:00`);
+
+  if ([aStart, aEnd, bStart, bEnd].some((date) => Number.isNaN(date.getTime()))) {
+    return false;
+  }
+
+  return aStart <= bEnd && bStart <= aEnd;
+}
+
+function formatShortDate(dateText) {
+  const date = new Date(`${dateText}T12:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return dateText;
+  }
+
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
+}
+
+function candidateMatchesAvailableLocations(candidate) {
+  const locations = instructorSettings.availableLocations || [];
+  return locations.includes(candidate.location);
+}
+
+function candidateConflictsWithSchedule(candidate) {
+  const candidateRange = parseRange(candidate.time);
+
+  if (!candidateRange) {
+    return true;
+  }
+
+  return scheduleForDay(candidate.day).some((slot) => {
+    const slotRange = parseRange(slot.time);
+    return slotRange ? rangesOverlap(candidateRange, slotRange) : false;
+  });
+}
+
+function candidateConflictsWithTimeOff(candidate) {
+  return timeOffRequests.some((request) => {
+    if (!dateRangesOverlap(candidate.startDate, candidate.endDate, request.startDate, request.endDate)) {
+      return false;
+    }
+
+    const cursor = new Date(`${request.startDate}T12:00:00`);
+    const end = new Date(`${request.endDate}T12:00:00`);
+
+    while (cursor <= end) {
+      if (new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(cursor) === candidate.day) {
+        return true;
+      }
+
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return false;
+  });
+}
+
+function availablePotentialClasses() {
+  return potentialClassCatalog
+    .filter((candidate) => candidateMatchesAvailableLocations(candidate))
+    .filter((candidate) => candidate.day === weekdayNameFromDate(candidate.startDate))
+    .filter((candidate) => !candidateConflictsWithSchedule(candidate))
+    .filter((candidate) => !candidateConflictsWithTimeOff(candidate))
+    .map((candidate) => ({
+      ...candidate,
+      reply: potentialClassReplies[candidate.id] || null,
+    }));
+}
+
+function openPotentialClassReplyModal(classId) {
+  const entry = availablePotentialClasses().find((candidate) => candidate.id === classId);
+
+  if (!entry || !metrics.potentialClassReplyModal) {
+    return;
+  }
+
+  activePotentialClassId = classId;
+  metrics.potentialClassReplyMeta.innerHTML = `
+    <span class="potential-class-reply-subject"><strong>Subject:</strong> ${entry.subject}</span><br>
+    <span><strong>Location:</strong> ${entry.location}</span><br>
+    <span><strong>Time:</strong> ${entry.day}, ${entry.time}</span><br>
+    <span><strong>Dates:</strong> ${formatShortDate(entry.startDate)} to ${formatShortDate(entry.endDate)}</span>
+  `;
+  document.querySelectorAll('input[name="potential-class-response"]').forEach((input) => {
+    input.checked = input.value === (entry.reply?.decision || "");
+  });
+  metrics.potentialClassReplyMessage.value = entry.reply?.message || "";
+  metrics.potentialClassReplyModal.classList.remove("hidden");
+  metrics.potentialClassReplyModal.setAttribute("aria-hidden", "false");
+  const checkedResponse = document.querySelector('input[name="potential-class-response"]:checked');
+  if (checkedResponse) {
+    checkedResponse.focus();
+  } else {
+    document.querySelector('input[name="potential-class-response"]')?.focus();
+  }
+}
+
+function closePotentialClassReplyModal() {
+  activePotentialClassId = null;
+  metrics.potentialClassReplyModal?.classList.add("hidden");
+  metrics.potentialClassReplyModal?.setAttribute("aria-hidden", "true");
+}
+
+function savePotentialClassReply() {
+  if (!activePotentialClassId) {
+    return;
+  }
+
+  const selectedDecision = document.querySelector('input[name="potential-class-response"]:checked')?.value || "";
+  const message = metrics.potentialClassReplyMessage.value.trim();
+
+  if (!selectedDecision) {
+    return;
+  }
+
+  potentialClassReplies[activePotentialClassId] = {
+    decision: selectedDecision,
+    message,
+    repliedAt: new Date().toISOString(),
+  };
+  persistPotentialClassReplies();
+  renderPotentialClasses();
+  closePotentialClassReplyModal();
+}
+
+function renderPotentialClasses() {
+  if (!metrics.potentialClassesList || !metrics.potentialClassesIndicator || !metrics.potentialClassesPanel) {
+    return;
+  }
+
+  const entries = availablePotentialClasses();
+  const hasEntries = entries.length > 0;
+  metrics.potentialClassesPanel.classList.toggle("has-potential-classes", hasEntries);
+  metrics.potentialClassesIndicator.classList.toggle("hidden", !hasEntries);
+
+  if (metrics.potentialClassesCount) {
+    metrics.potentialClassesCount.textContent = `${entries.length} new entr${entries.length === 1 ? "y" : "ies"}`;
+  }
+
+  metrics.potentialClassesList.innerHTML = hasEntries
+    ? entries.map((entry) => `
+        <article class="potential-class-card">
+          <div class="potential-class-main">
+            <div class="potential-class-topline">
+              <h4>${entry.subject}</h4>
+              <span class="potential-class-location">${entry.location}</span>
+            </div>
+            <p class="potential-class-meta"><strong>Dates:</strong> ${formatShortDate(entry.startDate)} - ${formatShortDate(entry.endDate)}</p>
+            <p class="potential-class-meta"><strong>Session:</strong> ${entry.day}, ${entry.time}</p>
+            ${
+              entry.reply?.decision
+                ? `<p class="potential-class-meta"><strong>Response:</strong> ${entry.reply.decision === "accept" ? "Can accept" : "Cannot accept"}</p>`
+                : ""
+            }
+          </div>
+          <div class="potential-class-actions">
+            <button class="schedule-button ${entry.reply ? "schedule-button-secondary" : ""}" type="button" data-potential-class-reply="${entry.id}">
+              ${entry.reply ? "Edit Reply" : "Reply"}
+            </button>
+          </div>
+        </article>
+      `).join("")
+    : `<article class="potential-class-empty"><p class="metric-caption">No open class opportunities fit your current schedule and availability right now.</p></article>`;
 }
 
 function courseForStudent(student) {
@@ -1847,6 +2068,7 @@ function renderSummary() {
   metrics.activeStudentCount.textContent = students.length;
   metrics.urgentAlertCount.textContent = helpCount;
   renderUrgentReminders();
+  renderPotentialClasses();
   metrics.workloadCount.textContent = `${todaySessions.length} ${todaySessions.length === 1 ? "session" : "sessions"}`;
   metrics.workloadList.innerHTML = todaySessions.length
     ? `
@@ -3178,6 +3400,13 @@ metrics.timeoffRows?.addEventListener("click", (event) => {
 });
 
 document.addEventListener("click", (event) => {
+  const potentialClassReplyButton = event.target.closest("[data-potential-class-reply]");
+
+  if (potentialClassReplyButton) {
+    openPotentialClassReplyModal(potentialClassReplyButton.dataset.potentialClassReply);
+    return;
+  }
+
   const documentPromptButton = event.target.closest("[data-document-prompt]");
 
   if (documentPromptButton) {
@@ -3272,9 +3501,15 @@ metrics.subplanCancel?.addEventListener("click", closeSubplanModal);
 metrics.subplanSave?.addEventListener("click", saveSubplanLink);
 metrics.studentReportClose?.addEventListener("click", closeStudentReportModal);
 metrics.studentReportCancel?.addEventListener("click", closeStudentReportModal);
+metrics.potentialClassReplyClose?.addEventListener("click", closePotentialClassReplyModal);
+metrics.potentialClassReplyCancel?.addEventListener("click", closePotentialClassReplyModal);
 metrics.studentReportForm?.addEventListener("submit", (event) => {
   event.preventDefault();
   saveStudentReportFromModal();
+});
+metrics.potentialClassReplyForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  savePotentialClassReply();
 });
 metrics.subplanOpenExisting?.addEventListener("click", () => {
   if (activeSubplanRequestIndex === null) {
@@ -3342,6 +3577,10 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("[data-close-student-report='true']")) {
     closeStudentReportModal();
   }
+
+  if (event.target.closest("[data-close-potential-class-reply='true']")) {
+    closePotentialClassReplyModal();
+  }
 });
 
 document.addEventListener("keydown", (event) => {
@@ -3355,6 +3594,7 @@ document.addEventListener("keydown", (event) => {
   closeLogoutModal();
   closeSubplanModal();
   closeStudentReportModal();
+  closePotentialClassReplyModal();
 });
 
 metrics.blockTimeButton.addEventListener("click", addUnavailableBlock);
@@ -3680,6 +3920,11 @@ window.addEventListener("storage", (event) => {
       renderTestingMap();
     }
   }
+
+  if (event.key === potentialClassRepliesStorageKey) {
+    potentialClassReplies = loadPotentialClassReplies();
+    renderPotentialClasses();
+  }
 });
 
 window.setInterval(() => {
@@ -3701,3 +3946,5 @@ setView(currentView);
 setScheduleTab(currentScheduleTab);
 setLoggedOut(Boolean(instructorSettings.loggedOut));
 renderSidebarVisibility();
+renderPotentialClasses();
+
