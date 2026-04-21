@@ -79,6 +79,10 @@
       <section class="dashboard-home-grid" aria-label="Dashboard home highlights">
         <article class="metric-card home-card">
           <p class="metric-label">Reminders</p>
+          <div id="home-positive-section" class="home-subsection hidden">
+            <p class="home-subsection-label home-subsection-label-positive">Opportunities</p>
+            <div id="home-positive-list" class="home-list"></div>
+          </div>
           <div id="home-urgent-section" class="home-subsection home-subsection-top">
             <p class="home-subsection-label">Urgent</p>
             <div id="home-urgent-list" class="home-list">
@@ -123,10 +127,10 @@
           <div>
             <p class="eyebrow">Potential Classes</p>
             <h3>Suggested class openings that fit your current calendar</h3>
-          </div>
-          <div id="potential-classes-indicator" class="potential-classes-indicator hidden" aria-live="polite">
-            <span class="potential-classes-pulse" aria-hidden="true"></span>
-            <span id="potential-classes-count">0 new</span>
+            <div id="potential-classes-indicator" class="potential-classes-indicator hidden" aria-live="polite">
+              <span class="potential-classes-pulse" aria-hidden="true"></span>
+              <span id="potential-classes-count">0 new</span>
+            </div>
           </div>
         </div>
         <div id="potential-classes-list" class="potential-classes-list"></div>

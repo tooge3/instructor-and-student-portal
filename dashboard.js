@@ -76,15 +76,37 @@ const filters = {
   attendance: (student) => !student.presentToday,
 };
 const hourlyRate = 40;
+const minimumPotentialClassCount = 5;
 const potentialClassCatalog = [
+  { id: "potential-data-monday", subject: "Data Science Basics", day: "Monday", time: "10:15 AM - 11:45 AM", startDate: "2026-05-04", endDate: "2026-06-22", location: "Online" },
   { id: "potential-python-tuesday", subject: "Python Foundations Tutoring", day: "Tuesday", time: "1:30 PM - 3:00 PM", startDate: "2026-05-05", endDate: "2026-06-23", location: "Irvine" },
+  { id: "potential-app-tuesday", subject: "App Design Studio", day: "Tuesday", time: "10:00 AM - 11:30 AM", startDate: "2026-05-05", endDate: "2026-06-23", location: "Online" },
   { id: "potential-web-monday", subject: "Web Development Foundations Tutoring", day: "Monday", time: "1:00 PM - 2:30 PM", startDate: "2026-05-04", endDate: "2026-06-22", location: "Online" },
   { id: "potential-game-thursday", subject: "Game Design with Scratch", day: "Thursday", time: "1:00 PM - 2:30 PM", startDate: "2026-05-07", endDate: "2026-06-25", location: "Irvine" },
   { id: "potential-robotics-wednesday", subject: "Intro to Robotics", day: "Wednesday", time: "12:30 PM - 2:00 PM", startDate: "2026-05-06", endDate: "2026-06-24", location: "Online" },
+  { id: "potential-cs-wednesday", subject: "Computer Science Explorers", day: "Wednesday", time: "10:00 AM - 11:30 AM", startDate: "2026-05-06", endDate: "2026-06-24", location: "Irvine" },
   { id: "potential-html-friday", subject: "HTML and CSS Studio", day: "Friday", time: "1:15 PM - 2:45 PM", startDate: "2026-05-08", endDate: "2026-06-26", location: "Irvine" },
   { id: "potential-ui-friday", subject: "UI Design Foundations", day: "Friday", time: "10:30 AM - 12:00 PM", startDate: "2026-05-08", endDate: "2026-06-26", location: "Online" },
   { id: "potential-python-monday", subject: "Python Foundations Tutoring", day: "Monday", time: "5:15 PM - 6:45 PM", startDate: "2026-05-04", endDate: "2026-06-22", location: "Online" },
   { id: "potential-js-tuesday", subject: "JavaScript Lecture Lab", day: "Tuesday", time: "5:15 PM - 6:45 PM", startDate: "2026-05-05", endDate: "2026-06-23", location: "Online" },
+];
+const potentialFallbackSubjects = [
+  "Creative Coding Studio",
+  "Computer Science Explorers",
+  "Data Science Basics",
+  "App Design Studio",
+  "Digital Logic Workshop",
+  "Frontend Lab",
+];
+const potentialFallbackWindows = [
+  { day: "Monday", time: "9:30 AM - 11:00 AM" },
+  { day: "Tuesday", time: "10:00 AM - 11:30 AM" },
+  { day: "Wednesday", time: "11:00 AM - 12:30 PM" },
+  { day: "Thursday", time: "9:45 AM - 11:15 AM" },
+  { day: "Friday", time: "10:30 AM - 12:00 PM" },
+  { day: "Monday", time: "12:15 PM - 1:45 PM" },
+  { day: "Wednesday", time: "1:30 PM - 3:00 PM" },
+  { day: "Thursday", time: "11:30 AM - 1:00 PM" },
 ];
 
 const metrics = {
@@ -140,6 +162,8 @@ const metrics = {
   workloadList: document.getElementById("workload-list"),
   homeUrgentSection: document.getElementById("home-urgent-section"),
   homeUrgentList: document.getElementById("home-urgent-list"),
+  homePositiveSection: document.getElementById("home-positive-section"),
+  homePositiveList: document.getElementById("home-positive-list"),
   potentialClassesPanel: document.getElementById("potential-classes-panel"),
   potentialClassesIndicator: document.getElementById("potential-classes-indicator"),
   potentialClassesCount: document.getElementById("potential-classes-count"),
@@ -1028,6 +1052,37 @@ function formatShortDate(dateText) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
 }
 
+function isoDateFromDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function nextDateForWeekday(dayName, weeksAhead = 2) {
+  const weekdayOrder = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const targetIndex = weekdayOrder.indexOf(dayName);
+  const base = new Date();
+  base.setHours(12, 0, 0, 0);
+  base.setDate(base.getDate() + (weeksAhead * 7));
+
+  if (targetIndex === -1) {
+    return isoDateFromDate(base);
+  }
+
+  const offset = (targetIndex - base.getDay() + 7) % 7;
+  base.setDate(base.getDate() + offset);
+  return isoDateFromDate(base);
+}
+
+function addDaysToIsoDate(dateText, dayCount) {
+  const date = new Date(`${dateText}T12:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return dateText;
+  }
+
+  date.setDate(date.getDate() + dayCount);
+  return isoDateFromDate(date);
+}
+
 function candidateMatchesAvailableLocations(candidate) {
   const locations = instructorSettings.availableLocations || [];
   return locations.includes(candidate.location);
@@ -1067,12 +1122,67 @@ function candidateConflictsWithTimeOff(candidate) {
   });
 }
 
-function availablePotentialClasses() {
+function candidateKey(candidate) {
+  return `${candidate.subject}|${candidate.day}|${candidate.time}|${candidate.location}`;
+}
+
+function filteredPotentialClassCatalog() {
   return potentialClassCatalog
     .filter((candidate) => candidateMatchesAvailableLocations(candidate))
     .filter((candidate) => candidate.day === weekdayNameFromDate(candidate.startDate))
     .filter((candidate) => !candidateConflictsWithSchedule(candidate))
-    .filter((candidate) => !candidateConflictsWithTimeOff(candidate))
+    .filter((candidate) => !candidateConflictsWithTimeOff(candidate));
+}
+
+function supplementalPotentialClasses(existingCandidates) {
+  const locations = (instructorSettings.availableLocations || []).filter(Boolean);
+  const existingKeys = new Set(existingCandidates.map(candidateKey));
+  const generated = [];
+  let subjectIndex = 0;
+
+  for (const window of potentialFallbackWindows) {
+    for (const location of locations) {
+      const subject = potentialFallbackSubjects[subjectIndex % potentialFallbackSubjects.length];
+      const startDate = nextDateForWeekday(window.day, 2);
+      const candidate = {
+        id: `potential-generated-${window.day.toLowerCase()}-${location.toLowerCase()}-${subjectIndex}`,
+        subject,
+        day: window.day,
+        time: window.time,
+        startDate,
+        endDate: addDaysToIsoDate(startDate, 49),
+        location,
+      };
+
+      subjectIndex += 1;
+
+      if (existingKeys.has(candidateKey(candidate))) {
+        continue;
+      }
+
+      if (candidateConflictsWithSchedule(candidate) || candidateConflictsWithTimeOff(candidate)) {
+        continue;
+      }
+
+      generated.push(candidate);
+      existingKeys.add(candidateKey(candidate));
+
+      if (existingCandidates.length + generated.length >= minimumPotentialClassCount) {
+        return generated;
+      }
+    }
+  }
+
+  return generated;
+}
+
+function availablePotentialClasses() {
+  const baseCandidates = filteredPotentialClassCatalog();
+  const generatedCandidates = baseCandidates.length >= minimumPotentialClassCount
+    ? []
+    : supplementalPotentialClasses(baseCandidates);
+
+  return [...baseCandidates, ...generatedCandidates]
     .map((candidate) => ({
       ...candidate,
       reply: potentialClassReplies[candidate.id] || null,
@@ -1173,6 +1283,18 @@ function renderPotentialClasses() {
         </article>
       `).join("")
     : `<article class="potential-class-empty"><p class="metric-caption">No open class opportunities fit your current schedule and availability right now.</p></article>`;
+
+  if (metrics.homePositiveSection && metrics.homePositiveList) {
+    metrics.homePositiveSection.classList.toggle("hidden", !hasEntries);
+    metrics.homePositiveList.innerHTML = hasEntries
+      ? `
+        <a class="home-list-item home-list-item-positive home-list-item-link" href="#potential-classes-panel">
+          <span class="positive-bullet" aria-hidden="true"></span>
+          <span>${entries.length} potential class entr${entries.length === 1 ? "y is" : "ies are"} available for review.</span>
+        </a>
+      `
+      : "";
+  }
 }
 
 function courseForStudent(student) {
@@ -2856,10 +2978,10 @@ function testingMapTablesForRoster(roster, displayedCourseIds) {
   }));
 }
 
-function renderTestingMapCell(student, rosterIndex) {
+function renderTestingMapCell(student, rosterIndex, courseId) {
   if (!student) {
     return `
-      <div class="restaurant-map-seat-shell" data-testing-target-index="${rosterIndex}">
+      <div class="restaurant-map-seat-shell" data-testing-target-index="${rosterIndex}" data-testing-course-id="${courseId}">
         <button class="restaurant-map-cell available" type="button" aria-label="Available">
           <span class="restaurant-seat-name">
             <strong>Available</strong>
@@ -2884,8 +3006,8 @@ function renderTestingMapCell(student, rosterIndex) {
   const reportButtonLabel = existingReport ? "Edit Report" : "Submit Report";
 
   return `
-    <div class="restaurant-map-seat-shell" data-testing-target-index="${rosterIndex}">
-      <button class="restaurant-map-cell occupied${presenceClass}${alertClass}" type="button" draggable="true" data-testing-student="${student.name}" data-testing-target-index="${rosterIndex}" aria-label="${student.name}">
+    <div class="restaurant-map-seat-shell" data-testing-target-index="${rosterIndex}" data-testing-course-id="${courseId}">
+      <button class="restaurant-map-cell occupied${presenceClass}${alertClass}" type="button" draggable="true" data-testing-student="${student.name}" data-testing-target-index="${rosterIndex}" data-testing-course-id="${courseId}" aria-label="${student.name}">
         ${student.alertActive ? '<span class="restaurant-map-seat-alert bouncing" aria-hidden="true">!</span>' : ""}
         <span class="restaurant-map-cell-marker" aria-hidden="true">${student.name.split(" ").map((part) => part[0]).join("").slice(0, 2)}</span>
       </button>
@@ -2980,36 +3102,55 @@ function renderTestingMap() {
     return;
   }
 
-  const courseTitles = [...new Set(
-    displayedCourseIds
-      .map((courseId) => courseMap[courseId]?.title)
-      .filter(Boolean),
-  )];
-  const tables = testingMapTablesForRoster(roster, displayedCourseIds);
+  const courseSections = displayedCourseIds
+    .map((courseId) => {
+      const course = courseMap[courseId];
+      const courseRoster = students.filter((student) => student.courseId === courseId);
+
+      if (!course || !courseRoster.length) {
+        return "";
+      }
+
+      const tables = testingMapTablesForRoster(courseRoster, [courseId]);
+
+      return `
+        <section class="class-group testing-session-group">
+          <div class="restaurant-map-context">
+            <div>
+              <div class="testing-session-badges">
+                <span class="testing-session-badge ${activeCourseIds.includes(courseId) ? "live" : "preview"}">
+                  ${activeCourseIds.includes(courseId) ? "Live now" : "Preview"}
+                </span>
+              </div>
+              <h4 class="testing-session-title">${course.title}</h4>
+              <p class="student-group-meta">${courseScheduleLabel(course)}</p>
+            </div>
+            <p class="student-meta">${activeCourseIds.includes(courseId) ? "Hover any occupied section to review the student status and current goal." : `Previewing ${preview?.label || "the next scheduled class"} with the same roster logic used in Current Class.`}</p>
+          </div>
+          <div class="restaurant-floor-map">
+            <div class="restaurant-map-area">
+              <div class="restaurant-map-area-label">Dining floor</div>
+              <div class="restaurant-map-table-grid">
+                ${tables.map((table) => `
+                  <article class="restaurant-map-table ${table.students.some(Boolean) ? "" : "restaurant-map-table-buffer"}" data-testing-table-start="${table.startIndex}" data-testing-table-capacity="${table.capacity}" data-testing-course-id="${courseId}">
+                    <div class="restaurant-map-label">${table.label}</div>
+                    <div class="restaurant-map-grid ${table.layout}">
+                      ${Array.from({ length: table.capacity }, (_, index) => renderTestingMapCell(table.students[index] || null, table.startIndex + index, courseId)).join("")}
+                    </div>
+                    ${table.students.some(Boolean) ? "" : '<div class="restaurant-map-table-note">Open table</div>'}
+                  </article>
+                `).join("")}
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+    })
+    .join("");
 
   metrics.testingMapContent.innerHTML = `
-    <div class="restaurant-map-context">
-      <div>
-        <p class="eyebrow">${activeCourseIds.length ? "Live Session Map" : "Preview Session Map"}</p>
-        <h4>${courseTitles.join(" and ")}</h4>
-      </div>
-      <p class="student-meta">${activeCourseIds.length ? "Hover any occupied section to review the student status and current goal." : `Previewing ${preview?.label || "the next scheduled class"} with the same roster logic used in Current Class.`}</p>
-    </div>
-    <div class="restaurant-floor-map">
-      <div class="restaurant-map-area">
-        <div class="restaurant-map-area-label">Dining floor</div>
-        <div class="restaurant-map-table-grid">
-          ${tables.map((table) => `
-            <article class="restaurant-map-table ${table.students.some(Boolean) ? "" : "restaurant-map-table-buffer"}" data-testing-table-start="${table.startIndex}" data-testing-table-capacity="${table.capacity}">
-              <div class="restaurant-map-label">${table.label}</div>
-              <div class="restaurant-map-grid ${table.layout}">
-                ${Array.from({ length: table.capacity }, (_, index) => renderTestingMapCell(table.students[index] || null, table.startIndex + index)).join("")}
-              </div>
-              ${table.students.some(Boolean) ? "" : '<div class="restaurant-map-table-note">Open table</div>'}
-            </article>
-          `).join("")}
-        </div>
-      </div>
+    <div class="restaurant-map-board">
+      ${courseSections}
     </div>
   `;
 }
@@ -3047,7 +3188,7 @@ function moveStudentInTestingMap(draggedName, targetIndex, displayedCourseIds) {
   renderTestingMap();
 }
 
-function resolveTestingMapDropIndex(dropTarget, slotCount) {
+function resolveTestingMapDropIndex(dropTarget, slotCount, courseId) {
   if (!dropTarget) {
     return 0;
   }
@@ -3057,7 +3198,7 @@ function resolveTestingMapDropIndex(dropTarget, slotCount) {
     const capacity = Number(dropTarget.dataset.testingTableCapacity || 4);
     const tableCells = Array.from({ length: capacity }, (_, index) => start + index);
     const occupiedCells = new Set(
-      Array.from(document.querySelectorAll("[data-testing-student][data-testing-target-index]"))
+      Array.from(document.querySelectorAll(`[data-testing-student][data-testing-target-index][data-testing-course-id="${courseId}"]`))
         .map((entry) => Number(entry.dataset.testingTargetIndex))
         .filter((value) => Number.isInteger(value)),
     );
@@ -3830,11 +3971,18 @@ metrics.testingMapContent?.addEventListener("drop", (event) => {
     entry.classList.remove("drag-over", "dragging");
   });
 
-  const { displayedCourseIds } = currentClassDisplayState();
-  const rosterLength = students.filter((student) => displayedCourseIds.includes(student.courseId)).length;
+  const courseId = cell.dataset.testingCourseId || cell.closest("[data-testing-course-id]")?.dataset.testingCourseId;
+
+  if (!courseId) {
+    draggedStudentName = null;
+    metrics.testingMapContent?.classList.remove("dragging-student-map");
+    return;
+  }
+
+  const rosterLength = students.filter((student) => student.courseId === courseId).length;
   const slotCount = Math.max(1, Math.ceil(rosterLength / 4) + 1) * 4;
-  const targetIndex = resolveTestingMapDropIndex(cell, slotCount);
-  moveStudentInTestingMap(draggedStudentName, targetIndex, displayedCourseIds);
+  const targetIndex = resolveTestingMapDropIndex(cell, slotCount, courseId);
+  moveStudentInTestingMap(draggedStudentName, targetIndex, [courseId]);
   draggedStudentName = null;
   metrics.testingMapContent?.classList.remove("dragging-student-map");
 });

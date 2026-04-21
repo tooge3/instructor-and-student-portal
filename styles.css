@@ -690,6 +690,10 @@ body {
   text-transform: uppercase;
 }
 
+.home-subsection-label-positive {
+  color: var(--ok);
+}
+
 .home-list-item {
   margin: 0;
   padding: 12px 14px;
@@ -708,6 +712,19 @@ body {
   gap: 10px;
   background: #fff6f4;
   border-color: #f0d4d0;
+}
+
+.home-list-item-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.home-list-item-positive {
+  background: #f3fbf6;
+  border-color: #cfe6d8;
+  color: var(--ink);
 }
 
 .home-urgent-link {
@@ -811,6 +828,17 @@ body {
   box-shadow: 0 0 0 6px rgba(179, 61, 41, 0.08);
 }
 
+.positive-bullet {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-top: 4px;
+  flex: 0 0 auto;
+  background: var(--ok);
+  box-shadow: 0 0 0 6px rgba(47, 122, 82, 0.08);
+}
+
 .home-list-item.conflict {
   background: #fff7e8;
   border-color: #f1c979;
@@ -840,6 +868,7 @@ body {
 
 .potential-classes-heading {
   align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .potential-classes-indicator {
@@ -852,6 +881,7 @@ body {
   color: var(--accent);
   font-weight: 800;
   white-space: nowrap;
+  margin-top: 12px;
 }
 
 .potential-classes-pulse {
@@ -2860,6 +2890,51 @@ body {
 
 .restaurant-map-board {
   display: grid;
+  gap: 18px;
+}
+
+.testing-session-group {
+  display: grid;
+  gap: 16px;
+}
+
+.testing-session-group .restaurant-map-context {
+  align-items: center;
+  padding: 18px 20px;
+  border: 1px solid #dbe5fb;
+  background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+}
+
+.testing-session-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.testing-session-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.testing-session-badge.live {
+  background: #e9f6ee;
+  color: var(--ok);
+}
+
+.testing-session-badge.preview {
+  background: #fff3e8;
+  color: #9a5a12;
+}
+
+.testing-session-title {
+  margin: 0;
+  font-size: 1.22rem;
 }
 
 .restaurant-floor-map-shell {
