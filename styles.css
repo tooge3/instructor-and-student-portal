@@ -555,10 +555,23 @@ body {
   gap: 10px;
 }
 
+.admin-edit-form-section {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #f8faff;
+}
+
 .admin-edit-inline-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.admin-edit-contact-grid {
+  grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.65fr);
 }
 
 .admin-edit-inline-grid > div {
@@ -581,6 +594,79 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.admin-edit-location-grid {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #f8faff;
+}
+
+.admin-icon-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 46px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #f7f9fc;
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.admin-history-pill {
+  min-width: auto;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  gap: 5px;
+  cursor: pointer;
+  transition: color 140ms ease, transform 140ms ease;
+}
+
+.admin-history-pill strong {
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+
+.admin-history-pill:hover,
+.admin-history-pill:focus-visible {
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.admin-history-pill:focus-visible {
+  outline: 2px solid rgba(69, 107, 232, 0.28);
+  outline-offset: 4px;
+}
+
+.admin-history-icon {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M5.15 2.35H2.7V4.8' stroke='%23243143' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M2.95 4.55a5.55 5.55 0 1 0 2.2-2.45' stroke='%23243143' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M8 5.2v3.05l2.2 1.25' stroke='%23243143' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 16px 16px;
+}
+
+.admin-history-icon::before {
+  content: none;
+}
+
+.admin-history-icon::after {
+  content: none;
+}
+.admin-icon-pill strong {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.84rem;
 }
 
 .admin-edit-tag-option {
@@ -955,9 +1041,21 @@ body {
 
 .potential-class-actions {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: flex-end;
+  gap: 6px;
   flex: 0 0 auto;
+}
+
+.potential-class-reply-note {
+  margin: 0;
+  max-width: 150px;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
 }
 
 .choice-chip-group {
@@ -2604,6 +2702,7 @@ body {
   body.print-paystub-active .paystub-earnings-footer strong {
     font-size: 0.84rem;
   }
+
 }
 
 .mini-bar {
@@ -3425,6 +3524,31 @@ body {
 
   .admin-dashboard {
     padding: 20px;
+  }
+
+  .admin-payroll-history-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-payroll-history-head {
+    flex-direction: column;
+  }
+
+  .admin-payroll-tablehead {
+    display: none;
+  }
+
+  .admin-payroll-row-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-payroll-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-payroll-hours-summary,
+  .admin-payroll-hours-item {
+    flex-direction: column;
   }
 
   .restaurant-header {
@@ -4271,6 +4395,348 @@ body {
   font-size: 1.2rem;
 }
 
+.admin-payroll-filter-grid {
+  grid-template-columns: minmax(0, 1.55fr) minmax(220px, 0.8fr);
+  align-items: end;
+  gap: 16px;
+}
+
+.admin-payroll-search-field,
+.admin-payroll-status-field {
+  min-width: 0;
+}
+
+.admin-payroll-search-field .schedule-input,
+.admin-payroll-status-field .schedule-select {
+  width: 100%;
+}
+
+.admin-payroll-ledger {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.admin-payroll-tablehead,
+.admin-payroll-row-summary {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.35fr) minmax(150px, 1.1fr) minmax(110px, 0.7fr) minmax(100px, 0.65fr) minmax(130px, 0.9fr) minmax(110px, 0.75fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.admin-payroll-tablehead {
+  padding: 0 14px 6px;
+  color: #6b7da3;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-payroll-row {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.04);
+}
+
+.admin-payroll-row-summary {
+  padding: 14px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.admin-payroll-row-summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-payroll-row-details {
+  display: grid;
+  gap: 14px;
+  padding: 0 14px 14px;
+  border-top: 1px solid #e6edf9;
+}
+
+.admin-payroll-cell {
+  min-width: 0;
+}
+
+.admin-payroll-cell strong,
+.admin-payroll-cell span {
+  display: block;
+}
+
+.admin-payroll-cell strong {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.96rem;
+  color: var(--ink);
+}
+
+.admin-payroll-cell span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.admin-payroll-instructor-cell strong {
+  font-size: 1rem;
+}
+
+.admin-payroll-toggle-cell {
+  text-align: right;
+}
+
+.admin-payroll-toggle-cell span {
+  color: #456be8;
+}
+
+.admin-payroll-course-block {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-payroll-history-block {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-payroll-history-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-payroll-history-item {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid #dbe4f5;
+  background: #fbfcff;
+}
+
+.admin-payroll-history-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.admin-payroll-history-head strong {
+  display: block;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+}
+
+.admin-payroll-history-head span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.admin-payroll-history-status {
+  min-width: 128px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  text-align: right;
+  background: #eef3ff;
+}
+
+.admin-payroll-history-status span {
+  display: block;
+  color: #5873a5;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-payroll-history-status strong {
+  display: block;
+  margin-top: 6px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.05rem;
+}
+
+.admin-payroll-history-status.paid {
+  background: rgba(74, 167, 113, 0.12);
+  color: #2f7751;
+}
+
+.admin-payroll-history-status.processing {
+  background: rgba(232, 161, 69, 0.14);
+  color: #9a621d;
+}
+
+.admin-payroll-history-status.pending {
+  background: rgba(197, 94, 72, 0.12);
+  color: #9f4534;
+}
+
+.admin-payroll-history-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-payroll-history-grid div {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(238, 243, 251, 0.72);
+}
+
+.admin-payroll-history-grid span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-payroll-history-grid strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--ink);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.96rem;
+}
+
+.admin-payroll-hours-trigger {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #456be8;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-payroll-hours-trigger:hover {
+  text-decoration: underline;
+}
+
+.admin-payroll-hours-card {
+  width: min(92vw, 720px);
+}
+
+.admin-payroll-hours-body {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-payroll-hours-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.admin-payroll-hours-summary strong {
+  display: block;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.08rem;
+}
+
+.admin-payroll-hours-summary span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.admin-payroll-hours-total {
+  min-width: 120px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: #eef3ff;
+  text-align: right;
+}
+
+.admin-payroll-hours-total span {
+  color: #5873a5;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-payroll-hours-total strong {
+  margin-top: 8px;
+  font-size: 1.25rem;
+  color: #2049c7;
+}
+
+.admin-payroll-hours-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.admin-payroll-hours-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-payroll-hours-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #f7f9fc;
+}
+
+.admin-payroll-hours-item strong {
+  display: block;
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.admin-payroll-hours-item span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.admin-payroll-course-list {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.admin-payroll-course-item {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid #dbe4f5;
+  background: #fbfcff;
+  color: inherit;
+  text-decoration: none;
+}
+
+.admin-payroll-course-item strong {
+  font-size: 0.95rem;
+}
+
+.admin-payroll-course-item span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.admin-payroll-course-item:hover {
+  border-color: rgba(69, 107, 232, 0.28);
+  box-shadow: 0 10px 24px rgba(69, 107, 232, 0.08);
+}
+
 .admin-quick-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4391,21 +4857,21 @@ body {
 }
 
 .admin-hiring-table {
-  min-width: 1240px;
+  min-width: 1080px;
 }
 
 .admin-hiring-table th,
 .admin-hiring-table td {
-  padding: 10px 12px;
+  padding: 9px 10px;
 }
 
 .admin-hiring-table td:nth-child(4),
 .admin-hiring-table td:nth-child(5) {
-  font-size: 0.95rem;
+  text-align: center;
+  width: 52px;
 }
-
 .admin-inline-select {
-  min-width: 150px;
+  min-width: 132px;
   padding: 7px 9px;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -4434,6 +4900,232 @@ body {
   background: #fff;
   color: var(--ink);
   cursor: pointer;
+}
+
+.admin-hiring-notes-cell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-notes-icon-button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: inline-grid;
+  place-items: center;
+  background: #fff;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.admin-notes-icon-button.empty {
+  background: #fff;
+}
+
+.admin-notes-icon-button.filled {
+  background: #eef4ff;
+  border-color: rgba(44, 107, 237, 0.22);
+}
+
+.admin-notes-icon-button .course-notes-icon {
+  transform: scale(0.82);
+}
+
+.admin-hiring-notes-hover {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  display: grid;
+  gap: 6px;
+  width: 220px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(18, 27, 43, 0.96);
+  color: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22);
+  z-index: 30;
+}
+
+.admin-hiring-notes-hover strong {
+  font-size: 0.84rem;
+}
+
+.admin-hiring-notes-hover span {
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.admin-hiring-notes-cell:hover .admin-hiring-notes-hover,
+.admin-hiring-notes-cell:focus-within .admin-hiring-notes-hover {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.admin-hiring-notes-card {
+  width: min(92vw, 620px);
+  max-height: min(88vh, 760px);
+  overflow-y: auto;
+}
+
+.admin-assessment-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.admin-assessment-card {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 16px 36px rgba(17, 24, 39, 0.06);
+}
+
+.admin-assessment-card.ready {
+  border-color: rgba(74, 167, 113, 0.32);
+}
+
+.admin-assessment-card.growth {
+  border-color: rgba(232, 161, 69, 0.28);
+}
+
+.admin-assessment-card.coaching {
+  border-color: rgba(197, 94, 72, 0.26);
+}
+
+.admin-assessment-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 16px;
+}
+
+.admin-assessment-head h3 {
+  margin: 4px 0 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.28rem;
+}
+
+.admin-assessment-score {
+  min-width: 92px;
+  padding: 12px 14px;
+  border-radius: 22px;
+  text-align: center;
+  background: #eef4ff;
+  color: var(--primary);
+}
+
+.admin-assessment-card.ready .admin-assessment-score {
+  background: rgba(74, 167, 113, 0.12);
+  color: #317150;
+}
+
+.admin-assessment-card.growth .admin-assessment-score {
+  background: rgba(232, 161, 69, 0.14);
+  color: #9f641d;
+}
+
+.admin-assessment-card.coaching .admin-assessment-score {
+  background: rgba(197, 94, 72, 0.12);
+  color: #9f4534;
+}
+
+.admin-assessment-score strong {
+  display: block;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.admin-assessment-score span {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.admin-assessment-metrics,
+.admin-assessment-tags,
+.admin-assessment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-assessment-pill,
+.admin-assessment-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef3fb;
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.admin-assessment-tag.muted {
+  background: #f7f2eb;
+  color: #7b6250;
+}
+
+.admin-assessment-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-assessment-list div {
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(238, 243, 251, 0.72);
+}
+
+.admin-assessment-list span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-assessment-list p {
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+.admin-history-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eef3fb;
+  color: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.admin-history-entry-body {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-history-entry-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.83rem;
+  line-height: 1.45;
 }
 
 .admin-course-detail-list {
@@ -6371,3 +7063,39 @@ body {
     transform: none;
   }
 }
+
+.admin-hire-instructor-card {
+  width: min(92vw, 760px);
+  max-height: min(88vh, 780px);
+  overflow-y: auto;
+}
+
+.admin-hiring-hover-layer {
+  width: min(380px, calc(100vw - 32px));
+}
+
+.admin-hiring-hover-cell {
+  overflow: visible;
+}
+
+.admin-hiring-contact-head {
+  width: 52px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.admin-hiring-contact-cell {
+  text-align: center;
+  width: 52px;
+}
+
+.admin-table-contact-button {
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.admin-table-contact-button:hover {
+  text-decoration: none;
+}
+
+

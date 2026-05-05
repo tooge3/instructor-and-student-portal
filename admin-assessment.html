@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Instructor Course Detail</title>
+  <title>Instructor Assessment</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
@@ -22,16 +22,16 @@
         <div class="brand-block">
           <p class="eyebrow">Administration Workspace</p>
           <h1>North Hall Academy</h1>
-          <p class="muted">A centralized portal for staffing, student oversight, coverage planning, and payroll review.</p>
+          <p class="muted">A centralized portal for staffing, student oversight, coverage planning, payroll review, hiring workflow, and instructor growth planning.</p>
         </div>
         <nav class="nav-panel" aria-label="Administrator">
           <a class="nav-link nav-link-anchor" href="admin.html">Dashboard Home</a>
-          <a class="nav-link nav-link-anchor active" href="admin-instructors.html">Instructor Directory</a>
+          <a class="nav-link nav-link-anchor" href="admin-instructors.html">Instructor Directory</a>
           <a class="nav-link nav-link-anchor" href="admin-courses.html">Course Oversight</a>
           <a class="nav-link nav-link-anchor" href="admin-coverage.html">Coverage Requests</a>
           <a class="nav-link nav-link-anchor" href="admin-payroll.html">Payroll</a>
           <a class="nav-link nav-link-anchor" href="admin-students.html">Student Directory</a>
-          <a class="nav-link nav-link-anchor" href="admin-assessment.html">Assessment</a>
+          <a class="nav-link nav-link-anchor active" href="admin-assessment.html">Assessment</a>
           <a class="nav-link nav-link-anchor" href="admin-hiring.html">Hiring</a>
           <a class="nav-link nav-link-anchor" href="index.html">Instructor Portal</a>
         </nav>
@@ -55,41 +55,57 @@
 
     <main class="dashboard admin-dashboard">
       <section class="admin-shell">
+        <header class="admin-hero">
+          <div>
+            <p class="eyebrow">Assessment</p>
+            <h1>Instructor growth and promotion readiness</h1>
+            <p class="admin-hero-copy">Review promotion signals across communication, instructional range, staffing flexibility, reliability, and leadership readiness using the same instructor records tracked elsewhere in the admin portal.</p>
+          </div>
+        </header>
+
+        <section class="admin-summary-grid" id="admin-assessment-summary"></section>
+
+        <section class="panel admin-panel admin-search-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Search</p>
+            </div>
+          </div>
+          <div class="admin-filter-grid admin-assessment-filter-grid">
+            <label class="schedule-field admin-assessment-search-field">
+              <span>Search</span>
+              <input id="admin-assessment-search" class="schedule-input admin-search-input" type="search" placeholder="Search by instructor, rank, language, or assessment tag">
+            </label>
+            <label class="schedule-field admin-assessment-location-field">
+              <span>Filter Location</span>
+              <select id="admin-assessment-location" class="schedule-select">
+                <option value="">All locations</option>
+                <option value="Irvine">Irvine</option>
+                <option value="Redmond">Redmond</option>
+                <option value="Bothell">Bothell</option>
+                <option value="Factoria">Factoria</option>
+                <option value="Online">Online</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
         <section class="panel admin-panel">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">Instructor Course Detail</p>
-              <h3 id="admin-instructor-course-title">Instructor course assignment</h3>
-              <p class="metric-caption" id="admin-instructor-course-subtitle">Review all assigned courses and connected student rosters.</p>
+              <p class="eyebrow">Promotion View</p>
+              <h3>Company-style readiness review</h3>
+              <p class="metric-caption">These assessments surface practical promotion signals and coaching blockers without separating instructors from their existing profile and course context.</p>
             </div>
-            <a class="schedule-button schedule-button-secondary" href="admin-instructors.html">Back to Instructor Directory</a>
           </div>
-          <div class="admin-summary-grid admin-directory-summary" id="admin-instructor-course-summary"></div>
+          <div class="admin-assessment-grid" id="admin-assessment-grid"></div>
         </section>
-
-        <section id="admin-instructor-course-list" class="admin-course-detail-list"></section>
       </section>
     </main>
   </div>
 
-  <div id="admin-course-report-modal" class="modal-shell hidden" aria-hidden="true">
-    <article class="modal-card">
-      <div class="modal-header">
-        <div>
-          <p class="eyebrow">Student Report</p>
-          <h3 id="admin-course-report-title">Student progress report</h3>
-          <p id="admin-course-report-meta" class="metric-caption"></p>
-        </div>
-        <button id="admin-course-report-close" class="modal-close" type="button" aria-label="Close report review">×</button>
-      </div>
-      <div id="admin-course-report-body" class="admin-report-body"></div>
-      <div class="modal-actions">
-        <button id="admin-course-report-cancel" class="schedule-button schedule-button-secondary" type="button">Close</button>
-      </div>
-    </article>
-  </div>
-
   <script src="data.js"></script>
   <script src="admin.js"></script>
+  <script src="admin-assessment.js"></script>
 </body>
 </html>

@@ -31,6 +31,7 @@
           <a class="nav-link nav-link-anchor" href="admin-coverage.html">Coverage Requests</a>
           <a class="nav-link nav-link-anchor" href="admin-payroll.html">Payroll</a>
           <a class="nav-link nav-link-anchor" href="admin-students.html">Student Directory</a>
+          <a class="nav-link nav-link-anchor" href="admin-assessment.html">Assessment</a>
           <a class="nav-link nav-link-anchor" href="admin-hiring.html">Hiring</a>
           <a class="nav-link nav-link-anchor" href="index.html">Instructor Portal</a>
         </nav>
@@ -168,12 +169,32 @@
         </div>
         <label class="schedule-label" for="admin-edit-instructor-salary">Salary Rate</label>
         <input id="admin-edit-instructor-salary" class="schedule-input" type="text" placeholder="$42/hr">
-        <label class="schedule-label" for="admin-edit-instructor-email">Email</label>
-        <input id="admin-edit-instructor-email" class="schedule-input" type="email">
-        <label class="schedule-label" for="admin-edit-instructor-phone">Phone</label>
-        <input id="admin-edit-instructor-phone" class="schedule-input" type="text">
-        <label class="schedule-label" for="admin-edit-instructor-locations">Locations</label>
-        <input id="admin-edit-instructor-locations" class="schedule-input" type="text" placeholder="Comma-separated locations">
+        <div class="admin-edit-form-section">
+          <span class="schedule-label">Contact Information</span>
+          <div class="admin-edit-inline-grid admin-edit-contact-grid">
+            <div>
+              <label class="schedule-label" for="admin-edit-instructor-email">Email</label>
+              <input id="admin-edit-instructor-email" class="schedule-input" type="email">
+            </div>
+            <div>
+              <label class="schedule-label" for="admin-edit-instructor-phone">Phone</label>
+              <input id="admin-edit-instructor-phone" class="schedule-input" type="text">
+            </div>
+          </div>
+        </div>
+        <div class="admin-edit-tag-section">
+          <span class="schedule-label">Location Coverage</span>
+          <div class="admin-edit-tag-grid admin-edit-location-grid" id="admin-edit-instructor-locations">
+            <label class="admin-edit-tag-option"><input type="checkbox" value="Online">Online</label>
+            <label class="admin-edit-tag-option"><input type="checkbox" value="Irvine">Irvine</label>
+            <label class="admin-edit-tag-option"><input type="checkbox" value="Diamond Bar">Diamond Bar</label>
+            <label class="admin-edit-tag-option"><input type="checkbox" value="Arcadia">Arcadia</label>
+            <label class="admin-edit-tag-option"><input type="checkbox" value="West Lafayette">West Lafayette</label>
+            <label class="admin-edit-tag-option"><input type="checkbox" value="Redmond">Redmond</label>
+            <label class="admin-edit-tag-option"><input type="checkbox" value="Bellevue">Bellevue</label>
+            <label class="admin-edit-tag-option"><input type="checkbox" value="Bothell">Bothell</label>
+          </div>
+        </div>
         <label class="schedule-label" for="admin-edit-instructor-languages">Languages</label>
         <input id="admin-edit-instructor-languages" class="schedule-input" type="text" placeholder="Comma-separated languages">
         <div class="admin-edit-tag-section">

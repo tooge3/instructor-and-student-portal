@@ -1279,6 +1279,11 @@ function renderPotentialClasses() {
             <button class="schedule-button ${entry.reply ? "schedule-button-secondary" : ""}" type="button" data-potential-class-reply="${entry.id}">
               ${entry.reply ? "Edit Reply" : "Reply"}
             </button>
+            ${
+              entry.reply
+                ? '<p class="potential-class-reply-note">OPs team will confirm with you later.</p>'
+                : ""
+            }
           </div>
         </article>
       `).join("")

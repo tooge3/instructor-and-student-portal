@@ -1,5 +1,4 @@
-let students = window.portalStore.getStudents();
-const sharedCourses = window.portalStore.getCourses();
+let students = [];
 let adminInstructorHoverHideTimeout = null;
 let activeAdminInstructorHoverAnchor = null;
 const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -9,11 +8,24 @@ const timeOffStorageKey = "portal-timeoff-requests";
 const adminSidebarHiddenStorageKey = "portal-admin-sidebar-hidden";
 const adminInstructorOverridesKey = "portal-admin-instructor-overrides";
 const adminInstructorAccidentsKey = "portal-admin-instructor-accidents";
+const adminHiringNotesKey = 'portal-admin-hiring-notes';
+const adminHiringOverridesKey = 'portal-admin-hiring-overrides';
 const hourlyRate = 40;
-const instructorPageSize = 18;
+const instructorPageSize = 50;
 const coursePageSize = 20;
 const courseCompletionGraceDays = 14;
 const connectedCoursePageSize = 6;
+const hiringStatusOptions = [
+  "Applied",
+  "Applied Local",
+  "Bootstrap",
+  "Bootstrap Returned",
+  "Interview Requested",
+  "Interview Done",
+  "Hire",
+  "Decline",
+  "Delete",
+];
 
 const metrics = {
   instructorCount: document.getElementById("admin-instructor-count"),
@@ -61,6 +73,32 @@ const metrics = {
   hiringPrev: document.getElementById("admin-hiring-prev"),
   hiringNext: document.getElementById("admin-hiring-next"),
   hiringPageInfo: document.getElementById("admin-hiring-page-info"),
+  hiringNotesModal: document.getElementById("admin-hiring-notes-modal"),
+  hiringNotesTitle: document.getElementById("admin-hiring-notes-title"),
+  hiringNotesMeta: document.getElementById("admin-hiring-notes-meta"),
+  hiringNotesInput: document.getElementById("admin-hiring-note-input"),
+  hiringNotesList: document.getElementById("admin-hiring-notes-list"),
+  hiringNotesStatus: document.getElementById("admin-hiring-notes-status"),
+  hiringNotesClose: document.getElementById("admin-hiring-notes-close"),
+  hiringNotesCancel: document.getElementById("admin-hiring-notes-cancel"),
+  hiringNotesSave: document.getElementById("admin-hiring-notes-save"),
+  hiringHistoryModal: document.getElementById("admin-hiring-history-modal"),
+  hiringHistoryTitle: document.getElementById("admin-hiring-history-title"),
+  hiringHistoryMeta: document.getElementById("admin-hiring-history-meta"),
+  hiringHistoryList: document.getElementById("admin-hiring-history-list"),
+  hiringHistoryClose: document.getElementById("admin-hiring-history-close"),
+  hiringHistoryCancel: document.getElementById("admin-hiring-history-cancel"),
+  hireInstructorModal: document.getElementById("admin-hire-instructor-modal"),
+  hireInstructorTitle: document.getElementById("admin-hire-instructor-title"),
+  hireInstructorMeta: document.getElementById("admin-hire-instructor-meta"),
+  hireInstructorUsername: document.getElementById("admin-hire-instructor-username"),
+  hireInstructorPassword: document.getElementById("admin-hire-instructor-password"),
+  hireInstructorSalary: document.getElementById("admin-hire-instructor-salary"),
+  hireInstructorLocations: document.getElementById("admin-hire-instructor-locations"),
+  hireInstructorStatus: document.getElementById("admin-hire-instructor-status"),
+  hireInstructorClose: document.getElementById("admin-hire-instructor-close"),
+  hireInstructorCancel: document.getElementById("admin-hire-instructor-cancel"),
+  hireInstructorSave: document.getElementById("admin-hire-instructor-save"),
   instructorCourseTitle: document.getElementById("admin-instructor-course-title"),
   instructorCourseSubtitle: document.getElementById("admin-instructor-course-subtitle"),
   instructorCourseSummary: document.getElementById("admin-instructor-course-summary"),
@@ -133,9 +171,11 @@ const adminState = {
 const hiringPageSize = 18;
 const adminInstructorCount = 50;
 const adminCourseCount = 100;
+const adminStudentCount = 150;
 let instructorRecords = null;
 let courseRecords = null;
 let hiringRecords = null;
+let adminStudentRecords = null;
 const adminCourseRosterCache = new Map();
 const adminCourseReportSummaryCache = new Map();
 const adminCourseReportStoreCache = new Map();
@@ -143,6 +183,11 @@ let adminSidebarHidden = loadAdminSidebarHidden();
 let activeCourseReportId = null;
 let activeAccidentInstructorId = null;
 let activeEditInstructorId = null;
+let activeHiringNotesId = null;
+let activeHiringHistoryId = null;
+let activeHireCandidateId = null;
+let adminHiringHoverHideTimeout = null;
+let activeAdminHiringHoverAnchor = null;
 
 function loadAdminInstructorOverrides() {
   const stored = window.localStorage.getItem(adminInstructorOverridesKey);
@@ -160,6 +205,42 @@ function loadAdminInstructorOverrides() {
 
 function saveAdminInstructorOverrides(overrides) {
   window.localStorage.setItem(adminInstructorOverridesKey, JSON.stringify(overrides));
+}
+
+function loadAdminHiringNotes() {
+  const stored = window.localStorage.getItem(adminHiringNotesKey);
+
+  if (!stored) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(stored);
+  } catch (error) {
+    return {};
+  }
+}
+
+function saveAdminHiringNotes(notes) {
+  window.localStorage.setItem(adminHiringNotesKey, JSON.stringify(notes));
+}
+
+function loadAdminHiringOverrides() {
+  const stored = window.localStorage.getItem(adminHiringOverridesKey);
+
+  if (!stored) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(stored);
+  } catch (error) {
+    return {};
+  }
+}
+
+function saveAdminHiringOverrides(overrides) {
+  window.localStorage.setItem(adminHiringOverridesKey, JSON.stringify(overrides));
 }
 
 function loadAdminInstructorAccidents() {
@@ -211,12 +292,127 @@ function getCourseRecords() {
   return courseRecords;
 }
 
+function buildAdminStudentRecords(count, courses) {
+  const firstNames = ["Ariana", "Mateo", "Grace", "Hannah", "Jordan", "Elena", "Marcus", "Ethan", "Sofia", "Noah", "Priya", "Liam", "Mila", "Leo", "Zoe", "Owen", "Ruby", "Isaac", "Maya", "Caleb"];
+  const lastNames = ["Patel", "Cho", "Kim", "Nguyen", "Lopez", "Chen", "Rivera", "Singh", "Morris", "Tran", "Allen", "Flores", "Hughes", "Reyes", "Carter"];
+  const goalStarts = ["Finish", "Strengthen", "Complete", "Improve", "Practice", "Build"];
+  const goalTopics = ["core syntax", "debugging habits", "project structure", "algorithm fluency", "front-end layouts", "Python problem solving", "JavaScript fundamentals", "presentation confidence"];
+
+  return Array.from({ length: count }, (_, index) => {
+    const firstName = firstNames[index % firstNames.length];
+    const lastName = lastNames[Math.floor(index / firstNames.length) % lastNames.length];
+    const course = courses[index % courses.length];
+    const attendance = 78 + ((index * 5) % 23);
+    const progress = 62 + ((index * 7) % 35);
+    const assignmentsLate = index % 9 === 0 ? 3 : index % 5 === 0 ? 1 : 0;
+    const alertActive = index % 17 === 0;
+    const needsHelp = !alertActive && index % 11 === 0;
+    const goalText = `${goalStarts[index % goalStarts.length]} ${goalTopics[index % goalTopics.length]}`;
+
+    return {
+      id: `STD-${String(index + 1).padStart(3, "0")}`,
+      name: `${firstName} ${lastName}`,
+      courseId: course.id,
+      cohort: course.title,
+      location: course.location,
+      attendance,
+      progress,
+      assignmentsLate,
+      alertActive,
+      needsHelp,
+      goal: goalText,
+      currentGoals: [{ text: goalText, assignedAt: new Date("2026-04-01T09:00:00").toISOString() }],
+    };
+  });
+}
+
+function getAdminStudentRecords() {
+  if (!adminStudentRecords) {
+    adminStudentRecords = buildAdminStudentRecords(adminStudentCount, getCourseRecords());
+  }
+
+  return adminStudentRecords;
+}
+
+function courseRecordTitleForId(courseId) {
+  return getCourseRecords().find((entry) => entry.id === courseId)?.title || "";
+}
+function normalizeHiringStatus(status) {
+  const map = {
+    "Applied (Local)": "Applied Local",
+    "Bootstrap Reviewed": "Bootstrap Returned",
+    "Interview Complete": "Interview Done",
+    "Hiring Offer": "Hire",
+    "Hired": "Hire",
+    "Declined & Rejected": "Decline",
+    "Duplicate": "Delete",
+  };
+
+  return map[status] || status || "Applied";
+}
+
+function buildHiringStatusHistory(candidate) {
+  const defaultFlow = hiringStatusOptions.filter((status) => status !== "Decline" && status !== "Delete");
+  const currentStatus = normalizeHiringStatus(candidate.status);
+  const count = Math.max(1, candidate.historyCount || 1);
+  const seedDate = new Date(`${candidate.date}T09:00:00`);
+  const earlierStatuses = defaultFlow.filter((status) => status !== currentStatus).slice(0, Math.max(0, count - 1));
+  const statuses = [...earlierStatuses, currentStatus].slice(-count);
+
+  return statuses.map((status, index) => {
+    const createdAt = new Date(seedDate);
+    createdAt.setDate(seedDate.getDate() - ((statuses.length - index - 1) * 3));
+    return {
+      status: normalizeHiringStatus(status),
+      createdAt: createdAt.toISOString(),
+      note: index === statuses.length - 1 ? `Current stage: ${normalizeHiringStatus(status)}` : `Moved into ${normalizeHiringStatus(status)}.`,
+    };
+  }).reverse();
+}
+
 function getHiringRecords() {
   if (!hiringRecords) {
     hiringRecords = buildHiringRecords(420);
   }
 
-  return hiringRecords;
+  const overrides = loadAdminHiringOverrides();
+  return hiringRecords.map((candidate) => {
+    const override = overrides[candidate.id] || {};
+    const resolvedStatus = normalizeHiringStatus(override.status || candidate.status);
+    const statusHistory = (Array.isArray(override.statusHistory) && override.statusHistory.length
+      ? override.statusHistory
+      : buildHiringStatusHistory({ ...candidate, status: resolvedStatus })
+    ).map((entry) => ({
+      ...entry,
+      status: normalizeHiringStatus(entry.status),
+    }));
+
+    return {
+      ...candidate,
+      ...override,
+      status: resolvedStatus,
+      statusHistory,
+      historyCount: statusHistory.length,
+    };
+  });
+}
+
+function hiringNotesForCandidate(candidateId) {
+  return loadAdminHiringNotes()[candidateId] || [];
+}
+
+function syncHiringStatusFilterOptions() {
+  if (!metrics.hiringStatusFilter) {
+    return;
+  }
+
+  const currentValue = metrics.hiringStatusFilter.value || "";
+  metrics.hiringStatusFilter.innerHTML = [`<option value="">All statuses</option>`, ...hiringStatusOptions.map((status) => `<option value="${status}">${status}</option>`)].join("");
+  metrics.hiringStatusFilter.value = hiringStatusOptions.includes(currentValue) ? currentValue : "";
+}
+function latestHiringNote(candidateId) {
+  const notes = hiringNotesForCandidate(candidateId);
+  return notes.length ? notes[0] : null;
 }
 
 function clearAdminDerivedCaches() {
@@ -710,7 +906,6 @@ function openSessionReportsModal(courseId, sessionIndex) {
   metrics.courseReportModal.classList.remove("hidden");
   metrics.courseReportModal.setAttribute("aria-hidden", "false");
 }
-
 function openSessionAttendanceModal(courseId, sessionIndex) {
   const course = getCourseRecords().find((entry) => entry.id === courseId);
   const roster = course ? adminCourseRoster(course) : [];
@@ -721,8 +916,8 @@ function openSessionAttendanceModal(courseId, sessionIndex) {
     return;
   }
 
-  metrics.courseReportTitle.textContent = `${course.title} · Session ${entry.label} attendance`;
-  metrics.courseReportMeta.textContent = `${entry.dateLabel} · ${entry.timeLabel} · ${entry.attendancePillLabel}`;
+  metrics.courseReportTitle.textContent = `${course.title} � Session ${entry.label} attendance`;
+  metrics.courseReportMeta.textContent = `${entry.dateLabel} � ${entry.timeLabel} � ${entry.attendancePillLabel}`;
   metrics.courseReportBody.innerHTML = entry.attendanceState === "neutral" ? `
     <section class="admin-report-section">
       <h4>Attendance Not Due Yet</h4>
@@ -778,36 +973,34 @@ function buildHiringRecords(count) {
   ];
   const statuses = [
     "Applied",
-    "Applied (Local)",
+    "Applied Local",
     "Bootstrap",
     "Bootstrap Returned",
-    "Bootstrap Reviewed",
     "Interview Requested",
-    "Interview Complete",
-    "Hiring Offer",
-    "Hired",
-    "Declined & Rejected",
-    "Duplicate",
+    "Interview Done",
+    "Hire",
+    "Decline",
+    "Delete",
   ];
   const pronouns = ["he/him", "she/her", "she/they", "they/them", "he/they"];
   const locations = ["Irvine", "Redmond", "Bothell", "Factoria", "Online"];
   const languages = ["English", "Spanish", "Mandarin", "English / Spanish", "English / Mandarin"];
-  const statusRotation = [2, 2, 5, 8, 9, 5, 7, 8, 10, 0, 6, 4, 2, 8, 9];
+  const statusRotation = [2, 2, 4, 7, 8, 4, 6, 7, 8, 0, 5, 3, 2, 7, 8];
   const startDate = new Date("2025-10-16T00:00:00");
 
   return Array.from({ length: count }, (_, index) => {
     const firstName = firstNames[index % firstNames.length];
     const lastName = lastNames[Math.floor(index / firstNames.length) % lastNames.length];
     const preferred = index % 4 === 0 ? "N/A" : firstName;
-    const status = statuses[statusRotation[index % statusRotation.length]];
+    const status = normalizeHiringStatus(statuses[statusRotation[index % statusRotation.length]]);
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + (index % 183));
     const emailHandle = `${firstName}.${lastName}${index + 1}`.toLowerCase();
 
     return {
-      id: `APP-${String(index + 1).padStart(4, "0")}`,
+      id: `APP-${String(index + 1).padStart(4, "0")}` ,
       date: date.toISOString().slice(0, 10),
-      fullName: `${firstName} ${lastName}`,
+      fullName: `${firstName} ${lastName}` ,
       preferred,
       email: `${emailHandle}@gmail.com`,
       phone: `${index % 3 === 0 ? "+1" : "+44"}${String(2000000000 + (index * 7919)).slice(0, 10)}`,
@@ -1000,7 +1193,9 @@ function adminCourseRoster(course) {
     return adminCourseRosterCache.get(course.id);
   }
 
-  if (!students.length) {
+  const studentPool = getAdminStudentRecords();
+
+  if (!studentPool.length) {
     return [];
   }
 
@@ -1008,7 +1203,7 @@ function adminCourseRoster(course) {
   const desired = Math.min(8, Math.max(4, Math.round(course.enrollment / 3)));
 
   const roster = Array.from({ length: desired }, (_, index) => {
-    const baseStudent = students[(seed + index) % students.length];
+    const baseStudent = studentPool[(seed + index) % studentPool.length];
     return {
       ...baseStudent,
       rosterCourseTitle: course.title,
@@ -1503,6 +1698,73 @@ function showAdminInstructorHover(event, instructorPayload) {
   positionAdminInstructorHover(anchor);
 }
 
+function ensureAdminHiringHoverLayer() {
+  let layer = document.getElementById("admin-hiring-hover-layer");
+
+  if (layer) {
+    return layer;
+  }
+
+  layer = document.createElement("aside");
+  layer.id = "admin-hiring-hover-layer";
+  layer.className = "admin-hover-layer hidden admin-hiring-hover-layer";
+  document.body.appendChild(layer);
+  layer.addEventListener("mouseenter", () => window.clearTimeout(adminHiringHoverHideTimeout));
+  layer.addEventListener("mouseleave", scheduleAdminHiringHoverHide);
+  return layer;
+}
+
+function scheduleAdminHiringHoverHide() {
+  const layer = document.getElementById("admin-hiring-hover-layer");
+
+  if (!layer) {
+    return;
+  }
+
+  window.clearTimeout(adminHiringHoverHideTimeout);
+  adminHiringHoverHideTimeout = window.setTimeout(() => {
+    layer.classList.add("hidden");
+    activeAdminHiringHoverAnchor = null;
+  }, 140);
+}
+
+function positionAdminHiringHover(anchor) {
+  const layer = ensureAdminHiringHoverLayer();
+
+  if (!anchor || layer.classList.contains("hidden")) {
+    return;
+  }
+
+  const rect = anchor.getBoundingClientRect();
+  const top = window.scrollY + rect.top - 12;
+  const left = window.scrollX + rect.right + 10;
+  layer.style.top = `${top}px`;
+  layer.style.left = `${left}px`;
+}
+
+function showAdminHiringHover(event, candidate) {
+  const layer = ensureAdminHiringHoverLayer();
+  const anchor = event.currentTarget;
+
+  window.clearTimeout(adminHiringHoverHideTimeout);
+  activeAdminHiringHoverAnchor = anchor;
+
+  layer.innerHTML = `
+    <p class="eyebrow">Candidate Snapshot</p>
+    <h4>${candidate.fullName}</h4>
+    <div class="admin-hover-grid">
+      <div><span>Status</span><strong>${candidate.status}</strong></div>
+      <div><span>Location</span><strong>${candidate.location}</strong></div>
+      <div><span>Contact Information</span><strong>${candidate.email}<br>${candidate.phone}</strong></div>
+      <div><span>Language</span><strong>${candidate.language}</strong></div>
+      <div><span>Pronoun</span><strong>${candidate.pronoun}</strong></div>
+      <div><span>Detail</span><strong>${candidate.detail}</strong></div>
+    </div>
+  `;
+
+  layer.classList.remove("hidden");
+  positionAdminHiringHover(anchor);
+}
 function compareText(a, b) {
   return a.localeCompare(b, undefined, { sensitivity: "base" });
 }
@@ -1543,8 +1805,8 @@ function sortStudentRecords(records) {
   sorted.sort((left, right) => {
     const leftId = studentIdForName(left.name);
     const rightId = studentIdForName(right.name);
-    const leftCourse = sharedCourses.find((entry) => entry.id === left.courseId)?.title || left.cohort || "";
-    const rightCourse = sharedCourses.find((entry) => entry.id === right.courseId)?.title || right.cohort || "";
+    const leftCourse = courseRecordTitleForId(left.courseId) || left.cohort || "";
+    const rightCourse = courseRecordTitleForId(right.courseId) || right.cohort || "";
 
     let result = 0;
 
@@ -1604,6 +1866,10 @@ function toggleStudentSort(nextSort) {
 }
 
 function operationalStudentLocation(student) {
+  if (student.location) {
+    return student.location;
+  }
+
   const courseLocationMap = {
     "biology-201": "Irvine",
     "chemistry-prep": "Online",
@@ -1612,7 +1878,6 @@ function operationalStudentLocation(student) {
 
   return courseLocationMap[student.courseId] || "Irvine";
 }
-
 function buildMonthlyAdminSnapshot() {
   const totalHours = getCourseRecords().reduce((sum, course) => {
     const matches = course.schedule.match(/(\d{1,2}:\d{2}\s[AP]M)\s-\s(\d{1,2}:\d{2}\s[AP]M)/i);
@@ -1777,8 +2042,34 @@ function renderInstructorDirectory() {
     return;
   }
 
-  const instructors = getInstructorRecords();
+  const rawInstructors = getInstructorRecords();
+  const instructors = rawInstructors.map((instructor) => ({
+    ...instructor,
+    locations: Array.isArray(instructor.locations)
+      ? instructor.locations
+      : typeof instructor.locations === "string" && instructor.locations.trim()
+        ? instructor.locations.split(",").map((value) => value.trim()).filter(Boolean)
+        : [],
+    languages: Array.isArray(instructor.languages)
+      ? instructor.languages
+      : typeof instructor.languages === "string" && instructor.languages.trim()
+        ? instructor.languages.split(",").map((value) => value.trim()).filter(Boolean)
+        : [],
+    tags: Array.isArray(instructor.tags)
+      ? instructor.tags
+      : typeof instructor.tags === "string" && instructor.tags.trim()
+        ? instructor.tags.split(",").map((value) => value.trim()).filter(Boolean)
+        : [],
+    email: typeof instructor.email === "string" ? instructor.email : "",
+    username: typeof instructor.username === "string" ? instructor.username : "",
+    rank: typeof instructor.rank === "string" ? instructor.rank : "",
+    status: typeof instructor.status === "string" && instructor.status.trim() ? instructor.status : "Active",
+    phone: typeof instructor.phone === "string" ? instructor.phone : "",
+    program: typeof instructor.program === "string" ? instructor.program : "",
+    name: typeof instructor.name === "string" ? instructor.name : "Unknown Instructor",
+  }));
   const courseLoadMap = buildInstructorCourseLoadMap();
+  const query = (adminState.instructorQuery || "").toLowerCase();
   const filtered = sortInstructorRecords(instructors.filter((instructor) => {
     const haystack = [
       instructor.id,
@@ -1789,69 +2080,79 @@ function renderInstructorDirectory() {
       instructor.rank,
       instructor.locations.join(" "),
       instructor.languages.join(" "),
-      (instructor.tags || []).join(" "),
+      instructor.tags.join(" "),
       instructor.status,
     ].join(" ").toLowerCase();
 
-    return haystack.includes(adminState.instructorQuery.toLowerCase());
+    return haystack.includes(query);
   }));
   const pageCount = Math.max(1, Math.ceil(filtered.length / instructorPageSize));
   adminState.instructorPage = Math.min(adminState.instructorPage, pageCount);
   const start = (adminState.instructorPage - 1) * instructorPageSize;
   const pageItems = filtered.slice(start, start + instructorPageSize);
 
-  metrics.instructorRows.innerHTML = pageItems.length
-    ? pageItems.map((instructor) => `
-      <tr>
-        <td>
-          <div class="admin-hover-cell">
-            <div
-              class="admin-hover-anchor"
-              data-instructor-hover="true"
-              data-id="${instructor.id}"
-              data-name="${instructor.name}"
-              data-status="${instructor.status}"
-              data-phone="${instructor.phone}"
-              data-email="${instructor.email}"
-              data-locations="${instructor.locations.join(", ")}"
-              data-languages="${instructor.languages.join(", ")}"
-              data-course-load="${courseLoadMap.get(instructor.id) || 0} courses"
-              data-students="${instructor.studentsSupported}"
-              data-alerts="${instructor.alerts}"
-            ><strong class="admin-hover-name">${instructor.name}</strong></div><br>
-            <span class="student-meta">${instructor.id} · ${instructor.email}</span>
-          </div>
-        </td>
-        <td>${instructor.program}</td>
-        <td>${instructor.locations.join(", ")}</td>
-        <td>${instructor.languages.join(", ")}</td>
-        <td>${courseLoadMap.get(instructor.id) || 0} courses<br><span class="student-meta">${instructor.studentsSupported} students</span></td>
-        <td><span class="status-chip ${instructorStatusClass(instructor.status)} admin-status-chip">${instructor.status}</span></td>
-        <td>
-          <details class="admin-session-menu">
-            <summary class="admin-menu-button" aria-label="Instructor actions">…</summary>
-            <div class="admin-session-menu-list">
-              <button class="schedule-slot-menu-button" type="button" data-report-accident="${instructor.id}">Report Accident</button>
-              <button class="schedule-slot-menu-button" type="button" data-edit-instructor="${instructor.id}">Edit Instructor</button>
-              <a class="schedule-slot-menu-button" href="${adminInstructorProfileUrl(instructor.id)}">View whole profile</a>
-              <a class="schedule-slot-menu-button" href="${adminInstructorAvailabilityUrl(instructor.id)}">View weekly availability</a>
-            </div>
-          </details>
-        </td>
-      </tr>
-    `).join("")
-    : `
+  if (!pageItems.length) {
+    metrics.instructorRows.innerHTML = `
       <tr>
         <td colspan="7" class="admin-empty-state">No instructors matched this search.</td>
       </tr>
     `;
+  } else {
+    metrics.instructorRows.innerHTML = pageItems.map((instructor) => {
+      const locationsLabel = instructor.locations.join(", ") || "Unassigned";
+      const languagesLabel = instructor.languages.join(", ") || "English";
+      const courseLoad = courseLoadMap.get(instructor.id) || 0;
+      const studentsSupported = Number.isFinite(Number(instructor.studentsSupported)) ? Number(instructor.studentsSupported) : 0;
+
+      return `
+        <tr>
+          <td>
+            <div class="admin-hover-cell">
+              <div
+                class="admin-hover-anchor"
+                data-instructor-hover="true"
+                data-id="${instructor.id}"
+                data-name="${instructor.name}"
+                data-status="${instructor.status}"
+                data-phone="${instructor.phone}"
+                data-email="${instructor.email}"
+                data-locations="${locationsLabel}"
+                data-languages="${languagesLabel}"
+                data-course-load="${courseLoad} courses"
+                data-students="${studentsSupported}"
+                data-alerts="${instructor.alerts || 0}"
+              ><strong class="admin-hover-name">${instructor.name}</strong></div><br>
+              <span class="student-meta">${instructor.id} � ${instructor.email}</span>
+            </div>
+          </td>
+          <td>${instructor.program}</td>
+          <td>${locationsLabel}</td>
+          <td>${languagesLabel}</td>
+          <td>${courseLoad} courses<br><span class="student-meta">${studentsSupported} students</span></td>
+          <td><span class="status-chip ${instructorStatusClass(instructor.status)} admin-status-chip">${instructor.status}</span></td>
+          <td>
+            <details class="admin-session-menu">
+              <summary class="admin-menu-button" aria-label="Instructor actions">�</summary>
+              <div class="admin-session-menu-list">
+                <button class="schedule-slot-menu-button" type="button" data-report-accident="${instructor.id}">Report Accident</button>
+                <button class="schedule-slot-menu-button" type="button" data-edit-instructor="${instructor.id}">Edit Instructor</button>
+                <a class="schedule-slot-menu-button" href="${adminInstructorProfileUrl(instructor.id)}">View whole profile</a>
+                <a class="schedule-slot-menu-button" href="${adminInstructorAvailabilityUrl(instructor.id)}">View weekly availability</a>
+              </div>
+            </details>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
 
   if (metrics.instructorSummary) {
     const activeCount = instructors.filter((instructor) => instructor.status === "Active").length;
     const onlineCount = instructors.filter((instructor) => instructor.locations.includes("Online")).length;
     const multilingualCount = instructors.filter((instructor) => instructor.languages.length > 1).length;
-
-    const avgCourseLoad = (instructors.reduce((sum, instructor) => sum + (courseLoadMap.get(instructor.id) || 0), 0) / instructors.length).toFixed(1);
+    const avgCourseLoad = instructors.length
+      ? (instructors.reduce((sum, instructor) => sum + (courseLoadMap.get(instructor.id) || 0), 0) / instructors.length).toFixed(1)
+      : "0.0";
 
     metrics.instructorSummary.innerHTML = `
       <article class="metric-card"><p class="metric-label">Total Instructors</p><h3>${instructors.length}</h3><p class="metric-caption">Directory records currently available.</p></article>
@@ -1863,7 +2164,7 @@ function renderInstructorDirectory() {
   }
 
   if (metrics.instructorPageInfo) {
-    metrics.instructorPageInfo.textContent = `${filtered.length} results · Page ${adminState.instructorPage} of ${pageCount}`;
+    metrics.instructorPageInfo.textContent = `${filtered.length} results � Page ${adminState.instructorPage} of ${pageCount}`;
   }
   if (metrics.instructorPrev) {
     metrics.instructorPrev.disabled = adminState.instructorPage === 1;
@@ -1872,7 +2173,6 @@ function renderInstructorDirectory() {
     metrics.instructorNext.disabled = adminState.instructorPage === pageCount;
   }
 }
-
 function openAccidentModal(instructorId) {
   const instructor = getInstructorRecord(instructorId);
 
@@ -1923,7 +2223,8 @@ function saveAccidentModal() {
   ];
   saveAdminInstructorAccidents(reports);
   metrics.accidentStatus.textContent = "Incident report saved.";
-  renderAdminPortal();
+  syncHiringStatusFilterOptions();
+renderAdminPortal();
   closeAccidentModal();
 }
 
@@ -1944,7 +2245,9 @@ function openEditInstructorModal(instructorId) {
   metrics.editInstructorUsername.value = instructor.username || "";
   metrics.editInstructorPassword.value = instructor.password || "";
   metrics.editInstructorPhone.value = instructor.phone;
-  metrics.editInstructorLocations.value = instructor.locations.join(", ");
+  metrics.editInstructorLocations?.querySelectorAll("input[type='checkbox']").forEach((input) => {
+    input.checked = instructor.locations.includes(input.value);
+  });
   metrics.editInstructorLanguages.value = instructor.languages.join(", ");
   metrics.editInstructorTags?.querySelectorAll("input[type='checkbox']").forEach((input) => {
     input.checked = (instructor.tags || []).includes(input.value);
@@ -1967,6 +2270,7 @@ function saveEditInstructorModal() {
   }
 
   const overrides = loadAdminInstructorOverrides();
+  const selectedLocations = Array.from(metrics.editInstructorLocations?.querySelectorAll("input[type='checkbox']:checked") || []).map((input) => input.value);
   const selectedTags = Array.from(metrics.editInstructorTags?.querySelectorAll("input[type='checkbox']:checked") || []).map((input) => input.value);
   overrides[activeEditInstructorId] = {
     ...(overrides[activeEditInstructorId] || {}),
@@ -1977,13 +2281,14 @@ function saveEditInstructorModal() {
     username: metrics.editInstructorUsername?.value.trim(),
     password: metrics.editInstructorPassword?.value.trim(),
     phone: metrics.editInstructorPhone?.value.trim(),
-    locations: (metrics.editInstructorLocations?.value || "").split(",").map((item) => item.trim()).filter(Boolean),
+    locations: selectedLocations,
     languages: (metrics.editInstructorLanguages?.value || "").split(",").map((item) => item.trim()).filter(Boolean),
     tags: selectedTags,
   };
   saveAdminInstructorOverrides(overrides);
   metrics.editInstructorStatusNote.textContent = "Instructor record saved.";
-  renderAdminPortal();
+  syncHiringStatusFilterOptions();
+renderAdminPortal();
   closeEditInstructorModal();
 }
 
@@ -2148,6 +2453,7 @@ function renderCourseDirectory() {
   }
 
   const courses = getCourseRecords();
+  const query = (adminState.courseQuery || "").toLowerCase();
   const filtered = courses.filter((course) => {
     const haystack = [
       course.id,
@@ -2158,35 +2464,41 @@ function renderCourseDirectory() {
       course.schedule,
     ].join(" ").toLowerCase();
 
-    return haystack.includes(adminState.courseQuery.toLowerCase());
+    return haystack.includes(query);
   });
   const pageCount = Math.max(1, Math.ceil(filtered.length / coursePageSize));
   adminState.coursePage = Math.min(adminState.coursePage, pageCount);
   const start = (adminState.coursePage - 1) * coursePageSize;
   const pageItems = filtered.slice(start, start + coursePageSize);
 
-  metrics.courseRows.innerHTML = pageItems.length
-    ? pageItems.map((course) => `
-      <tr>
-        <td>
-          <a class="student-link" href="${adminCourseDetailUrl(course.id)}"><strong>${course.title}</strong></a><br>
-          <span class="student-meta">${course.id} · ${course.location}</span>
-        </td>
-        <td>${course.instructorName}</td>
-        <td>${course.program}<br><span class="student-meta">${course.courseFormat}</span></td>
-        <td>${course.sessionProgressLabel}<br><span class="student-meta">${courseLifecycleMeta(course).detail}</span></td>
-        <td>${course.isOpenClass ? "No designated end" : course.endDateLabel}<br><span class="student-meta">${courseLifecycleMeta(course).label} · ${course.openClassTrait}</span></td>
-        <td>${course.enrollment}<br><span class="student-meta">${course.hereToday} here today</span></td>
-        <td>${course.attendanceRate}%</td>
-        <td>${course.alerts}</td>
-        <td>${reportStatusMarkup(courseReportSummary(course))}</td>
-      </tr>
-    `).join("")
-    : `
+  if (!pageItems.length) {
+    metrics.courseRows.innerHTML = `
       <tr>
         <td colspan="9" class="admin-empty-state">No courses matched this search.</td>
       </tr>
     `;
+  } else {
+    metrics.courseRows.innerHTML = pageItems.map((course) => {
+      const lifecycle = courseLifecycleMeta(course);
+      const reportStatus = reportStatusMarkup(courseReportSummary(course));
+      return `
+        <tr>
+          <td>
+            <a class="student-link" href="${adminCourseDetailUrl(course.id)}"><strong>${course.title}</strong></a><br>
+            <span class="student-meta">${course.id} � ${course.location}</span>
+          </td>
+          <td>${course.instructorName}</td>
+          <td>${course.program}<br><span class="student-meta">${course.courseFormat}</span></td>
+          <td>${course.sessionProgressLabel}<br><span class="student-meta">${lifecycle.detail}</span></td>
+          <td>${course.isOpenClass ? "No designated end" : course.endDateLabel}<br><span class="student-meta">${lifecycle.label} � ${course.openClassTrait}</span></td>
+          <td>${course.enrollment}<br><span class="student-meta">${course.hereToday} here today</span></td>
+          <td>${course.attendanceRate}%</td>
+          <td>${course.alerts}</td>
+          <td>${reportStatus}</td>
+        </tr>
+      `;
+    }).join("");
+  }
 
   if (metrics.courseSummary) {
     const highAlert = courses.filter((course) => course.alerts >= 3).length;
@@ -2202,7 +2514,7 @@ function renderCourseDirectory() {
       <article class="metric-card"><p class="metric-label">Total Courses</p><h3>${courses.length}</h3><p class="metric-caption">Courses currently tracked in oversight.</p></article>
       <article class="metric-card"><p class="metric-label">Structured Terms</p><h3>${structuredCount}</h3><p class="metric-caption">Courses moving through a 16-session sequence.</p></article>
       <article class="metric-card"><p class="metric-label">Open Classes</p><h3>${openClassCount}</h3><p class="metric-caption">Continuous classes with lighter progress updates.</p></article>
-      <article class="metric-card"><p class="metric-label">Completed Wrap-up</p><h3>${completedGraceCount}</h3><p class="metric-caption">Finished courses still counted in active load during wrap-up.</p></article>
+      <article class="metric-card"><p class="metric-label">Completed Wrap-up</p><h3>${completedGraceCount}</h3><p class="metric-caption">Finished courses still in wrap-up visibility.</p></article>
       <article class="metric-card"><p class="metric-label">Missing Reports</p><h3>${missingReportCourses}</h3><p class="metric-caption">Courses still missing student report coverage.</p></article>
       <article class="metric-card"><p class="metric-label">Avg Enrollment</p><h3>${avgEnrollment}</h3><p class="metric-caption">Average students per course.</p></article>
       <article class="metric-card"><p class="metric-label">Avg Attendance</p><h3>${avgAttendance}%</h3><p class="metric-caption">Current attendance benchmark.</p></article>
@@ -2212,7 +2524,7 @@ function renderCourseDirectory() {
   }
 
   if (metrics.coursePageInfo) {
-    metrics.coursePageInfo.textContent = `${filtered.length} results · Page ${adminState.coursePage} of ${pageCount}`;
+    metrics.coursePageInfo.textContent = `${filtered.length} results � Page ${adminState.coursePage} of ${pageCount}`;
   }
   if (metrics.coursePrev) {
     metrics.coursePrev.disabled = adminState.coursePage === 1;
@@ -2221,29 +2533,37 @@ function renderCourseDirectory() {
     metrics.courseNext.disabled = adminState.coursePage === pageCount;
   }
 }
-
 function renderTimeOff(timeOffRequests, instructorSettings) {
   if (!metrics.timeoffRows) {
     return;
   }
 
-  metrics.timeoffRows.innerHTML = timeOffRequests.length
-    ? timeOffRequests.map((request) => `
-      <tr>
-        <td>${request.dateLabel}</td>
-        <td>${instructorSettings.name}</td>
-        <td>${request.intersections?.length ? request.intersections.join(", ") : "No class intersections"}</td>
-        <td>${request.approved ? "Approved" : "Pending"}</td>
-        <td>${request.subPlanLink ? '<a class="student-link" href="' + request.subPlanLink + '" target="_blank" rel="noreferrer">View doc</a>' : '<span class="admin-missing">Missing</span>'}</td>
-      </tr>
-    `).join("")
-    : `
+  if (!timeOffRequests.length) {
+    metrics.timeoffRows.innerHTML = `
       <tr>
         <td colspan="5">No time-off requests submitted yet.</td>
       </tr>
     `;
-}
+    return;
+  }
 
+  metrics.timeoffRows.innerHTML = timeOffRequests.map((request) => {
+    const intersections = request.intersections?.length ? request.intersections.join(", ") : "No class intersections";
+    const subPlanMarkup = request.subPlanLink
+      ? `<a class="student-link" href="${request.subPlanLink}" target="_blank" rel="noreferrer">View doc</a>`
+      : `<span class="admin-missing">Missing</span>`;
+
+    return `
+      <tr>
+        <td>${request.dateLabel}</td>
+        <td>${instructorSettings.name}</td>
+        <td>${intersections}</td>
+        <td>${request.approved ? "Approved" : "Pending"}</td>
+        <td>${subPlanMarkup}</td>
+      </tr>
+    `;
+  }).join("");
+}
 function renderPayroll() {
   if (!metrics.payrollSummary) {
     return;
@@ -2279,7 +2599,7 @@ function renderStudents() {
   }
 
   const filtered = sortStudentRecords(students.filter((student) => {
-    const course = sharedCourses.find((entry) => entry.id === student.courseId);
+    const course = getCourseRecords().find((entry) => entry.id === student.courseId);
     const status = studentStatus(student);
     const haystack = [
       studentIdForName(student.name),
@@ -2294,7 +2614,7 @@ function renderStudents() {
 
   metrics.studentRows.innerHTML = filtered.length
     ? filtered.map((student) => {
-      const course = sharedCourses.find((entry) => entry.id === student.courseId);
+      const course = getCourseRecords().find((entry) => entry.id === student.courseId);
       const status = studentStatus(student);
 
       return `
@@ -2323,15 +2643,15 @@ function formatHiringDate(value) {
 }
 
 function hiringStatusClass(status) {
-  if (status === "Hired") {
+  if (status === "Hire") {
     return "ok";
   }
 
-  if (status === "Declined & Rejected" || status === "Duplicate") {
+  if (status === "Decline" || status === "Delete") {
     return "muted";
   }
 
-  if (status === "Interview Requested" || status === "Interview Complete" || status === "Hiring Offer") {
+  if (status === "Interview Requested" || status === "Interview Done") {
     return "warning";
   }
 
@@ -2366,48 +2686,119 @@ function renderHiring() {
   adminState.hiringPage = Math.min(adminState.hiringPage, pageCount);
   const start = (adminState.hiringPage - 1) * hiringPageSize;
   const pageItems = filtered.slice(start, start + hiringPageSize);
+  const hiringStatuses = [
+    "Applied",
+    "Applied Local",
+    "Bootstrap",
+    "Bootstrap Returned",
+    "Interview Requested",
+    "Interview Done",
+    "Hire",
+    "Decline",
+    "Delete",
+  ];
 
-  metrics.hiringRows.innerHTML = pageItems.length
-    ? pageItems.map((candidate) => `
+  if (!pageItems.length) {
+    metrics.hiringRows.innerHTML = `
       <tr>
-        <td>${formatHiringDate(candidate.date)}</td>
-        <td>
-          <strong>${candidate.fullName}</strong><br>
-          <span class="student-meta">${candidate.id}</span>
-        </td>
-        <td>${candidate.preferred}</td>
-        <td>${candidate.email}</td>
-        <td>${candidate.phone}</td>
-        <td>${candidate.adult}</td>
-        <td>
-          <select class="admin-inline-select" data-hiring-id="${candidate.id}">
-            ${["Applied", "Applied (Local)", "Bootstrap", "Bootstrap Returned", "Bootstrap Reviewed", "Interview Requested", "Interview Complete", "Hiring Offer", "Hired", "Declined & Rejected", "Duplicate"].map((status) => `
-              <option value="${status}" ${status === candidate.status ? "selected" : ""}>${status}</option>
-            `).join("")}
-          </select>
-        </td>
-        <td>${candidate.pronoun}</td>
-        <td>${candidate.location}</td>
-        <td>${candidate.language}</td>
-        <td><span class="admin-link-pill">History ${candidate.historyCount}</span></td>
-        <td><span class="admin-link-pill">${candidate.detail}</span></td>
-        <td><span class="admin-link-pill">${candidate.notesCount ? `Notes ${candidate.notesCount}` : "Add note"}</span></td>
-        <td><button class="admin-menu-button" type="button" aria-label="Candidate actions">≡</button></td>
-      </tr>
-    `).join("")
-    : `
-      <tr>
-        <td colspan="13" class="admin-empty-state">No candidates matched the current filters.</td>
+        <td colspan="14" class="admin-empty-state">No candidates matched the current filters.</td>
       </tr>
     `;
+  } else {
+    metrics.hiringRows.innerHTML = pageItems.map((candidate) => {
+      const notes = hiringNotesForCandidate(candidate.id);
+      const latestNote = notes[0] || null;
+      const noteCountLabel = `${notes.length} note${notes.length === 1 ? "" : "s"}`;
+      const noteAriaLabel = notes.length ? `Open ${noteCountLabel} for ${candidate.fullName}` : `Add note for ${candidate.fullName}`;
+      const historyLabel = `${candidate.historyCount} history item${candidate.historyCount === 1 ? "" : "s"}`;
+      const statusOptions = hiringStatuses.map((status) => `
+        <option value="${status}" ${status === candidate.status ? "selected" : ""}>${status}</option>
+      `).join("");
+      const resumeUrl = candidate.resumeUrl || `https://example.com/resume/${candidate.id}`;
+      const bootstrapUrl = candidate.bootstrapUrl || `https://example.com/bootstrap/${candidate.id}`;
+
+      return `
+        <tr>
+          <td>${formatHiringDate(candidate.date)}</td>
+          <td>
+            <div class="admin-hover-cell admin-hiring-hover-cell">
+              <div
+                class="admin-hover-anchor admin-hiring-hover-anchor"
+                data-hiring-hover="true"
+                data-id="${candidate.id}"
+                data-name="${candidate.fullName}"
+                data-status="${candidate.status}"
+                data-email="${candidate.email}"
+                data-phone="${candidate.phone}"
+                data-location="${candidate.location}"
+                data-language="${candidate.language}"
+                data-pronoun="${candidate.pronoun}"
+                data-detail="${candidate.detail}"
+              ><strong class="admin-hover-name">${candidate.fullName}</strong></div><br>
+              <span class="student-meta">${candidate.id}</span>
+            </div>
+          </td>
+          <td>${candidate.preferred}</td>
+          <td class="admin-hiring-contact-cell">
+            <a class="admin-contact-icon admin-table-contact-button" href="mailto:${candidate.email}" aria-label="Email ${candidate.fullName}">
+              &#9993;
+              <span class="admin-contact-preview">${candidate.email}</span>
+            </a>
+          </td>
+          <td class="admin-hiring-contact-cell">
+            <a class="admin-contact-icon admin-table-contact-button" href="tel:${candidate.phone}" aria-label="Call ${candidate.fullName}">
+              &#9742;
+              <span class="admin-contact-preview">${candidate.phone}</span>
+            </a>
+          </td>
+          <td>${candidate.adult}</td>
+          <td><span class="admin-link-pill">${candidate.status}</span></td>
+          <td>${candidate.pronoun}</td>
+          <td>${candidate.location}</td>
+          <td>${candidate.language}</td>
+          <td>
+            <button class="admin-icon-pill admin-history-pill" type="button" title="${historyLabel}" aria-label="${historyLabel}" data-open-hiring-history="${candidate.id}">
+              <span class="admin-history-icon" aria-hidden="true"></span>
+              <strong>${candidate.historyCount}</strong>
+            </button>
+          </td>
+          <td>
+            <select class="admin-inline-select" data-hiring-id="${candidate.id}">
+              ${statusOptions}
+            </select>
+          </td>
+          <td>
+            <div class="admin-hiring-notes-cell">
+              <button class="admin-notes-icon-button ${notes.length ? "filled" : "empty"}" type="button" data-open-hiring-notes="${candidate.id}" aria-label="${noteAriaLabel}">
+                <span class="course-notes-icon" aria-hidden="true"></span>
+              </button>
+              <div class="admin-hiring-notes-hover">
+                <strong>${notes.length ? noteCountLabel : "No notes yet"}</strong>
+                <span>${latestNote ? latestNote.text : "Click to jot down a short note for this candidate."}</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <details class="admin-session-menu">
+              <summary class="admin-menu-button" aria-label="Candidate actions">�</summary>
+              <div class="admin-session-menu-list">
+                <a class="schedule-slot-menu-button" href="${resumeUrl}" target="_blank" rel="noreferrer">View Resume</a>
+                <a class="schedule-slot-menu-button" href="${bootstrapUrl}" target="_blank" rel="noreferrer">View bootstrap submission</a>
+                <button class="schedule-slot-menu-button" type="button" data-hire-candidate="${candidate.id}">Hire Instructor</button>
+              </div>
+            </details>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
 
   if (metrics.hiringSummary) {
-    const statusCounts = ["Applied", "Applied (Local)", "Bootstrap", "Bootstrap Returned", "Bootstrap Reviewed", "Interview Requested", "Interview Complete", "Hiring Offer", "Hired", "Declined & Rejected", "Duplicate"]
-      .map((status) => ({
-        label: status,
-        count: candidates.filter((candidate) => candidate.status === status).length,
-        className: hiringStatusClass(status),
-      }));
+    const statusCounts = hiringStatuses.map((status) => ({
+      label: status,
+      count: candidates.filter((candidate) => candidate.status === status).length,
+      className: hiringStatusClass(status),
+    }));
 
     metrics.hiringSummary.innerHTML = statusCounts.map((item) => `
       <article class="admin-status-metric ${item.className}">
@@ -2418,7 +2809,7 @@ function renderHiring() {
   }
 
   if (metrics.hiringPageInfo) {
-    metrics.hiringPageInfo.textContent = `${filtered.length} candidates · Page ${adminState.hiringPage} of ${pageCount}`;
+    metrics.hiringPageInfo.textContent = `${filtered.length} candidates � Page ${adminState.hiringPage} of ${pageCount}`;
   }
   if (metrics.hiringPrev) {
     metrics.hiringPrev.disabled = adminState.hiringPage === 1;
@@ -2427,7 +2818,181 @@ function renderHiring() {
     metrics.hiringNext.disabled = adminState.hiringPage === pageCount;
   }
 }
+function renderHiringNotesList(candidateId) {
+  if (!metrics.hiringNotesList) {
+    return;
+  }
 
+  const notes = hiringNotesForCandidate(candidateId);
+  metrics.hiringNotesList.innerHTML = notes.length
+    ? notes.map((note, index) => `
+      <details class="notes-entry" ${index === 0 ? "open" : ""}>
+        <summary class="notes-entry-head">
+          <p class="notes-entry-date">${new Date(note.createdAt).toLocaleString()}</p>
+          <span class="metric-caption">${note.text.slice(0, 56)}${note.text.length > 56 ? "..." : ""}</span>
+        </summary>
+        <div class="notes-entry-body">
+          <p>${note.text}</p>
+        </div>
+      </details>
+    `).join("")
+    : `<p class="notes-empty">No notes have been added for this candidate yet.</p>`;
+}
+
+function renderHiringHistoryList(candidateId) {
+  if (!metrics.hiringHistoryList) {
+    return;
+  }
+
+  const candidate = getHiringRecords().find((entry) => entry.id === candidateId);
+  const history = candidate && Array.isArray(candidate.statusHistory) ? candidate.statusHistory : [];
+
+  metrics.hiringHistoryList.innerHTML = history.length
+    ? history.map((entry, index) => `
+      <details class="notes-entry" ${index === 0 ? "open" : ""}>
+        <summary class="notes-entry-head">
+          <p class="notes-entry-date">${new Date(entry.createdAt).toLocaleString()}</p>
+          <span class="admin-history-status-pill">${entry.status}</span>
+        </summary>
+        <div class="notes-entry-body admin-history-entry-body">
+          <p class="admin-history-entry-meta">${entry.note || `Application status updated to ${entry.status}.`}</p>
+        </div>
+      </details>
+    `).join("")
+    : `<p class="notes-empty">No application status history has been documented for this candidate yet.</p>`;
+}
+
+function openHiringHistoryModal(candidateId) {
+  const candidate = getHiringRecords().find((entry) => entry.id === candidateId);
+
+  if (!candidate || !metrics.hiringHistoryModal) {
+    return;
+  }
+
+  activeHiringHistoryId = candidateId;
+  metrics.hiringHistoryTitle.textContent = `${candidate.fullName} history`;
+  metrics.hiringHistoryMeta.textContent = `${candidate.id} · ${candidate.location} · ${candidate.status}`;
+  renderHiringHistoryList(candidateId);
+  metrics.hiringHistoryModal.classList.remove("hidden");
+  metrics.hiringHistoryModal.setAttribute("aria-hidden", "false");
+}
+
+function closeHiringHistoryModal() {
+  activeHiringHistoryId = null;
+  metrics.hiringHistoryModal?.classList.add("hidden");
+  metrics.hiringHistoryModal?.setAttribute("aria-hidden", "true");
+}
+
+function openHiringNotesModal(candidateId) {
+  const candidate = getHiringRecords().find((entry) => entry.id === candidateId);
+
+  if (!candidate || !metrics.hiringNotesModal) {
+    return;
+  }
+
+  activeHiringNotesId = candidateId;
+  metrics.hiringNotesTitle.textContent = `${candidate.fullName} notes`;
+  metrics.hiringNotesMeta.textContent = `${candidate.id} · ${candidate.location} · ${candidate.status}`;
+  metrics.hiringNotesInput.value = "";
+  metrics.hiringNotesStatus.textContent = "";
+  renderHiringNotesList(candidateId);
+  metrics.hiringNotesModal.classList.remove("hidden");
+  metrics.hiringNotesModal.setAttribute("aria-hidden", "false");
+  metrics.hiringNotesInput.focus();
+}
+
+function closeHiringNotesModal() {
+  activeHiringNotesId = null;
+  metrics.hiringNotesModal?.classList.add("hidden");
+  metrics.hiringNotesModal?.setAttribute("aria-hidden", "true");
+}
+
+function saveHiringNote() {
+  if (!activeHiringNotesId) {
+    return;
+  }
+
+  const text = metrics.hiringNotesInput?.value.trim() || "";
+
+  if (!text) {
+    metrics.hiringNotesStatus.textContent = "Enter a short note before saving.";
+    return;
+  }
+
+  const notes = loadAdminHiringNotes();
+  const existing = notes[activeHiringNotesId] || [];
+  notes[activeHiringNotesId] = [
+    {
+      text,
+      createdAt: new Date().toISOString(),
+    },
+    ...existing,
+  ];
+  saveAdminHiringNotes(notes);
+  metrics.hiringNotesInput.value = "";
+  metrics.hiringNotesStatus.textContent = "Note saved.";
+  renderHiringNotesList(activeHiringNotesId);
+  renderHiring();
+}
+
+function openHireInstructorModal(candidateId) {
+  const candidate = getHiringRecords().find((entry) => entry.id === candidateId);
+
+  if (!candidate || !metrics.hireInstructorModal) {
+    return;
+  }
+
+  activeHireCandidateId = candidateId;
+  metrics.hireInstructorTitle.textContent = `Hire ${candidate.fullName}`;
+  metrics.hireInstructorMeta.textContent = `${candidate.id} � ${candidate.location} � ${candidate.status}`;
+  metrics.hireInstructorUsername.value = candidate.username || candidate.email.split("@")[0];
+  metrics.hireInstructorPassword.value = candidate.password || `NHA!${candidate.id.replace(/\D/g, "").padStart(4, "0")}`;
+  metrics.hireInstructorSalary.value = candidate.salaryRate || "$38/hr";
+  metrics.hireInstructorStatus.textContent = "";
+  const selectedLocations = Array.isArray(candidate.stationedLocations)
+    ? candidate.stationedLocations
+    : (candidate.location ? [candidate.location] : []);
+  metrics.hireInstructorLocations?.querySelectorAll("input[type='checkbox']").forEach((input) => {
+    input.checked = selectedLocations.includes(input.value);
+  });
+  metrics.hireInstructorModal.classList.remove("hidden");
+  metrics.hireInstructorModal.setAttribute("aria-hidden", "false");
+}
+
+function closeHireInstructorModal() {
+  activeHireCandidateId = null;
+  metrics.hireInstructorModal?.classList.add("hidden");
+  metrics.hireInstructorModal?.setAttribute("aria-hidden", "true");
+}
+
+function saveHireInstructorModal() {
+  if (!activeHireCandidateId) {
+    return;
+  }
+
+  const overrides = loadAdminHiringOverrides();
+  const existingOverride = overrides[activeHireCandidateId] || {};
+  const currentCandidate = getHiringRecords().find((entry) => entry.id === activeHireCandidateId);
+  const baseHistory = Array.isArray(existingOverride.statusHistory) && existingOverride.statusHistory.length
+    ? existingOverride.statusHistory
+    : (currentCandidate?.statusHistory || []);
+
+  overrides[activeHireCandidateId] = {
+    ...existingOverride,
+    status: "Hire",
+    username: metrics.hireInstructorUsername?.value.trim() || "",
+    password: metrics.hireInstructorPassword?.value.trim() || "",
+    salaryRate: metrics.hireInstructorSalary?.value.trim() || "",
+    stationedLocations: Array.from(metrics.hireInstructorLocations?.querySelectorAll("input[type='checkbox']:checked") || []).map((input) => input.value),
+    statusHistory: currentCandidate && currentCandidate.status !== "Hire"
+      ? [{ status: "Hire", createdAt: new Date().toISOString(), note: `Application status changed from ${currentCandidate.status} to Hire.` }, ...baseHistory]
+      : baseHistory,
+  };
+  saveAdminHiringOverrides(overrides);
+  metrics.hireInstructorStatus.textContent = "Hire details saved.";
+  renderHiring();
+  closeHireInstructorModal();
+}
 function renderInstructorCourseDetailPage() {
   if (!metrics.instructorCourseList || !metrics.instructorCourseTitle) {
     return;
@@ -2757,67 +3322,76 @@ function openCourseReportModal(courseId, studentName) {
 
 function verifyActiveCourseReport() {}
 
+function safeAdminRender(label, callback) {
+  try {
+    callback();
+  } catch (error) {
+    console.error(`Admin render failed: ${label}`, error);
+  }
+}
+
 function renderAdminPortal() {
-  students = window.portalStore.getStudents();
+  students = getAdminStudentRecords();
   clearAdminDerivedCaches();
   const instructorSettings = loadInstructorSettings();
   const timeOffRequests = loadTimeOffRequests();
 
-  renderAdminSidebarVisibility();
-  syncSortChips();
-  if (metrics.instructorCount || metrics.studentCount || metrics.alertCount || metrics.pendingCount) {
-    renderSummary(instructorSettings, timeOffRequests);
-  }
-
-  if (metrics.locationBreakdown) {
-    renderLocationBreakdown();
-  }
-
-  if (metrics.opsList) {
-    renderOperations(instructorSettings, timeOffRequests);
-  }
+  safeAdminRender("sidebar visibility", () => renderAdminSidebarVisibility());
+  safeAdminRender("sort chips", () => syncSortChips());
 
   if (metrics.instructorRows || metrics.instructorSummary) {
-    renderInstructorDirectory();
-  }
-
-  if (metrics.courseRows || metrics.courseSummary) {
-    renderCourseDirectory();
-  }
-
-  if (metrics.timeoffRows) {
-    renderTimeOff(timeOffRequests, instructorSettings);
-  }
-
-  if (metrics.payrollSummary) {
-    renderPayroll();
+    safeAdminRender("instructor directory", () => renderInstructorDirectory());
   }
 
   if (metrics.studentRows) {
-    renderStudents();
+    safeAdminRender("student directory", () => renderStudents());
+  }
+
+  if (metrics.courseRows || metrics.courseSummary) {
+    safeAdminRender("course directory", () => renderCourseDirectory());
   }
 
   if (metrics.hiringRows || metrics.hiringSummary) {
-    renderHiring();
+    safeAdminRender("hiring", () => renderHiring());
+  }
+
+  if (metrics.instructorCount || metrics.studentCount || metrics.alertCount || metrics.pendingCount) {
+    safeAdminRender("summary", () => renderSummary(instructorSettings, timeOffRequests));
+  }
+
+  if (metrics.locationBreakdown) {
+    safeAdminRender("location breakdown", () => renderLocationBreakdown());
+  }
+
+  if (metrics.opsList) {
+    safeAdminRender("operations", () => renderOperations(instructorSettings, timeOffRequests));
+  }
+
+  if (metrics.timeoffRows) {
+    safeAdminRender("time off", () => renderTimeOff(timeOffRequests, instructorSettings));
+  }
+
+  if (metrics.payrollSummary) {
+    safeAdminRender("payroll", () => renderPayroll());
   }
 
   if (metrics.instructorCourseList) {
-    renderInstructorCourseDetailPage();
+    safeAdminRender("instructor course detail", () => renderInstructorCourseDetailPage());
   }
 
   if (metrics.courseDetailContent) {
-    renderAdminCourseDetailPage();
+    safeAdminRender("course detail", () => renderAdminCourseDetailPage());
   }
  
   if (metrics.instructorProfileContent) {
-    renderAdminInstructorProfilePage();
+    safeAdminRender("instructor profile", () => renderAdminInstructorProfilePage());
   }
 
   if (metrics.instructorAvailabilityContent) {
-    renderAdminInstructorAvailabilityPage();
+    safeAdminRender("instructor availability", () => renderAdminInstructorAvailabilityPage());
   }
 }
-
+syncHiringStatusFilterOptions();
 renderAdminPortal();
 
 metrics.sidebarToggle?.addEventListener("click", () => {
@@ -2941,6 +3515,15 @@ metrics.hiringNext?.addEventListener("click", () => {
   renderHiring();
 });
 
+metrics.hiringNotesClose?.addEventListener("click", closeHiringNotesModal);
+metrics.hiringNotesCancel?.addEventListener("click", closeHiringNotesModal);
+metrics.hiringNotesSave?.addEventListener('click', saveHiringNote);
+metrics.hiringHistoryClose?.addEventListener("click", closeHiringHistoryModal);
+metrics.hiringHistoryCancel?.addEventListener("click", closeHiringHistoryModal);
+metrics.hireInstructorClose?.addEventListener('click', closeHireInstructorModal);
+metrics.hireInstructorCancel?.addEventListener('click', closeHireInstructorModal);
+metrics.hireInstructorSave?.addEventListener('click', saveHireInstructorModal);
+
 metrics.hiringRows?.addEventListener("change", (event) => {
   const target = event.target;
 
@@ -2954,13 +3537,45 @@ metrics.hiringRows?.addEventListener("change", (event) => {
     return;
   }
 
-  hiringRecords = getHiringRecords().map((candidate) => (
-    candidate.id === candidateId
-      ? { ...candidate, status: target.value }
-      : candidate
-  ));
+  const candidates = getHiringRecords();
+  const previousCandidate = candidates.find((candidate) => candidate.id === candidateId);
+  const nextStatus = target.value;
+  const overrides = loadAdminHiringOverrides();
+  const existingOverride = overrides[candidateId] || {};
+  const baseHistory = Array.isArray(existingOverride.statusHistory) && existingOverride.statusHistory.length
+    ? existingOverride.statusHistory
+    : (previousCandidate?.statusHistory || []);
 
+  overrides[candidateId] = {
+    ...existingOverride,
+    status: nextStatus,
+    statusHistory: previousCandidate && previousCandidate.status !== nextStatus
+      ? [{ status: nextStatus, createdAt: new Date().toISOString(), note: `Application status changed from ${previousCandidate.status} to ${nextStatus}.` }, ...baseHistory]
+      : baseHistory,
+  };
+
+  saveAdminHiringOverrides(overrides);
   renderHiring();
+});
+
+metrics.hiringRows?.addEventListener("click", (event) => {
+  const historyButton = event.target.closest("[data-open-hiring-history]");
+  const notesButton = event.target.closest("[data-open-hiring-notes]");
+  const hireButton = event.target.closest("[data-hire-candidate]");
+
+  if (historyButton) {
+    openHiringHistoryModal(historyButton.dataset.openHiringHistory);
+    return;
+  }
+
+  if (notesButton) {
+    openHiringNotesModal(notesButton.dataset.openHiringNotes);
+    return;
+  }
+
+  if (hireButton) {
+    openHireInstructorModal(hireButton.dataset.hireCandidate);
+  }
 });
 
 metrics.instructorRows?.addEventListener("mouseenter", (event) => {
@@ -3069,6 +3684,12 @@ metrics.editInstructorModal?.addEventListener("click", (event) => {
   }
 });
 
+metrics.hiringNotesModal?.addEventListener("click", (event) => {
+  if (event.target === metrics.hiringNotesModal) {
+    closeHiringNotesModal();
+  }
+});
+
 window.addEventListener("scroll", () => {
   if (activeAdminInstructorHoverAnchor) {
     positionAdminInstructorHover(activeAdminInstructorHoverAnchor);
@@ -3092,6 +3713,32 @@ window.addEventListener("storage", (event) => {
     if (event.key === adminSidebarHiddenStorageKey) {
       adminSidebarHidden = loadAdminSidebarHidden();
     }
-    renderAdminPortal();
+    syncHiringStatusFilterOptions();
+renderAdminPortal();
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

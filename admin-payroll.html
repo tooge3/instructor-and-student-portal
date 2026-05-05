@@ -31,6 +31,7 @@
           <a class="nav-link nav-link-anchor" href="admin-coverage.html">Coverage Requests</a>
           <a class="nav-link nav-link-anchor active" href="admin-payroll.html">Payroll</a>
           <a class="nav-link nav-link-anchor" href="admin-students.html">Student Directory</a>
+          <a class="nav-link nav-link-anchor" href="admin-assessment.html">Assessment</a>
           <a class="nav-link nav-link-anchor" href="admin-hiring.html">Hiring</a>
           <a class="nav-link nav-link-anchor" href="index.html">Instructor Portal</a>
         </nav>
@@ -71,11 +72,65 @@
           </div>
           <div id="admin-payroll-summary" class="admin-payroll-summary"></div>
         </section>
+
+        <section class="panel admin-panel admin-search-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Payment Tracking</p>
+              <h3>Instructor paystub history</h3>
+            </div>
+          </div>
+          <div class="admin-filter-grid admin-payroll-filter-grid">
+            <label class="schedule-field admin-payroll-search-field">
+              <span>Search</span>
+              <input id="admin-payroll-search" class="schedule-input admin-search-input" type="search" placeholder="Search by instructor, location, month, payment status, or method">
+            </label>
+            <label class="schedule-field admin-payroll-status-field">
+              <span>Filter Status</span>
+              <select id="admin-payroll-status" class="schedule-select">
+                <option value="">All statuses</option>
+                <option value="Paid">Paid</option>
+                <option value="Processing">Processing</option>
+                <option value="Pending Approval">Pending Approval</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section class="panel admin-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Instructor Payments</p>
+              <h3>All paystubs grouped by instructor</h3>
+              <p class="metric-caption">Track every recent payroll month in one place, then search an instructor to see their full paystub history without switching months.</p>
+            </div>
+          </div>
+          <div id="admin-payroll-ledger-summary" class="admin-summary-grid"></div>
+          <div id="admin-payroll-ledger" class="admin-payroll-ledger"></div>
+        </section>
       </section>
     </main>
   </div>
 
+  <div id="admin-payroll-hours-modal" class="modal-shell hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-payroll-hours></div>
+    <article class="modal-card admin-payroll-hours-card" role="dialog" aria-modal="true" aria-labelledby="admin-payroll-hours-title">
+      <header class="modal-header">
+        <div>
+          <p class="eyebrow">Worked Hours</p>
+          <h3 id="admin-payroll-hours-title">Paystub hours detail</h3>
+        </div>
+        <button class="modal-close" type="button" data-close-payroll-hours aria-label="Close">×</button>
+      </header>
+      <div id="admin-payroll-hours-body" class="admin-payroll-hours-body"></div>
+      <footer class="modal-actions">
+        <button class="secondary-btn" type="button" data-close-payroll-hours>Close</button>
+      </footer>
+    </article>
+  </div>
+
   <script src="data.js"></script>
   <script src="admin.js"></script>
+  <script src="admin-payroll.js"></script>
 </body>
 </html>

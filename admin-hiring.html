@@ -31,6 +31,7 @@
           <a class="nav-link nav-link-anchor" href="admin-coverage.html">Coverage Requests</a>
           <a class="nav-link nav-link-anchor" href="admin-payroll.html">Payroll</a>
           <a class="nav-link nav-link-anchor" href="admin-students.html">Student Directory</a>
+          <a class="nav-link nav-link-anchor" href="admin-assessment.html">Assessment</a>
           <a class="nav-link nav-link-anchor active" href="admin-hiring.html">Hiring</a>
           <a class="nav-link nav-link-anchor" href="index.html">Instructor Portal</a>
         </nav>
@@ -86,16 +87,14 @@
               <select id="admin-hiring-status" class="schedule-select">
                 <option value="">All statuses</option>
                 <option value="Applied">Applied</option>
-                <option value="Applied (Local)">Applied (Local)</option>
+                <option value="Applied Local">Applied Local</option>
                 <option value="Bootstrap">Bootstrap</option>
                 <option value="Bootstrap Returned">Bootstrap Returned</option>
-                <option value="Bootstrap Reviewed">Bootstrap Reviewed</option>
                 <option value="Interview Requested">Interview Requested</option>
-                <option value="Interview Complete">Interview Complete</option>
-                <option value="Hiring Offer">Hiring Offer</option>
-                <option value="Hired">Hired</option>
-                <option value="Declined &amp; Rejected">Declined &amp; Rejected</option>
-                <option value="Duplicate">Duplicate</option>
+                <option value="Interview Done">Interview Done</option>
+                <option value="Hire">Hire</option>
+                <option value="Decline">Decline</option>
+                <option value="Delete">Delete</option>
               </select>
             </label>
             <label class="schedule-field">
@@ -130,15 +129,15 @@
                   <th>Date</th>
                   <th>Full Name</th>
                   <th>Preferred</th>
-                  <th>Email</th>
-                  <th>Phone</th>
+                  <th class="admin-hiring-contact-head" aria-label="Email">?</th>
+                  <th class="admin-hiring-contact-head" aria-label="Phone">?</th>
                   <th>Adult</th>
-                  <th>Status</th>
+                  <th>Current</th>
                   <th>Pronoun</th>
                   <th>Location</th>
                   <th>Language</th>
                   <th>History</th>
-                  <th>Detail</th>
+                  <th>Status</th>
                   <th>Notes</th>
                   <th>Menu</th>
                 </tr>
@@ -157,7 +156,93 @@
     </main>
   </div>
 
+  <div id="admin-hiring-notes-modal" class="modal-shell hidden" aria-hidden="true">
+    <article class="modal-card admin-hiring-notes-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Candidate Notes</p>
+          <h3 id="admin-hiring-notes-title">Hiring notes</h3>
+          <p id="admin-hiring-notes-meta" class="metric-caption"></p>
+        </div>
+        <button id="admin-hiring-notes-close" class="modal-close" type="button" aria-label="Close candidate notes">x</button>
+      </div>
+      <div class="settings-form">
+        <label class="schedule-label" for="admin-hiring-note-input">Add short note</label>
+        <textarea id="admin-hiring-note-input" class="course-note-input" placeholder="Jot down a short note for this candidate."></textarea>
+      </div>
+      <div class="modal-actions">
+        <span id="admin-hiring-notes-status" class="metric-caption"></span>
+        <button id="admin-hiring-notes-cancel" class="schedule-button schedule-button-secondary" type="button">Cancel</button>
+        <button id="admin-hiring-notes-save" class="schedule-button" type="button">Save Note</button>
+      </div>
+      <div id="admin-hiring-notes-list" class="notes-modal-list"></div>
+    </article>
+  </div>
+
+  <div id="admin-hiring-history-modal" class="modal-shell hidden" aria-hidden="true">
+    <article class="modal-card admin-hiring-notes-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Application History</p>
+          <h3 id="admin-hiring-history-title">Status history</h3>
+          <p id="admin-hiring-history-meta" class="metric-caption"></p>
+        </div>
+        <button id="admin-hiring-history-close" class="modal-close" type="button" aria-label="Close application history">x</button>
+      </div>
+      <div id="admin-hiring-history-list" class="notes-modal-list"></div>
+      <div class="modal-actions">
+        <button id="admin-hiring-history-cancel" class="schedule-button schedule-button-secondary" type="button">Close</button>
+      </div>
+    </article>
+  </div>
+
+  <div id="admin-hire-instructor-modal" class="modal-shell hidden" aria-hidden="true">
+    <article class="modal-card admin-hire-instructor-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Hire Instructor</p>
+          <h3 id="admin-hire-instructor-title">Complete hiring details</h3>
+          <p id="admin-hire-instructor-meta" class="metric-caption"></p>
+        </div>
+        <button id="admin-hire-instructor-close" class="modal-close" type="button" aria-label="Close hire instructor">x</button>
+      </div>
+      <div class="settings-form">
+        <div class="admin-edit-inline-grid">
+          <div>
+            <label class="schedule-label" for="admin-hire-instructor-username">Username</label>
+            <input id="admin-hire-instructor-username" class="schedule-input" type="text" placeholder="candidate.username">
+          </div>
+          <div>
+            <label class="schedule-label" for="admin-hire-instructor-password">Password</label>
+            <input id="admin-hire-instructor-password" class="schedule-input" type="text" placeholder="Temporary password">
+          </div>
+        </div>
+        <label class="schedule-label" for="admin-hire-instructor-salary">Salary Rate</label>
+        <input id="admin-hire-instructor-salary" class="schedule-input" type="text" placeholder="$38/hr">
+        <div class="admin-edit-tag-section">
+          <span class="schedule-label">Stationed Locations</span>
+          <div id="admin-hire-instructor-locations" class="admin-edit-location-grid">
+            <label class="admin-tag-option"><input type="checkbox" value="Online"> <span>Online</span></label>
+            <label class="admin-tag-option"><input type="checkbox" value="Irvine"> <span>Irvine</span></label>
+            <label class="admin-tag-option"><input type="checkbox" value="Diamond Bar"> <span>Diamond Bar</span></label>
+            <label class="admin-tag-option"><input type="checkbox" value="Arcadia"> <span>Arcadia</span></label>
+            <label class="admin-tag-option"><input type="checkbox" value="West Lafayette"> <span>West Lafayette</span></label>
+            <label class="admin-tag-option"><input type="checkbox" value="Redmond"> <span>Redmond</span></label>
+            <label class="admin-tag-option"><input type="checkbox" value="Bellevue"> <span>Bellevue</span></label>
+            <label class="admin-tag-option"><input type="checkbox" value="Bothell"> <span>Bothell</span></label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <span id="admin-hire-instructor-status" class="metric-caption"></span>
+        <button id="admin-hire-instructor-cancel" class="schedule-button schedule-button-secondary" type="button">Cancel</button>
+        <button id="admin-hire-instructor-save" class="schedule-button" type="button">Save Hire</button>
+      </div>
+    </article>
+  </div>
   <script src="data.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>
+
+
