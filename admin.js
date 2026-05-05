@@ -42,12 +42,14 @@ const metrics = {
   payrollSummary: document.getElementById("admin-payroll-summary"),
   studentRows: document.getElementById("admin-student-rows"),
   studentSearch: document.getElementById("admin-student-search"),
+  studentSearchFilter: document.getElementById("admin-student-search-filter"),
   studentSortName: document.getElementById("admin-student-sort-name"),
   studentSortId: document.getElementById("admin-student-sort-id"),
   studentSortCourse: document.getElementById("admin-student-sort-course"),
   instructorRows: document.getElementById("admin-instructor-rows"),
   instructorSummary: document.getElementById("admin-instructor-summary"),
   instructorSearch: document.getElementById("admin-instructor-search"),
+  instructorSearchFilter: document.getElementById("admin-instructor-search-filter"),
   instructorSortName: document.getElementById("admin-instructor-sort-name"),
   instructorSortLocation: document.getElementById("admin-instructor-sort-location"),
   instructorSortCourseLoad: document.getElementById("admin-instructor-sort-course-load"),
@@ -57,6 +59,7 @@ const metrics = {
   courseRows: document.getElementById("admin-course-rows"),
   courseSummary: document.getElementById("admin-course-summary"),
   courseSearch: document.getElementById("admin-course-search"),
+  courseSearchFilter: document.getElementById("admin-course-search-filter"),
   coursePrev: document.getElementById("admin-course-prev"),
   courseNext: document.getElementById("admin-course-next"),
   coursePageInfo: document.getElementById("admin-course-page-info"),
@@ -155,12 +158,15 @@ const adminState = {
   coursePage: 1,
   hiringPage: 1,
   studentQuery: "",
+  studentSearchFilter: "all",
   studentSort: "name",
   studentSortDirection: "asc",
   instructorQuery: "",
+  instructorSearchFilter: "all",
   instructorSort: "name",
   instructorSortDirection: "asc",
   courseQuery: "",
+  courseSearchFilter: "all",
   hiringQuery: "",
   hiringStatus: "",
   hiringLocation: "",
@@ -2070,19 +2076,28 @@ function renderInstructorDirectory() {
   }));
   const courseLoadMap = buildInstructorCourseLoadMap();
   const query = (adminState.instructorQuery || "").toLowerCase();
+  const searchFilter = adminState.instructorSearchFilter || "all";
   const filtered = sortInstructorRecords(instructors.filter((instructor) => {
-    const haystack = [
-      instructor.id,
-      instructor.name,
-      instructor.email,
-      instructor.username,
-      instructor.program,
-      instructor.rank,
-      instructor.locations.join(" "),
-      instructor.languages.join(" "),
-      instructor.tags.join(" "),
-      instructor.status,
-    ].join(" ").toLowerCase();
+    const searchFields = {
+      all: [
+        instructor.id,
+        instructor.name,
+        instructor.email,
+        instructor.username,
+        instructor.program,
+        instructor.rank,
+        instructor.locations.join(" "),
+        instructor.languages.join(" "),
+        instructor.tags.join(" "),
+        instructor.status,
+      ],
+      name: [instructor.name, instructor.id, instructor.email, instructor.username],
+      program: [instructor.program, instructor.rank],
+      locations: [instructor.locations.join(" ")],
+      languages: [instructor.languages.join(" ")],
+      status: [instructor.status, instructor.tags.join(" ")],
+    };
+    const haystack = (searchFields[searchFilter] || searchFields.all).join(" ").toLowerCase();
 
     return haystack.includes(query);
   }));
@@ -2454,15 +2469,25 @@ function renderCourseDirectory() {
 
   const courses = getCourseRecords();
   const query = (adminState.courseQuery || "").toLowerCase();
+  const searchFilter = adminState.courseSearchFilter || "all";
   const filtered = courses.filter((course) => {
-    const haystack = [
-      course.id,
-      course.title,
-      course.program,
-      course.instructorName,
-      course.location,
-      course.schedule,
-    ].join(" ").toLowerCase();
+    const searchFields = {
+      all: [
+        course.id,
+        course.title,
+        course.program,
+        course.instructorName,
+        course.location,
+        course.schedule,
+        course.courseFormat,
+      ],
+      title: [course.id, course.title],
+      instructor: [course.instructorName],
+      program: [course.program],
+      location: [course.location],
+      format: [course.courseFormat, course.isOpenClass ? "open class" : "structured term"],
+    };
+    const haystack = (searchFields[searchFilter] || searchFields.all).join(" ").toLowerCase();
 
     return haystack.includes(query);
   });
@@ -2598,16 +2623,25 @@ function renderStudents() {
     return;
   }
 
+  const searchFilter = adminState.studentSearchFilter || "all";
   const filtered = sortStudentRecords(students.filter((student) => {
     const course = getCourseRecords().find((entry) => entry.id === student.courseId);
     const status = studentStatus(student);
-    const haystack = [
-      studentIdForName(student.name),
-      student.name,
-      course?.title || student.cohort,
-      status.label,
-      primaryGoalText(student),
-    ].join(" ").toLowerCase();
+    const searchFields = {
+      all: [
+        studentIdForName(student.name),
+        student.name,
+        course?.title || student.cohort,
+        status.label,
+        primaryGoalText(student),
+      ],
+      name: [student.name],
+      id: [studentIdForName(student.name)],
+      course: [course?.title || student.cohort],
+      status: [status.label],
+      goal: [primaryGoalText(student)],
+    };
+    const haystack = (searchFields[searchFilter] || searchFields.all).join(" ").toLowerCase();
 
     return haystack.includes(adminState.studentQuery.toLowerCase());
   }));
@@ -3406,6 +3440,12 @@ metrics.instructorSearch?.addEventListener("input", (event) => {
   renderInstructorDirectory();
 });
 
+metrics.instructorSearchFilter?.addEventListener("change", (event) => {
+  adminState.instructorSearchFilter = event.target.value || "all";
+  adminState.instructorPage = 1;
+  renderInstructorDirectory();
+});
+
 metrics.instructorSortName?.addEventListener("click", () => {
   toggleInstructorSort("name");
 });
@@ -3437,6 +3477,11 @@ metrics.studentSearch?.addEventListener("input", (event) => {
   renderStudents();
 });
 
+metrics.studentSearchFilter?.addEventListener("change", (event) => {
+  adminState.studentSearchFilter = event.target.value || "all";
+  renderStudents();
+});
+
 metrics.studentSortName?.addEventListener("click", () => {
   toggleStudentSort("name");
 });
@@ -3461,6 +3506,12 @@ metrics.instructorNext?.addEventListener("click", () => {
 
 metrics.courseSearch?.addEventListener("input", (event) => {
   adminState.courseQuery = event.target.value || "";
+  adminState.coursePage = 1;
+  renderCourseDirectory();
+});
+
+metrics.courseSearchFilter?.addEventListener("change", (event) => {
+  adminState.courseSearchFilter = event.target.value || "all";
   adminState.coursePage = 1;
   renderCourseDirectory();
 });

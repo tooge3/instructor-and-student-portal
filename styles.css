@@ -3542,13 +3542,18 @@ body {
     grid-template-columns: 1fr 1fr;
   }
 
-  .admin-payroll-filter-grid {
-    grid-template-columns: 1fr;
-  }
-
   .admin-payroll-hours-summary,
   .admin-payroll-hours-item {
     flex-direction: column;
+  }
+
+  .admin-search-combo {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-search-combo-select {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
   }
 
   .restaurant-header {
@@ -4049,6 +4054,42 @@ body {
   margin-top: 18px;
 }
 
+.admin-search-combo {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  align-items: stretch;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.admin-search-combo-select,
+.admin-search-combo-input {
+  min-width: 0;
+  min-height: 48px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+}
+
+.admin-search-combo-select {
+  padding: 0 16px;
+  border-right: 1px solid var(--line);
+  font-weight: 700;
+}
+
+.admin-search-combo-input {
+  padding: 0 16px;
+}
+
+.admin-search-combo-select:focus,
+.admin-search-combo-input:focus {
+  outline: none;
+}
+
 .admin-page-search {
   width: 100%;
   min-width: 0;
@@ -4393,22 +4434,6 @@ body {
 .admin-payroll-card strong {
   font-family: "Space Grotesk", sans-serif;
   font-size: 1.2rem;
-}
-
-.admin-payroll-filter-grid {
-  grid-template-columns: minmax(0, 1.55fr) minmax(220px, 0.8fr);
-  align-items: end;
-  gap: 16px;
-}
-
-.admin-payroll-search-field,
-.admin-payroll-status-field {
-  min-width: 0;
-}
-
-.admin-payroll-search-field .schedule-input,
-.admin-payroll-status-field .schedule-select {
-  width: 100%;
 }
 
 .admin-payroll-ledger {

@@ -71,22 +71,16 @@
               <p class="eyebrow">Search</p>
             </div>
           </div>
-          <div class="admin-filter-grid admin-assessment-filter-grid">
-            <label class="schedule-field admin-assessment-search-field">
-              <span>Search</span>
-              <input id="admin-assessment-search" class="schedule-input admin-search-input" type="search" placeholder="Search by instructor, rank, language, or assessment tag">
-            </label>
-            <label class="schedule-field admin-assessment-location-field">
-              <span>Filter Location</span>
-              <select id="admin-assessment-location" class="schedule-select">
-                <option value="">All locations</option>
-                <option value="Irvine">Irvine</option>
-                <option value="Redmond">Redmond</option>
-                <option value="Bothell">Bothell</option>
-                <option value="Factoria">Factoria</option>
-                <option value="Online">Online</option>
-              </select>
-            </label>
+          <div class="admin-search-combo admin-assessment-search-combo">
+            <select id="admin-assessment-location" class="admin-search-combo-select" aria-label="Filter location">
+              <option value="">All locations</option>
+              <option value="Irvine">Irvine</option>
+              <option value="Redmond">Redmond</option>
+              <option value="Bothell">Bothell</option>
+              <option value="Factoria">Factoria</option>
+              <option value="Online">Online</option>
+            </select>
+            <input id="admin-assessment-search" class="admin-search-combo-input" type="search" placeholder="Search by instructor, rank, language, or assessment tag" aria-label="Search assessment">
           </div>
         </section>
 

@@ -58,13 +58,23 @@
         <section class="admin-summary-grid admin-directory-summary" id="admin-course-summary"></section>
 
         <section class="panel admin-panel admin-search-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Search</p>
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Search</p>
+              </div>
             </div>
-          </div>
-          <input id="admin-course-search" class="schedule-input admin-search-input" type="search" placeholder="Search by course, program, instructor, or location">
-        </section>
+            <div class="admin-search-combo">
+              <select id="admin-course-search-filter" class="admin-search-combo-select" aria-label="Course search filter">
+                <option value="all">All</option>
+                <option value="title">Course</option>
+                <option value="instructor">Instructor</option>
+                <option value="program">Program</option>
+                <option value="location">Location</option>
+                <option value="format">Format</option>
+              </select>
+              <input id="admin-course-search" class="schedule-input admin-search-input admin-search-combo-input" type="search" placeholder="Search course records">
+            </div>
+          </section>
 
         <section class="panel admin-panel">
           <div class="panel-heading admin-table-heading">

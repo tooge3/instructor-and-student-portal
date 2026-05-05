@@ -56,13 +56,23 @@
     <main class="dashboard admin-dashboard">
       <section class="admin-shell">
         <section class="panel admin-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Search</p>
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Search</p>
+              </div>
             </div>
-          </div>
-          <input id="admin-student-search" class="schedule-input admin-search-input admin-page-search" type="search" placeholder="Search by student, ID, course, goal, or status">
-        </section>
+            <div class="admin-search-combo">
+              <select id="admin-student-search-filter" class="admin-search-combo-select" aria-label="Student search filter">
+                <option value="all">All</option>
+                <option value="name">Name</option>
+                <option value="id">ID</option>
+                <option value="course">Course</option>
+                <option value="status">Status</option>
+                <option value="goal">Goal</option>
+              </select>
+              <input id="admin-student-search" class="schedule-input admin-search-input admin-page-search admin-search-combo-input" type="search" placeholder="Search student records">
+            </div>
+          </section>
 
         <section class="panel admin-panel">
           <div class="panel-heading admin-table-heading">

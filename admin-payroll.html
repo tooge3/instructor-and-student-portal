@@ -80,20 +80,14 @@
               <h3>Instructor paystub history</h3>
             </div>
           </div>
-          <div class="admin-filter-grid admin-payroll-filter-grid">
-            <label class="schedule-field admin-payroll-search-field">
-              <span>Search</span>
-              <input id="admin-payroll-search" class="schedule-input admin-search-input" type="search" placeholder="Search by instructor, location, month, payment status, or method">
-            </label>
-            <label class="schedule-field admin-payroll-status-field">
-              <span>Filter Status</span>
-              <select id="admin-payroll-status" class="schedule-select">
-                <option value="">All statuses</option>
-                <option value="Paid">Paid</option>
-                <option value="Processing">Processing</option>
-                <option value="Pending Approval">Pending Approval</option>
-              </select>
-            </label>
+          <div class="admin-search-combo admin-payroll-search-combo">
+            <select id="admin-payroll-status" class="admin-search-combo-select" aria-label="Filter status">
+              <option value="">All statuses</option>
+              <option value="Paid">Paid</option>
+              <option value="Processing">Processing</option>
+              <option value="Pending Approval">Pending Approval</option>
+            </select>
+            <input id="admin-payroll-search" class="admin-search-combo-input" type="search" placeholder="Search by instructor, location, month, payment status, or method" aria-label="Search payroll">
           </div>
         </section>
 
