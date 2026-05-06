@@ -4056,7 +4056,7 @@ body {
 
 .admin-search-combo {
   display: grid;
-  grid-template-columns: 180px minmax(0, 1fr);
+  grid-template-columns: minmax(120px, 148px) minmax(0, 1fr);
   align-items: stretch;
   width: 100%;
   overflow: hidden;
@@ -4867,10 +4867,17 @@ body {
 
 .admin-hiring-search-field {
   max-width: none;
+  width: 100%;
+  grid-column: 3 / -1;
 }
 
-.admin-hiring-search-field .admin-search-input {
-  min-width: 300px;
+.admin-hiring-search-field .admin-search-combo {
+  width: 100%;
+  min-width: 360px;
+}
+
+.admin-hiring-search-field .admin-search-input,
+.admin-hiring-search-field .admin-search-combo-input {
   width: 100%;
 }
 

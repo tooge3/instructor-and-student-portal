@@ -73,46 +73,31 @@
             </div>
           </div>
 
-          <div class="admin-filter-grid">
-            <label class="schedule-field admin-date-field">
-              <span>Minimum Date</span>
-              <input id="admin-hiring-min-date" class="schedule-input" type="date">
-            </label>
-            <label class="schedule-field admin-date-field">
-              <span>Maximum Date</span>
-              <input id="admin-hiring-max-date" class="schedule-input" type="date">
-            </label>
-            <label class="schedule-field">
-              <span>Filter Status</span>
-              <select id="admin-hiring-status" class="schedule-select">
-                <option value="">All statuses</option>
-                <option value="Applied">Applied</option>
-                <option value="Applied Local">Applied Local</option>
-                <option value="Bootstrap">Bootstrap</option>
-                <option value="Bootstrap Returned">Bootstrap Returned</option>
-                <option value="Interview Requested">Interview Requested</option>
-                <option value="Interview Done">Interview Done</option>
-                <option value="Hire">Hire</option>
-                <option value="Decline">Decline</option>
-                <option value="Delete">Delete</option>
-              </select>
-            </label>
-            <label class="schedule-field">
-              <span>Filter Location</span>
-              <select id="admin-hiring-location" class="schedule-select">
-                <option value="">All locations</option>
-                <option value="Irvine">Irvine</option>
-                <option value="Redmond">Redmond</option>
-                <option value="Bothell">Bothell</option>
-                <option value="Factoria">Factoria</option>
-                <option value="Online">Online</option>
-              </select>
-            </label>
-            <label class="schedule-field admin-hiring-search-field">
-              <span>Search</span>
-              <input id="admin-hiring-search" class="schedule-input admin-search-input" type="search" placeholder="Search by candidate, email, phone, location, or status">
-            </label>
-          </div>
+            <div class="admin-filter-grid">
+              <label class="schedule-field admin-date-field">
+                <span>Minimum Date</span>
+                <input id="admin-hiring-min-date" class="schedule-input" type="date">
+              </label>
+              <label class="schedule-field admin-date-field">
+                <span>Maximum Date</span>
+                <input id="admin-hiring-max-date" class="schedule-input" type="date">
+              </label>
+              <label class="schedule-field admin-hiring-search-field">
+                <span>Search</span>
+                <div class="admin-search-combo admin-hiring-search-combo">
+                  <select id="admin-hiring-search-filter" class="admin-search-combo-select" aria-label="Hiring search filter">
+                    <option value="all">All</option>
+                    <option value="candidate">Candidate</option>
+                    <option value="email">Email</option>
+                    <option value="phone">Phone</option>
+                    <option value="location">Location</option>
+                    <option value="status">Status</option>
+                    <option value="language">Language</option>
+                  </select>
+                  <input id="admin-hiring-search" class="schedule-input admin-search-input admin-search-combo-input" type="search" placeholder="Search hiring records">
+                </div>
+              </label>
+            </div>
 
           <div class="admin-action-row">
             <button class="schedule-button schedule-button-secondary" type="button">Send Emails</button>

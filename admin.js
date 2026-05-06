@@ -69,6 +69,7 @@ const metrics = {
   hiringSummary: document.getElementById("admin-hiring-summary"),
   hiringRows: document.getElementById("admin-hiring-rows"),
   hiringSearch: document.getElementById("admin-hiring-search"),
+  hiringSearchFilter: document.getElementById("admin-hiring-search-filter"),
   hiringStatusFilter: document.getElementById("admin-hiring-status"),
   hiringLocationFilter: document.getElementById("admin-hiring-location"),
   hiringMinDate: document.getElementById("admin-hiring-min-date"),
@@ -168,6 +169,7 @@ const adminState = {
   courseQuery: "",
   courseSearchFilter: "all",
   hiringQuery: "",
+  hiringSearchFilter: "all",
   hiringStatus: "",
   hiringLocation: "",
   hiringMinDate: "",
@@ -2698,22 +2700,33 @@ function renderHiring() {
   }
 
   const candidates = getHiringRecords();
+  const searchFilter = adminState.hiringSearchFilter || "all";
   const filtered = candidates.filter((candidate) => {
-    const matchesQuery = !adminState.hiringQuery || [
-      candidate.id,
-      candidate.fullName,
-      candidate.email,
-      candidate.phone,
-      candidate.location,
-      candidate.language,
-      candidate.status,
-    ].join(" ").toLowerCase().includes(adminState.hiringQuery.toLowerCase());
-    const matchesStatus = !adminState.hiringStatus || candidate.status === adminState.hiringStatus;
-    const matchesLocation = !adminState.hiringLocation || candidate.location === adminState.hiringLocation;
+    const searchFields = {
+      all: [
+        candidate.id,
+        candidate.fullName,
+        candidate.email,
+        candidate.phone,
+        candidate.location,
+        candidate.language,
+        candidate.status,
+      ],
+      candidate: [candidate.id, candidate.fullName],
+      email: [candidate.email],
+      phone: [candidate.phone],
+      location: [candidate.location],
+      status: [candidate.status],
+      language: [candidate.language],
+    };
+    const matchesQuery = !adminState.hiringQuery || (searchFields[searchFilter] || searchFields.all)
+      .join(" ")
+      .toLowerCase()
+      .includes(adminState.hiringQuery.toLowerCase());
     const matchesMin = !adminState.hiringMinDate || candidate.date >= adminState.hiringMinDate;
     const matchesMax = !adminState.hiringMaxDate || candidate.date <= adminState.hiringMaxDate;
 
-    return matchesQuery && matchesStatus && matchesLocation && matchesMin && matchesMax;
+    return matchesQuery && matchesMin && matchesMax;
   });
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / hiringPageSize));
@@ -3532,14 +3545,8 @@ metrics.hiringSearch?.addEventListener("input", (event) => {
   renderHiring();
 });
 
-metrics.hiringStatusFilter?.addEventListener("change", (event) => {
-  adminState.hiringStatus = event.target.value || "";
-  adminState.hiringPage = 1;
-  renderHiring();
-});
-
-metrics.hiringLocationFilter?.addEventListener("change", (event) => {
-  adminState.hiringLocation = event.target.value || "";
+metrics.hiringSearchFilter?.addEventListener("change", (event) => {
+  adminState.hiringSearchFilter = event.target.value || "all";
   adminState.hiringPage = 1;
   renderHiring();
 });
