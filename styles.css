@@ -29,9 +29,11 @@ body {
 }
 
 .app-shell {
+  --sidebar-shell-width: 310px;
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: var(--sidebar-shell-width) minmax(0, 1fr);
   min-height: 100vh;
+  transition: grid-template-columns 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .sidebar {
@@ -241,7 +243,7 @@ body {
 }
 
 .app-shell.sidebar-hidden {
-  grid-template-columns: 64px 1fr;
+  --sidebar-shell-width: 64px;
 }
 
 .advisor-card-header {
@@ -327,6 +329,8 @@ body {
 
 .dashboard {
   padding: 28px;
+  min-width: 0;
+  width: 100%;
 }
 
 .dashboard-view {
@@ -4097,6 +4101,43 @@ body {
 
 .admin-dashboard {
   padding: 32px;
+  min-width: 0;
+  width: 100%;
+}
+
+.app-shell:not(.sidebar-hidden) .summary-grid,
+.app-shell:not(.sidebar-hidden) .dashboard-home-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.app-shell:not(.sidebar-hidden) .admin-summary-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.app-shell:not(.sidebar-hidden) .admin-table {
+  min-width: 760px;
+}
+
+.app-shell:not(.sidebar-hidden) .admin-hiring-table {
+  min-width: 940px;
+}
+
+.app-shell:not(.sidebar-hidden) .course-roster-table {
+  min-width: 880px;
+}
+
+.app-shell:not(.sidebar-hidden) .course-sessions-header-row,
+.app-shell:not(.sidebar-hidden) .course-sessions-row {
+  grid-template-columns: 72px 120px minmax(150px, 1fr) 132px 132px;
+}
+
+.app-shell:not(.sidebar-hidden) .admin-assessment-listhead,
+.app-shell:not(.sidebar-hidden) .admin-assessment-summary-row {
+  min-width: 980px;
+}
+
+.app-shell:not(.sidebar-hidden) .admin-assessment-listview {
+  overflow-x: auto;
 }
 
 .admin-hero {
@@ -5007,82 +5048,197 @@ body {
 }
 
 .admin-assessment-grid {
-  display: grid;
-  gap: 18px;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  display: block;
 }
 
-.admin-assessment-card {
-  display: grid;
-  gap: 16px;
-  padding: 22px;
+.admin-assessment-listview {
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 24px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  box-shadow: 0 16px 36px rgba(17, 24, 39, 0.06);
+  background: #fff;
 }
 
-.admin-assessment-card.ready {
-  border-color: rgba(74, 167, 113, 0.32);
-}
-
-.admin-assessment-card.growth {
-  border-color: rgba(232, 161, 69, 0.28);
-}
-
-.admin-assessment-card.coaching {
-  border-color: rgba(197, 94, 72, 0.26);
-}
-
-.admin-assessment-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
+.admin-assessment-listhead,
+.admin-assessment-summary-row {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.7fr) minmax(120px, 1fr) minmax(140px, 1.15fr) minmax(150px, 1.2fr) 88px 98px 88px 110px 72px 72px 72px;
+  align-items: center;
   gap: 16px;
 }
 
-.admin-assessment-head h3 {
-  margin: 4px 0 0;
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 1.28rem;
+.admin-assessment-listhead {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  background: #f8fbff;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.admin-assessment-score {
-  min-width: 92px;
-  padding: 12px 14px;
-  border-radius: 22px;
-  text-align: center;
-  background: #eef4ff;
-  color: var(--primary);
-}
-
-.admin-assessment-card.ready .admin-assessment-score {
-  background: rgba(74, 167, 113, 0.12);
-  color: #317150;
-}
-
-.admin-assessment-card.growth .admin-assessment-score {
-  background: rgba(232, 161, 69, 0.14);
-  color: #9f641d;
-}
-
-.admin-assessment-card.coaching .admin-assessment-score {
-  background: rgba(197, 94, 72, 0.12);
-  color: #9f4534;
-}
-
-.admin-assessment-score strong {
+.admin-assessment-listbody {
   display: block;
+}
+
+.admin-assessment-row {
+  border-top: 1px solid var(--line);
+}
+
+.admin-assessment-row:first-child {
+  border-top: 0;
+}
+
+.admin-assessment-summary-row {
+  list-style: none;
+  padding: 16px 20px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.admin-assessment-summary-row::-webkit-details-marker {
+  display: none;
+}
+
+.admin-assessment-row[open] .admin-assessment-summary-row {
+  background: #fbfdff;
+}
+
+.admin-assessment-row.ready .admin-assessment-summary-row {
+  box-shadow: inset 4px 0 0 rgba(74, 167, 113, 0.65);
+}
+
+.admin-assessment-row.growth .admin-assessment-summary-row {
+  box-shadow: inset 4px 0 0 rgba(232, 161, 69, 0.72);
+}
+
+.admin-assessment-row.coaching .admin-assessment-summary-row {
+  box-shadow: inset 4px 0 0 rgba(197, 94, 72, 0.72);
+}
+
+.admin-assessment-cell {
+  min-width: 0;
+  color: var(--ink);
+  font-size: 0.98rem;
+}
+
+.admin-assessment-cell-name strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.admin-assessment-cell-name small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.admin-assessment-rank-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef3fb;
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.admin-assessment-score-inline {
+  display: inline-flex;
+  min-width: 42px;
+  justify-content: center;
   font-family: "Space Grotesk", sans-serif;
-  font-size: 1.55rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.admin-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 48px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+}
+
+.admin-icon-button:hover {
+  background: #f8fbff;
+}
+
+.admin-icon-button-glyph {
+  font-size: 0.95rem;
   line-height: 1;
 }
 
-.admin-assessment-score span {
-  display: block;
-  margin-top: 6px;
+.admin-icon-button-count {
   font-size: 0.78rem;
   font-weight: 700;
+}
+
+.admin-inline-menu-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.admin-inline-menu-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  min-width: 220px;
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+}
+
+.admin-assessment-detail-row {
+  padding: 0 20px 20px;
+  background: #fbfdff;
+}
+
+.admin-assessment-detail-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 14px;
+}
+
+.admin-assessment-detail-grid div {
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(238, 243, 251, 0.72);
+}
+
+.admin-assessment-detail-grid span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-assessment-detail-grid p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.admin-assessment-meta-row {
+  display: grid;
+  gap: 12px;
 }
 
 .admin-assessment-metrics,
@@ -5110,33 +5266,6 @@ body {
   color: #7b6250;
 }
 
-.admin-assessment-list {
-  display: grid;
-  gap: 12px;
-}
-
-.admin-assessment-list div {
-  padding: 12px 14px;
-  border-radius: 18px;
-  background: rgba(238, 243, 251, 0.72);
-}
-
-.admin-assessment-list span {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.admin-assessment-list p {
-  margin: 0;
-  color: var(--ink);
-  line-height: 1.55;
-}
-
 .admin-history-status-pill {
   display: inline-flex;
   align-items: center;
@@ -5146,6 +5275,23 @@ body {
   color: var(--ink);
   font-size: 0.76rem;
   font-weight: 700;
+}
+
+@media (max-width: 1100px) {
+  .admin-assessment-listview {
+    overflow-x: auto;
+  }
+
+  .admin-assessment-listhead,
+  .admin-assessment-summary-row {
+    min-width: 1140px;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-assessment-detail-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .admin-history-entry-body {
@@ -7128,6 +7274,323 @@ body {
 
 .admin-table-contact-button:hover {
   text-decoration: none;
+}
+
+.app-shell:not(.sidebar-hidden) .admin-table-wrap,
+.app-shell:not(.sidebar-hidden) .course-roster-table-wrap,
+.app-shell:not(.sidebar-hidden) .course-sessions-table-wrap,
+.app-shell:not(.sidebar-hidden) .admin-assessment-listview {
+  overflow-x: visible;
+}
+
+.app-shell:not(.sidebar-hidden) .hero,
+.app-shell:not(.sidebar-hidden) .student-hero,
+.app-shell:not(.sidebar-hidden) .course-hero,
+.app-shell:not(.sidebar-hidden) .admin-hero,
+.app-shell:not(.sidebar-hidden) .panel-heading,
+.app-shell:not(.sidebar-hidden) .roster-header,
+.app-shell:not(.sidebar-hidden) .student-head,
+.app-shell:not(.sidebar-hidden) .student-stat-row,
+.app-shell:not(.sidebar-hidden) .status-row {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.app-shell:not(.sidebar-hidden) .course-hero-side,
+.app-shell:not(.sidebar-hidden) .student-badge-group,
+.app-shell:not(.sidebar-hidden) .admin-hero-actions {
+  min-width: 0;
+  width: 100%;
+}
+
+.app-shell:not(.sidebar-hidden) .course-inline-grid,
+.app-shell:not(.sidebar-hidden) .course-roster-grid,
+.app-shell:not(.sidebar-hidden) .course-snapshot-grid,
+.app-shell:not(.sidebar-hidden) .course-detail-grid,
+.app-shell:not(.sidebar-hidden) .classroom-grid,
+.app-shell:not(.sidebar-hidden) .student-grid,
+.app-shell:not(.sidebar-hidden) .student-summary-grid,
+.app-shell:not(.sidebar-hidden) .student-detail-grid,
+.app-shell:not(.sidebar-hidden) .admin-grid-two,
+.app-shell:not(.sidebar-hidden) .admin-filter-grid {
+  grid-template-columns: 1fr;
+}
+
+.app-shell:not(.sidebar-hidden) .documents-hub,
+.app-shell:not(.sidebar-hidden) .course-transfer-grid,
+.app-shell:not(.sidebar-hidden) .course-progress-grid,
+.app-shell:not(.sidebar-hidden) .course-report-grid,
+.app-shell:not(.sidebar-hidden) .admin-directory-summary,
+.app-shell:not(.sidebar-hidden) .admin-location-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.app-shell:not(.sidebar-hidden) .admin-search-combo {
+  grid-template-columns: minmax(110px, 136px) minmax(0, 1fr);
+}
+
+.app-shell:not(.sidebar-hidden) .admin-table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.app-shell:not(.sidebar-hidden) .admin-table th,
+.app-shell:not(.sidebar-hidden) .admin-table td,
+.app-shell:not(.sidebar-hidden) .admin-hiring-table th,
+.app-shell:not(.sidebar-hidden) .admin-hiring-table td {
+  padding: 10px 10px;
+  font-size: 0.92rem;
+  word-break: break-word;
+}
+
+.app-shell:not(.sidebar-hidden) .admin-hiring-table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.app-shell:not(.sidebar-hidden) .course-roster-table {
+  min-width: 0;
+}
+
+.app-shell:not(.sidebar-hidden) .course-roster-header-row,
+.app-shell:not(.sidebar-hidden) .course-roster-row {
+  grid-template-columns: minmax(160px, 1fr) minmax(180px, 1.1fr) minmax(110px, 0.7fr) 72px 88px;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.app-shell:not(.sidebar-hidden) .course-sessions-table {
+  min-width: 0;
+}
+
+.app-shell:not(.sidebar-hidden) .course-sessions-header-row,
+.app-shell:not(.sidebar-hidden) .course-sessions-row {
+  grid-template-columns: 64px 110px minmax(120px, 1fr) 110px 120px;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.app-shell:not(.sidebar-hidden) .admin-assessment-listhead,
+.app-shell:not(.sidebar-hidden) .admin-assessment-summary-row {
+  min-width: 0;
+  grid-template-columns: minmax(140px, 1.4fr) minmax(92px, 0.9fr) minmax(110px, 1fr) minmax(110px, 1fr) 64px 72px 72px 88px 60px 60px 60px;
+  gap: 10px;
+}
+
+.snake-panel {
+  display: grid;
+  gap: 20px;
+}
+
+.snake-game-heading,
+.snake-game-layout,
+.snake-scoreboard,
+.snake-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.snake-game-heading {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.snake-game-heading h3 {
+  margin-top: 6px;
+}
+
+.snake-scoreboard {
+  flex-wrap: wrap;
+}
+
+.snake-scoreboard div {
+  min-width: 104px;
+  border: 1px solid rgba(44, 107, 237, 0.18);
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: #eef7ff;
+}
+
+.snake-scoreboard span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.snake-scoreboard strong {
+  display: block;
+  margin-top: 2px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.55rem;
+}
+
+.snake-game-layout {
+  align-items: start;
+}
+
+.snake-stage-wrap {
+  position: relative;
+  width: min(100%, 520px);
+}
+
+.snake-board {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 8px solid #2c6bed;
+  border-radius: 16px;
+  background: #78bdf2;
+  box-shadow: 0 16px 34px rgba(44, 107, 237, 0.2);
+}
+
+.snake-message {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  border: 1px solid rgba(29, 39, 51, 0.12);
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--ink);
+  font-weight: 700;
+  text-align: center;
+}
+
+.snake-controls {
+  display: grid;
+  gap: 18px;
+  min-width: 260px;
+  flex: 1;
+}
+
+.snake-costume-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.snake-costume {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.snake-costume.active {
+  border-color: var(--accent);
+  background: #eef4ff;
+}
+
+.snake-costume-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 1px rgba(29, 39, 51, 0.14);
+}
+
+.snake-costume-swatch.classic {
+  background: #2f7a52;
+}
+
+.snake-costume-swatch.sunset {
+  background: #f26a3d;
+}
+
+.snake-costume-swatch.mint {
+  background: #33c7a7;
+}
+
+.snake-costume-swatch.royal {
+  background: #6d63ff;
+}
+
+.snake-actions {
+  flex-wrap: wrap;
+}
+
+.snake-direction-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 54px);
+  grid-template-rows: repeat(2, 54px);
+  gap: 8px;
+  justify-content: start;
+}
+
+.snake-direction-pad button {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.snake-direction-pad button:hover {
+  background: #eef4ff;
+}
+
+.snake-direction-pad [data-snake-direction="up"] {
+  grid-column: 2;
+}
+
+.snake-direction-pad [data-snake-direction="left"] {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.snake-direction-pad [data-snake-direction="down"] {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.snake-direction-pad [data-snake-direction="right"] {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+@media (max-width: 900px) {
+  .snake-game-heading,
+  .snake-game-layout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .snake-stage-wrap {
+    width: 100%;
+  }
+
+  .snake-controls {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .snake-costume-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .snake-scoreboard {
+    width: 100%;
+  }
+
+  .snake-scoreboard div {
+    flex: 1;
+  }
 }
 
 

@@ -98,6 +98,80 @@
     </main>
   </div>
 
+  <div id="admin-assessment-notes-modal" class="modal-shell hidden" aria-hidden="true">
+    <article class="modal-card admin-hiring-notes-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Assessment Notes</p>
+          <h3 id="admin-assessment-notes-title">Instructor notes</h3>
+          <p id="admin-assessment-notes-meta" class="metric-caption"></p>
+        </div>
+        <button id="admin-assessment-notes-close" class="modal-close" type="button" aria-label="Close assessment notes">x</button>
+      </div>
+      <div class="settings-form">
+        <label class="schedule-label" for="admin-assessment-note-input">Add short note</label>
+        <textarea id="admin-assessment-note-input" class="course-note-input" placeholder="Jot down a short assessment note for this instructor."></textarea>
+      </div>
+      <div class="modal-actions">
+        <span id="admin-assessment-notes-status" class="metric-caption"></span>
+        <button id="admin-assessment-notes-cancel" class="schedule-button schedule-button-secondary" type="button">Cancel</button>
+        <button id="admin-assessment-notes-save" class="schedule-button" type="button">Save Note</button>
+      </div>
+      <div id="admin-assessment-notes-list" class="notes-modal-list"></div>
+    </article>
+  </div>
+
+  <div id="admin-assessment-history-modal" class="modal-shell hidden" aria-hidden="true">
+    <article class="modal-card admin-hiring-notes-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Assessment History</p>
+          <h3 id="admin-assessment-history-title">Instructor history</h3>
+          <p id="admin-assessment-history-meta" class="metric-caption"></p>
+        </div>
+        <button id="admin-assessment-history-close" class="modal-close" type="button" aria-label="Close assessment history">x</button>
+      </div>
+      <div id="admin-assessment-history-list" class="notes-modal-list"></div>
+      <div class="modal-actions">
+        <button id="admin-assessment-history-cancel" class="schedule-button schedule-button-secondary" type="button">Close</button>
+      </div>
+    </article>
+  </div>
+
+  <div id="admin-assessment-promotion-modal" class="modal-shell hidden" aria-hidden="true">
+    <article class="modal-card admin-hiring-notes-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Promotion Assessment</p>
+          <h3 id="admin-assessment-promotion-title">Assign promotion assessment</h3>
+          <p id="admin-assessment-promotion-meta" class="metric-caption"></p>
+        </div>
+        <button id="admin-assessment-promotion-close" class="modal-close" type="button" aria-label="Close promotion assessment">x</button>
+      </div>
+      <div class="settings-form">
+        <label class="schedule-label" for="admin-assessment-promotion-rank">Target rank</label>
+        <select id="admin-assessment-promotion-rank" class="schedule-select">
+          <option value="Training">Training</option>
+          <option value="Beginner">Beginner</option>
+          <option value="Beginner++">Beginner++</option>
+          <option value="Intermediate">Intermediate</option>
+          <option value="Intermediate++">Intermediate++</option>
+          <option value="Professional">Professional</option>
+          <option value="Elite">Elite</option>
+        </select>
+        <label class="schedule-label" for="admin-assessment-promotion-cycle">Review cycle</label>
+        <input id="admin-assessment-promotion-cycle" class="schedule-input" type="text" placeholder="Summer review cycle">
+        <label class="schedule-label" for="admin-assessment-promotion-note">Assessment note</label>
+        <textarea id="admin-assessment-promotion-note" class="course-note-input" placeholder="Document why this instructor is being assigned a promotion assessment."></textarea>
+      </div>
+      <div class="modal-actions">
+        <span id="admin-assessment-promotion-status" class="metric-caption"></span>
+        <button id="admin-assessment-promotion-cancel" class="schedule-button schedule-button-secondary" type="button">Cancel</button>
+        <button id="admin-assessment-promotion-save" class="schedule-button" type="button">Assign Assessment</button>
+      </div>
+    </article>
+  </div>
+
   <script src="data.js?v=20260506-1"></script>
   <script src="admin.js?v=20260506-1"></script>
   <script src="admin-assessment.js?v=20260506-1"></script>

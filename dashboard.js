@@ -941,6 +941,10 @@ function renderSidebarVisibility() {
   if (toggleIcon) {
     toggleIcon.textContent = sidebarHidden ? ">" : "<";
   }
+
+  window.requestAnimationFrame(() => {
+    window.dispatchEvent(new Event("resize"));
+  });
 }
 
 function loadTimeOffRequests() {

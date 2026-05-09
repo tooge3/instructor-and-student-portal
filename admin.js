@@ -496,6 +496,10 @@ function renderAdminSidebarVisibility() {
   if (toggleIcon) {
     toggleIcon.textContent = adminSidebarHidden ? ">" : "<";
   }
+
+  window.requestAnimationFrame(() => {
+    window.dispatchEvent(new Event("resize"));
+  });
 }
 
 function buildInstructorRecords(count) {
