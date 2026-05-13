@@ -2153,7 +2153,7 @@ function renderInstructorDirectory() {
           <td><span class="status-chip ${instructorStatusClass(instructor.status)} admin-status-chip">${instructor.status}</span></td>
           <td>
             <details class="admin-session-menu">
-              <summary class="admin-menu-button" aria-label="Instructor actions">�</summary>
+              <summary class="admin-menu-button" aria-label="Instructor actions">...</summary>
               <div class="admin-session-menu-list">
                 <button class="schedule-slot-menu-button" type="button" data-report-accident="${instructor.id}">Report Accident</button>
                 <button class="schedule-slot-menu-button" type="button" data-edit-instructor="${instructor.id}">Edit Instructor</button>
@@ -2831,7 +2831,7 @@ function renderHiring() {
           </td>
           <td>
             <details class="admin-session-menu">
-              <summary class="admin-menu-button" aria-label="Candidate actions">�</summary>
+              <summary class="admin-menu-button" aria-label="Candidate actions">...</summary>
               <div class="admin-session-menu-list">
                 <a class="schedule-slot-menu-button" href="${resumeUrl}" target="_blank" rel="noreferrer">View Resume</a>
                 <a class="schedule-slot-menu-button" href="${bootstrapUrl}" target="_blank" rel="noreferrer">View bootstrap submission</a>

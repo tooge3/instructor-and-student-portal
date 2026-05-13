@@ -33,7 +33,6 @@
           <button class="nav-link" data-view="documents" type="button">Daily Documents</button>
           <button class="nav-link" data-view="payment" type="button">Payment</button>
           <button class="nav-link" data-view="testing" type="button">Testing</button>
-          <button class="nav-link" data-view="snake" type="button">Snake Game</button>
           <a class="nav-link nav-link-anchor" href="admin.html">Administrator Portal</a>
         </nav>
       </div>
@@ -333,70 +332,6 @@
       </section>
       </section>
 
-      <section class="dashboard-view" data-view-panel="snake">
-      <section class="panel snake-panel" id="snake-game">
-        <div class="snake-game-heading">
-          <div>
-            <p class="eyebrow">Mini Game</p>
-            <h3>Snake costume challenge</h3>
-          </div>
-          <div class="snake-scoreboard" aria-live="polite">
-            <div>
-              <span>Score</span>
-              <strong id="snake-score">0</strong>
-            </div>
-            <div>
-              <span>Best</span>
-              <strong id="snake-best-score">0</strong>
-            </div>
-          </div>
-        </div>
-
-        <div class="snake-game-layout">
-          <div class="snake-stage-wrap">
-            <canvas id="snake-board" class="snake-board" width="420" height="420" aria-label="Snake game board"></canvas>
-            <div id="snake-message" class="snake-message" aria-live="polite">Press Start to play</div>
-          </div>
-
-          <aside class="snake-controls" aria-label="Snake game controls">
-            <div>
-              <p class="metric-label">Costume</p>
-              <div class="snake-costume-grid" role="radiogroup" aria-label="Choose snake costume">
-                <button class="snake-costume active" type="button" data-snake-costume="classic" aria-pressed="true">
-                  <span class="snake-costume-swatch classic"></span>
-                  Classic
-                </button>
-                <button class="snake-costume" type="button" data-snake-costume="sunset" aria-pressed="false">
-                  <span class="snake-costume-swatch sunset"></span>
-                  Sunset
-                </button>
-                <button class="snake-costume" type="button" data-snake-costume="mint" aria-pressed="false">
-                  <span class="snake-costume-swatch mint"></span>
-                  Mint
-                </button>
-                <button class="snake-costume" type="button" data-snake-costume="royal" aria-pressed="false">
-                  <span class="snake-costume-swatch royal"></span>
-                  Royal
-                </button>
-              </div>
-            </div>
-
-            <div class="snake-actions">
-              <button id="snake-start" class="schedule-button" type="button">Start</button>
-              <button id="snake-restart" class="schedule-button schedule-button-secondary" type="button">Restart</button>
-            </div>
-
-            <div class="snake-direction-pad" aria-label="Snake direction buttons">
-              <button type="button" data-snake-direction="up" aria-label="Move up">^</button>
-              <button type="button" data-snake-direction="left" aria-label="Move left">&lt;</button>
-              <button type="button" data-snake-direction="down" aria-label="Move down">v</button>
-              <button type="button" data-snake-direction="right" aria-label="Move right">&gt;</button>
-            </div>
-          </aside>
-        </div>
-      </section>
-      </section>
-
     </main>
   </div>
 
@@ -625,6 +560,5 @@
 
   <script src="data.js"></script>
   <script src="dashboard.js"></script>
-  <script src="snake-game.js"></script>
 </body>
 </html>
